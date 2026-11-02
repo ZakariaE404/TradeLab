@@ -19,6 +19,9 @@ import {
   Layers,
   Sparkles,
   Info,
+  Database,
+  Trash2,
+  Loader2,
 } from 'lucide-react';
 
 interface TopNavProps {
@@ -36,6 +39,9 @@ interface TopNavProps {
   isSettingsOpen: boolean;
   isCustomData: boolean;
   strategyParams: StrategyParameters;
+  calculationStatus?: 'idle' | 'computing' | 'cached' | 'calculated';
+  lastCalculatedAt?: number | null;
+  onClearCache?: () => void;
 }
 
 export function TopNav({
@@ -53,6 +59,9 @@ export function TopNav({
   isSettingsOpen,
   isCustomData,
   strategyParams,
+  calculationStatus = 'calculated',
+  lastCalculatedAt = null,
+  onClearCache,
 }: TopNavProps) {
   const symbolMeta = FOREX_SYMBOLS[symbol];
   const allSymbols = Object.keys(FOREX_SYMBOLS) as ForexSymbol[];
@@ -124,7 +133,7 @@ export function TopNav({
               }`}
             />
             <span className="font-mono text-[11px] text-slate-300">
-              {isCustomData ? 'CUSTOM CSV' : 'DEMO FEED'}
+              {isCustomData ? 'CUSTOM CSV' : 'SYNTHETIC DEMO'}
             </span>
             <span className="text-slate-600">|</span>
             <span className="font-mono text-[11px] text-slate-400">{candleCount} Bars</span>
@@ -132,6 +141,39 @@ export function TopNav({
             <span className="text-[10px] text-slate-500 font-mono">
               Sprd: {symbolMeta.typicalSpreadPips}p
             </span>
+          </div>
+
+          {/* Engine Calculation & Cache Status Badge */}
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-[#0f172a] border border-slate-800/80 text-[11px] font-mono">
+            {calculationStatus === 'computing' ? (
+              <span className="flex items-center gap-1 text-amber-400 font-semibold animate-pulse">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                <span>Computing...</span>
+              </span>
+            ) : calculationStatus === 'cached' ? (
+              <span
+                className="flex items-center gap-1 text-sky-400 font-semibold"
+                title="Loaded from IndexedDB local cache"
+              >
+                <Database className="w-3 h-3 text-sky-400" />
+                <span>Cached</span>
+                {lastCalculatedAt && (
+                  <span className="text-slate-400 text-[10px] ml-0.5">
+                    ({new Date(lastCalculatedAt).toISOString().substring(11, 19)})
+                  </span>
+                )}
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 text-emerald-400 font-semibold">
+                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                <span>Computed</span>
+                {lastCalculatedAt && (
+                  <span className="text-slate-400 text-[10px] ml-0.5">
+                    ({new Date(lastCalculatedAt).toISOString().substring(11, 19)})
+                  </span>
+                )}
+              </span>
+            )}
           </div>
 
           {/* Market Regime Switcher */}
@@ -155,6 +197,18 @@ export function TopNav({
 
       {/* Right: Actions & Settings */}
       <div className="flex items-center gap-2 shrink-0">
+        {/* Clear Cache Button */}
+        {onClearCache && (
+          <button
+            onClick={onClearCache}
+            title="Clear IndexedDB & LocalStorage cache"
+            className="p-1.5 text-slate-400 hover:text-rose-300 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/30 rounded transition-colors flex items-center gap-1 text-xs cursor-pointer"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span className="hidden 2xl:inline">Clear Cache</span>
+          </button>
+        )}
+
         {/* Re-generate Demo Data */}
         {!isCustomData && (
           <button

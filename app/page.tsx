@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   BacktestResult,
   Candle,
@@ -19,6 +19,21 @@ import {
   DEFAULT_STRATEGY_PARAMS,
   runBacktest,
 } from '@/services/backtestEngine';
+import {
+  CalculationStatus,
+  clearAllCache,
+  getCachedBacktest,
+  getCachedCandles,
+  getCandlesCacheKey,
+  getCandlesIdentityHash,
+  getBacktestCacheKey,
+  getStoredIndicatorConfig,
+  getStoredStrategySettings,
+  saveStoredIndicatorConfig,
+  saveStoredStrategySettings,
+  setCachedBacktest,
+  setCachedCandles,
+} from '@/services/cacheService';
 import dynamic from 'next/dynamic';
 import { TopNav } from '@/components/layout/TopNav';
 import { StatsBar } from '@/components/stats/StatsBar';
@@ -52,10 +67,10 @@ export default function TradeLabPage() {
     candles: Candle[];
   } | null>(null);
 
-  // 2. Active Strategy Parameters
+  // 2. Active Strategy Parameters (Persisted in localStorage)
   const [strategyParams, setStrategyParams] = useState<StrategyParameters>(DEFAULT_STRATEGY_PARAMS);
 
-  // 3. Indicator Configuration
+  // 3. Indicator Configuration (Persisted in localStorage)
   const [indicatorConfig, setIndicatorConfig] = useState<IndicatorConfig>({
     showEma50: true,
     showEma200: true,
@@ -73,20 +88,120 @@ export default function TradeLabPage() {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedTradeId, setSelectedTradeId] = useState<string | null>(null);
 
-  // 5. Candles Generation / Retrieval
-  const activeCandles = useMemo(() => {
-    if (customCandles) {
-      return customCandles.candles;
+  // 5. Cache & Performance State
+  const [activeCandles, setActiveCandles] = useState<Candle[]>(() =>
+    generateForexCandles('XAUUSDm', '15m', 42, undefined, 'mixed')
+  );
+  const [backtestResult, setBacktestResult] = useState<BacktestResult>(() =>
+    runBacktest(activeCandles, DEFAULT_STRATEGY_PARAMS, 'XAUUSDm', '15m')
+  );
+  const [calculationStatus, setCalculationStatus] = useState<CalculationStatus>('calculated');
+  const [lastCalculatedAt, setLastCalculatedAt] = useState<number | null>(() => Date.now());
+
+  // Load localStorage preferences on client mount
+  useEffect(() => {
+    const storedParams = getStoredStrategySettings(DEFAULT_STRATEGY_PARAMS);
+    const storedIndicators = getStoredIndicatorConfig({
+      showEma50: true,
+      showEma200: true,
+      showFastEma: true,
+      showSlowEma: true,
+      showTrendEma: false,
+      showBollingerBands: false,
+      showVolume: true,
+      showMarkers: true,
+    });
+    setStrategyParams(storedParams);
+    setIndicatorConfig(storedIndicators);
+  }, []);
+
+  // Save changes to localStorage
+  const handleUpdateParams = (newParams: StrategyParameters) => {
+    setStrategyParams(newParams);
+    saveStoredStrategySettings(newParams);
+  };
+
+  const handleToggleIndicator = (key: keyof IndicatorConfig) => {
+    setIndicatorConfig((prev) => {
+      const updated = { ...prev, [key]: !prev[key] };
+      saveStoredIndicatorConfig(updated);
+      return updated;
+    });
+  };
+
+  // 6. Candle Generation & IndexedDB Caching
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function loadCandles() {
+      if (customCandles) {
+        setActiveCandles(customCandles.candles);
+        return;
+      }
+
+      const cacheKey = getCandlesCacheKey(symbol, timeframe, marketSeed, marketRegime);
+      const cached = await getCachedCandles(cacheKey);
+
+      if (isCancelled) return;
+
+      if (cached && cached.length > 0) {
+        setActiveCandles(cached);
+      } else {
+        const generated = generateForexCandles(symbol, timeframe, marketSeed, undefined, marketRegime);
+        if (isCancelled) return;
+        setActiveCandles(generated);
+        setCachedCandles(cacheKey, generated);
+      }
     }
-    return generateForexCandles(symbol, timeframe, marketSeed, undefined, marketRegime);
+
+    loadCandles();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [symbol, timeframe, marketSeed, marketRegime, customCandles]);
 
-  // 6. Backtest Execution
-  const backtestResult = useMemo(() => {
-    return runBacktest(activeCandles, strategyParams, symbol, timeframe);
+  // 7. Backtest Execution with IndexedDB Caching Layer
+  const evaluationIdRef = useRef(0);
+
+  useEffect(() => {
+    if (!activeCandles || activeCandles.length === 0) return;
+
+    const currentEvalId = ++evaluationIdRef.current;
+    setCalculationStatus('computing');
+
+    const candlesHash = getCandlesIdentityHash(activeCandles);
+    const cacheKey = getBacktestCacheKey(candlesHash, symbol, timeframe, strategyParams);
+
+    // Run async cache lookup then fallback to computation
+    (async () => {
+      const cached = await getCachedBacktest(cacheKey);
+
+      if (evaluationIdRef.current !== currentEvalId) return; // Discard superseded evaluation
+
+      if (cached) {
+        setBacktestResult(cached.result);
+        setLastCalculatedAt(cached.timestamp);
+        setCalculationStatus('cached');
+      } else {
+        // Small delay via requestAnimationFrame to keep UI responsive
+        requestAnimationFrame(async () => {
+          if (evaluationIdRef.current !== currentEvalId) return;
+
+          const result = runBacktest(activeCandles, strategyParams, symbol, timeframe);
+          const savedTimestamp = await setCachedBacktest(cacheKey, result);
+
+          if (evaluationIdRef.current !== currentEvalId) return;
+
+          setBacktestResult(result);
+          setLastCalculatedAt(savedTimestamp);
+          setCalculationStatus('calculated');
+        });
+      }
+    })();
   }, [activeCandles, strategyParams, symbol, timeframe]);
 
-  // Derive selected trade from result
+  // Derive selected trade from current result
   const selectedTrade = useMemo(() => {
     if (!selectedTradeId) return null;
     return backtestResult.trades.find((t) => t.id === selectedTradeId) || null;
@@ -108,7 +223,7 @@ export default function TradeLabPage() {
   // Handlers
   const handleSelectSymbol = (newSymbol: ForexSymbol) => {
     setSymbol(newSymbol);
-    setCustomCandles(null); // Clear custom CSV when switching symbols
+    setCustomCandles(null);
     setSelectedTradeId(null);
   };
 
@@ -123,21 +238,35 @@ export default function TradeLabPage() {
     setSelectedTradeId(null);
   };
 
-  const handleToggleIndicator = (key: keyof IndicatorConfig) => {
-    setIndicatorConfig((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-  };
-
   const handleImportCandles = (candles: Candle[], fileName: string) => {
     setCustomCandles({ fileName, candles });
     setSelectedTradeId(null);
   };
 
   const handleRunManualBacktest = () => {
-    // Triggers recalculation by forcing refresh or re-evaluating with feedback animation
+    // Force recalculation by generating a new evaluation timestamp
     setStrategyParams((prev) => ({ ...prev }));
+  };
+
+  const handleClearCache = async () => {
+    setCalculationStatus('computing');
+    await clearAllCache();
+
+    // Re-generate fresh candles and compute
+    const freshSeed = Math.floor(Math.random() * 100000) + 1;
+    setMarketSeed(freshSeed);
+    const freshCandles = generateForexCandles(symbol, timeframe, freshSeed, undefined, marketRegime);
+    setActiveCandles(freshCandles);
+
+    const candlesHash = getCandlesIdentityHash(freshCandles);
+    const cacheKey = getBacktestCacheKey(candlesHash, symbol, timeframe, strategyParams);
+    const result = runBacktest(freshCandles, strategyParams, symbol, timeframe);
+    const savedTimestamp = await setCachedBacktest(cacheKey, result);
+
+    setBacktestResult(result);
+    setLastCalculatedAt(savedTimestamp);
+    setCalculationStatus('calculated');
+    setSelectedTradeId(null);
   };
 
   return (
@@ -162,7 +291,60 @@ export default function TradeLabPage() {
         isSettingsOpen={isSettingsOpen}
         isCustomData={!!customCandles}
         strategyParams={strategyParams}
+        calculationStatus={calculationStatus}
+        lastCalculatedAt={lastCalculatedAt}
+        onClearCache={handleClearCache}
       />
+
+      {/* 2. Compact Statistics Strip */}
+      <StatsBar
+        result={backtestResult}
+        accountBalance={strategyParams.accountBalance}
+      />
+
+      {/* 3. Main Central Workspace: Candlestick Chart (Prioritized Screen Space) */}
+      <main className="flex-1 w-full min-h-0 relative flex flex-col bg-[#090d16]">
+        <TradingChart
+          candles={activeCandles}
+          symbol={symbol}
+          timeframe={timeframe}
+          onSelectTimeframe={handleSelectTimeframe}
+          trades={backtestResult.trades}
+          selectedTrade={selectedTrade}
+          onSelectTrade={(t) => setSelectedTradeId(t.id)}
+          indicatorConfig={indicatorConfig}
+          onToggleIndicator={handleToggleIndicator}
+          onClearSelectedTrade={() => setSelectedTradeId(null)}
+        />
+      </main>
+
+      {/* 4. Collapsible Trade History & Equity Curve Panel */}
+      <TradeHistoryPanel
+        result={backtestResult}
+        selectedTrade={selectedTrade}
+        onSelectTrade={(t) => setSelectedTradeId(t.id)}
+        isCollapsed={isHistoryCollapsed}
+        onToggleCollapse={() => setIsHistoryCollapsed(!isHistoryCollapsed)}
+      />
+
+      {/* 5. Strategy & Risk Parameters Drawer */}
+      <StrategySettingsDrawer
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        params={strategyParams}
+        onChangeParams={handleUpdateParams}
+        onApplyAndRun={handleRunManualBacktest}
+      />
+
+      {/* 6. Custom Data Import Modal */}
+      <ImportDataModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImportCandles={handleImportCandles}
+      />
+    </div>
+  );
+}
 
       {/* 2. Compact Statistics Strip */}
       <StatsBar
