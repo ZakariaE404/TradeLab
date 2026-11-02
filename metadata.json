@@ -1,0 +1,6 @@
+{
+  "name": "TradeLab - Forex Strategy Analysis & Backtesting",
+  "description": "Professional personal Forex strategy analysis and backtesting terminal with TradingView lightweight charts, real-time indicator overlays, strategy tuning, and R-multiple metrics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
