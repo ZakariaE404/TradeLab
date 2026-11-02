@@ -106,6 +106,9 @@ export function StatsBar({ result, accountBalance }: StatsBarProps) {
               <span className="font-bold text-slate-100">{result.totalTrades}</span>
               <span className="text-emerald-400 text-[11px] font-semibold">{result.winningTrades}W</span>
               <span className="text-rose-400 text-[11px] font-semibold">{result.losingTrades}L</span>
+              {result.unresolvedTrades !== undefined && result.unresolvedTrades > 0 && (
+                <span className="text-amber-400 text-[11px] font-medium">{result.unresolvedTrades}Open</span>
+              )}
               {result.breakevenTrades > 0 && (
                 <span className="text-slate-400 text-[11px]">{result.breakevenTrades}BE</span>
               )}
@@ -128,7 +131,28 @@ export function StatsBar({ result, accountBalance }: StatsBarProps) {
           </div>
         </div>
 
-        {/* Core Metric 5: Max Drawdown */}
+        {/* Core Metric 5: Average Win & Loss R */}
+        <div className="flex items-center gap-2.5 px-3 border-r border-slate-800/80 shrink-0">
+          <div className="w-7 h-7 rounded bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+            <Target className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider font-medium">
+              Avg Win / Loss
+            </div>
+            <div className="flex items-center gap-1.5 font-mono text-xs">
+              <span className="text-emerald-400 font-bold">
+                +{result.avgWinR ? result.avgWinR.toFixed(2) : '0.00'}R
+              </span>
+              <span className="text-slate-500">/</span>
+              <span className="text-rose-400 font-bold">
+                -{result.avgLossR ? Math.abs(result.avgLossR).toFixed(2) : '0.00'}R
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Core Metric 6: Max Drawdown */}
         <div className="flex items-center gap-2.5 px-3 border-r border-slate-800/80 shrink-0">
           <div className="w-7 h-7 rounded bg-rose-500/10 text-rose-400 flex items-center justify-center">
             <ShieldAlert className="w-4 h-4" />
@@ -163,7 +187,7 @@ export function StatsBar({ result, accountBalance }: StatsBarProps) {
         </div>
 
         {/* Long / Short split */}
-        <div className="flex items-center gap-3 pl-3 shrink-0 text-[11px] font-mono text-slate-400 hidden xl:flex">
+        <div className="flex items-center gap-3 pl-3 shrink-0 text-[11px] font-mono text-slate-400 hidden xl:flex border-r border-slate-800/80 pr-3">
           <div>
             <span className="text-emerald-400 font-semibold">Long:</span> {result.longWinRate}% (
             {result.longTradesCount})
@@ -172,6 +196,20 @@ export function StatsBar({ result, accountBalance }: StatsBarProps) {
             <span className="text-rose-400 font-semibold">Short:</span> {result.shortWinRate}% (
             {result.shortTradesCount})
           </div>
+        </div>
+
+        {/* Cost Model Distinction Badge */}
+        <div className="flex items-center pl-3 shrink-0">
+          <span
+            title={
+              result.isGrossSimulated
+                ? 'Gross Simulated Results: Pure strategy simulation before broker commissions and financing fees.'
+                : 'Simulated Results: Net of simulated spread.'
+            }
+            className="px-2 py-0.5 rounded text-[10px] font-mono font-medium border bg-sky-500/10 text-sky-400 border-sky-500/20 whitespace-nowrap"
+          >
+            {result.isGrossSimulated ? 'Gross Simulated (Pre-Cost)' : 'Net of Spread'}
+          </span>
         </div>
       </div>
     </div>

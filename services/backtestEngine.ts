@@ -139,7 +139,9 @@ export function runBacktest(
       index: st.index,
       symbol: st.symbol,
       timeframe,
-      direction: st.direction === 'BUY' ? 'LONG' : 'SHORT',
+      direction: st.direction,
+      signalTime: st.signalTime,
+      signalIndex: st.signalIndex,
       entryTime: st.entryTime,
       entryPrice: st.entryPrice,
       entryIndex: st.entryIndex,
@@ -149,27 +151,18 @@ export function runBacktest(
       stopLoss: st.stopLossPrice,
       takeProfit: st.takeProfitPrice,
       initialRiskPips: st.riskPips,
-      status:
-        st.status === 'WIN'
-          ? 'WIN'
-          : st.status === 'LOSS'
-          ? 'LOSS'
-          : st.status === 'BREAKEVEN'
-          ? 'BREAKEVEN'
-          : 'OPEN',
-      exitReason:
-        st.exitReason === 'TP'
-          ? 'TP'
-          : st.exitReason === 'SL'
-          ? 'SL'
-          : st.exitReason === 'MAX_BARS'
-          ? 'SIGNAL_CLOSE'
-          : 'OPEN',
+      status: st.status,
+      exitReason: st.exitReason,
       pnlPips: st.realizedPnlPips,
       pnlCurrency: Number((st.realizedR * st.riskAmount).toFixed(2)),
       pnlR: st.realizedR,
       holdingBars: st.holdingBars,
       riskAmount: st.riskAmount,
+      signalReason: st.signalReason,
+      h1Bias: st.h1Bias,
+      m15Confirmation: st.m15Confirmation,
+      riskRewardRatio: st.riskRewardRatio || params.riskRewardRatio,
+      simultaneousTouchResolvedToSL: st.simultaneousTouchResolvedToSL,
     }));
 
     const compiled = compileBacktestResults(mappedTrades, params.accountBalance);
@@ -402,12 +395,15 @@ export function runBacktest(
         const initialRiskPips = Math.abs(entryPrice - stopLoss) / pipSize;
         const riskAmount = currentBalance * (params.riskPercent / 100);
 
+        const signalDirection = signal === 'LONG' ? 'BUY' : 'SELL';
         activeTrade = {
           id: `TRD-${tradeCounter++}`,
           index: trades.length + 1,
           symbol,
           timeframe,
-          direction: signal,
+          direction: signalDirection,
+          signalTime: candle.time,
+          signalIndex: i,
           entryTime: candle.time,
           entryPrice,
           entryIndex: i,
@@ -417,13 +413,24 @@ export function runBacktest(
           stopLoss,
           takeProfit,
           initialRiskPips: Number(initialRiskPips.toFixed(1)),
-          status: 'OPEN',
-          exitReason: 'OPEN',
+          status: 'UNRESOLVED',
+          exitReason: 'UNRESOLVED',
           pnlPips: 0,
           pnlCurrency: 0,
           pnlR: 0,
           holdingBars: 0,
           riskAmount: Number(riskAmount.toFixed(2)),
+          signalReason:
+            params.strategyType === 'ema_pullback'
+              ? `EMA Pullback: Retest of 20 EMA in ${signal === 'LONG' ? 'Bullish' : 'Bearish'} Trend`
+              : params.strategyType === 'breakout_retest'
+              ? `Channel Breakout: 20-bar ${signal === 'LONG' ? 'High' : 'Low'} exceeded`
+              : params.strategyType === 'rsi_mean_reversion'
+              ? `RSI Mean Reversion: Extreme rebound ${signal === 'LONG' ? 'Oversold' : 'Overbought'}`
+              : `Momentum Crossover: Fast/Slow EMA shift`,
+          h1Bias: signalDirection,
+          m15Confirmation: `ATR ${currentAtr.toFixed(digits)} volatility stop (${params.atrStopMultiplier}x ATR)`,
+          riskRewardRatio: params.riskRewardRatio,
         };
       }
     }
@@ -482,12 +489,9 @@ function finalizeTrade(
  * Aggregates all trade statistics, equity progression, and drawdown curves
  */
 function compileBacktestResults(trades: Trade[], startingBalance: number): BacktestResult {
-  const closedTrades = trades.filter((t) => t.status !== 'OPEN');
-  const totalTrades = closedTrades.length;
-
-  if (totalTrades === 0) {
-    return createEmptyResult(startingBalance);
-  }
+  const resolvedTrades = trades.filter((t) => t.status !== 'OPEN' && t.status !== 'UNRESOLVED');
+  const unresolvedTrades = trades.filter((t) => t.status === 'OPEN' || t.status === 'UNRESOLVED').length;
+  const totalResolved = resolvedTrades.length;
 
   let winningTrades = 0;
   let losingTrades = 0;
@@ -515,7 +519,7 @@ function compileBacktestResults(trades: Trade[], startingBalance: number): Backt
 
   const equityCurve: EquityPoint[] = [
     {
-      time: closedTrades[0]?.entryTime || 1730505600,
+      time: trades[0]?.entryTime || 1730505600,
       tradeIndex: 0,
       equity: startingBalance,
       cumulativeR: 0,
@@ -524,8 +528,8 @@ function compileBacktestResults(trades: Trade[], startingBalance: number): Backt
     },
   ];
 
-  for (let i = 0; i < closedTrades.length; i++) {
-    const t = closedTrades[i];
+  for (let i = 0; i < resolvedTrades.length; i++) {
+    const t = resolvedTrades[i];
     netR += t.pnlR;
     totalPnlCurrency += t.pnlCurrency;
     currentEquity += t.pnlCurrency;
@@ -548,7 +552,8 @@ function compileBacktestResults(trades: Trade[], startingBalance: number): Backt
       currentConsecLosses = 0;
     }
 
-    if (t.direction === 'LONG') {
+    const isLong = t.direction === 'LONG' || t.direction === 'BUY';
+    if (isLong) {
       longCount++;
       if (t.status === 'WIN') longWins++;
     } else {
@@ -576,7 +581,7 @@ function compileBacktestResults(trades: Trade[], startingBalance: number): Backt
     });
   }
 
-  const winRate = Number(((winningTrades / totalTrades) * 100).toFixed(1));
+  const winRate = totalResolved > 0 ? Number(((winningTrades / totalResolved) * 100).toFixed(1)) : 0;
   const profitFactor =
     grossLossR > 0 ? Number((grossProfitR / grossLossR).toFixed(2)) : grossProfitR > 0 ? 99.9 : 0;
 
@@ -584,8 +589,8 @@ function compileBacktestResults(trades: Trade[], startingBalance: number): Backt
   const avgLossR = losingTrades > 0 ? Number((grossLossR / losingTrades).toFixed(2)) : 0;
 
   // Expectancy in R: (WinRate * AvgWin) - (LossRate * AvgLoss)
-  const winProb = winningTrades / totalTrades;
-  const lossProb = losingTrades / totalTrades;
+  const winProb = totalResolved > 0 ? winningTrades / totalResolved : 0;
+  const lossProb = totalResolved > 0 ? losingTrades / totalResolved : 0;
   const expectancyR = Number((winProb * avgWinR - lossProb * avgLossR).toFixed(2));
 
   const longWinRate = longCount > 0 ? Number(((longWins / longCount) * 100).toFixed(1)) : 0;
@@ -593,13 +598,16 @@ function compileBacktestResults(trades: Trade[], startingBalance: number): Backt
 
   return {
     trades,
-    totalTrades,
+    totalTrades: trades.length,
     winningTrades,
     losingTrades,
     breakevenTrades,
+    unresolvedTrades,
     winRate,
     profitFactor,
     netR: Number(netR.toFixed(2)),
+    grossSimulatedR: Number(grossProfitR.toFixed(2)),
+    isGrossSimulated: true,
     totalPnlCurrency: Number(totalPnlCurrency.toFixed(2)),
     maxDrawdownR: Number(maxDrawdownR.toFixed(2)),
     maxDrawdownPercent: Number(maxDrawdownPercent.toFixed(2)),
@@ -623,9 +631,12 @@ function createEmptyResult(startingBalance: number): BacktestResult {
     winningTrades: 0,
     losingTrades: 0,
     breakevenTrades: 0,
+    unresolvedTrades: 0,
     winRate: 0,
     profitFactor: 0,
     netR: 0,
+    grossSimulatedR: 0,
+    isGrossSimulated: true,
     totalPnlCurrency: 0,
     maxDrawdownR: 0,
     maxDrawdownPercent: 0,

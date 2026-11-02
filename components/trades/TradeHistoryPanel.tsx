@@ -25,14 +25,17 @@ interface TradeHistoryPanelProps {
 }
 
 type TabType = 'trades' | 'equity' | 'analytics';
-type FilterStatus = 'ALL' | 'WIN' | 'LOSS' | 'LONG' | 'SHORT';
+export type FilterStatus = 'ALL' | 'BUY' | 'SELL' | 'WIN' | 'LOSS' | 'UNRESOLVED';
 
-function formatTradeTime(seconds: number): string {
+function formatTradeDateTime(seconds: number): string {
+  if (!seconds || seconds <= 0) return '—';
   const d = new Date(seconds * 1000);
+  const year = d.getUTCFullYear();
+  const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
   const hours = String(d.getUTCHours()).padStart(2, '0');
   const minutes = String(d.getUTCMinutes()).padStart(2, '0');
-  const secs = String(d.getUTCSeconds()).padStart(2, '0');
-  return `${hours}:${minutes}:${secs}`;
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
 
 export function TradeHistoryPanel({
@@ -46,14 +49,40 @@ export function TradeHistoryPanel({
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Counts for filter pills
+  const filterCounts = useMemo(() => {
+    let buyCount = 0;
+    let sellCount = 0;
+    let winCount = 0;
+    let lossCount = 0;
+    let unresolvedCount = 0;
+
+    for (const t of result.trades) {
+      const isBuy = t.direction === 'BUY' || t.direction === 'LONG';
+      const isSell = t.direction === 'SELL' || t.direction === 'SHORT';
+      if (isBuy) buyCount++;
+      if (isSell) sellCount++;
+      if (t.status === 'WIN') winCount++;
+      if (t.status === 'LOSS') lossCount++;
+      if (t.status === 'UNRESOLVED' || t.status === 'OPEN') unresolvedCount++;
+    }
+
+    return { buyCount, sellCount, winCount, lossCount, unresolvedCount };
+  }, [result.trades]);
+
   // Filtered trades list
   const filteredTrades = useMemo(() => {
     return result.trades.filter((t) => {
+      const isBuy = t.direction === 'BUY' || t.direction === 'LONG';
+      const isSell = t.direction === 'SELL' || t.direction === 'SHORT';
+      const isUnresolved = t.status === 'UNRESOLVED' || t.status === 'OPEN';
+
       // Status filter
+      if (statusFilter === 'BUY' && !isBuy) return false;
+      if (statusFilter === 'SELL' && !isSell) return false;
       if (statusFilter === 'WIN' && t.status !== 'WIN') return false;
       if (statusFilter === 'LOSS' && t.status !== 'LOSS') return false;
-      if (statusFilter === 'LONG' && t.direction !== 'LONG') return false;
-      if (statusFilter === 'SHORT' && t.direction !== 'SHORT') return false;
+      if (statusFilter === 'UNRESOLVED' && !isUnresolved) return false;
 
       // Query filter
       if (searchQuery.trim()) {
@@ -61,8 +90,10 @@ export function TradeHistoryPanel({
         return (
           t.id.toLowerCase().includes(query) ||
           t.direction.toLowerCase().includes(query) ||
+          t.status.toLowerCase().includes(query) ||
           t.exitReason.toLowerCase().includes(query) ||
-          t.pnlR.toString().includes(query)
+          t.pnlR.toString().includes(query) ||
+          (t.signalReason && t.signalReason.toLowerCase().includes(query))
         );
       }
       return true;
@@ -186,17 +217,26 @@ export function TradeHistoryPanel({
         <div className="flex items-center gap-2">
           {!isCollapsed && activeTab === 'trades' && (
             <div className="hidden sm:flex items-center gap-1 bg-[#111726] p-0.5 rounded border border-slate-800 text-[11px]">
-              {(['ALL', 'WIN', 'LOSS', 'LONG', 'SHORT'] as FilterStatus[]).map((f) => (
+              {(
+                [
+                  { id: 'ALL', label: `ALL (${result.trades.length})` },
+                  { id: 'BUY', label: `BUY (${filterCounts.buyCount})` },
+                  { id: 'SELL', label: `SELL (${filterCounts.sellCount})` },
+                  { id: 'WIN', label: `WINS (${filterCounts.winCount})` },
+                  { id: 'LOSS', label: `LOSSES (${filterCounts.lossCount})` },
+                  { id: 'UNRESOLVED', label: `OPEN (${filterCounts.unresolvedCount})` },
+                ] as { id: FilterStatus; label: string }[]
+              ).map(({ id, label }) => (
                 <button
-                  key={f}
-                  onClick={() => setStatusFilter(f)}
-                  className={`px-2 py-0.5 rounded transition-colors ${
-                    statusFilter === f
+                  key={id}
+                  onClick={() => setStatusFilter(id)}
+                  className={`px-2 py-0.5 rounded transition-colors text-[10px] ${
+                    statusFilter === id
                       ? 'bg-slate-700 text-white font-semibold'
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
-                  {f}
+                  {label}
                 </button>
               ))}
             </div>
@@ -239,15 +279,14 @@ export function TradeHistoryPanel({
                     <thead className="sticky top-0 bg-[#0d121f] text-slate-400 text-[11px] border-b border-slate-800 uppercase tracking-wider select-none z-10">
                       <tr>
                         <th className="py-2 px-3">#</th>
-                        <th className="py-2 px-3">Type</th>
-                        <th className="py-2 px-3">Entry Time</th>
+                        <th className="py-2 px-3">Date & Time</th>
+                        <th className="py-2 px-3">Direction</th>
                         <th className="py-2 px-3">Entry</th>
-                        <th className="py-2 px-3">SL</th>
-                        <th className="py-2 px-3">TP</th>
-                        <th className="py-2 px-3">Exit Price</th>
-                        <th className="py-2 px-3">Exit Reason</th>
-                        <th className="py-2 px-3">Pips</th>
-                        <th className="py-2 px-3">R-Multiple</th>
+                        <th className="py-2 px-3">Stop Loss</th>
+                        <th className="py-2 px-3">Take Profit</th>
+                        <th className="py-2 px-3">Exit</th>
+                        <th className="py-2 px-3">Outcome</th>
+                        <th className="py-2 px-3">R Multiple</th>
                         <th className="py-2 px-3">PnL ($)</th>
                         <th className="py-2 px-3 text-right">Action</th>
                       </tr>
@@ -257,6 +296,8 @@ export function TradeHistoryPanel({
                         const isSelected = selectedTrade?.id === t.id;
                         const isWin = t.status === 'WIN';
                         const isLoss = t.status === 'LOSS';
+                        const isUnresolved = t.status === 'UNRESOLVED' || t.status === 'OPEN';
+                        const isBuy = t.direction === 'BUY' || t.direction === 'LONG';
                         const digits = FOREX_SYMBOLS[t.symbol]?.digits || 5;
 
                         return (
@@ -269,59 +310,49 @@ export function TradeHistoryPanel({
                                 : 'hover:bg-[#111726]/60'
                             }`}
                           >
-                            <td className="py-1.5 px-3 text-slate-400">{t.index}</td>
+                            <td className="py-1.5 px-3 text-slate-400 font-semibold">{t.index}</td>
+                            <td className="py-1.5 px-3 text-slate-300 whitespace-nowrap">
+                              {formatTradeDateTime(t.entryTime)}
+                            </td>
                             <td className="py-1.5 px-3">
                               <span
                                 className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                                  t.direction === 'LONG'
+                                  isBuy
                                     ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
                                     : 'bg-rose-500/15 text-rose-400 border border-rose-500/20'
                                 }`}
                               >
-                                {t.direction}
+                                {isBuy ? 'BUY' : 'SELL'}
                               </span>
-                            </td>
-                            <td className="py-1.5 px-3 text-slate-300">
-                              {formatTradeTime(t.entryTime)}
                             </td>
                             <td className="py-1.5 px-3 text-slate-200 font-semibold">
                               {t.entryPrice.toFixed(digits)}
                             </td>
-                            <td className="py-1.5 px-3 text-rose-400/90">
+                            <td className="py-1.5 px-3 text-rose-400/90 font-medium">
                               {t.stopLoss.toFixed(digits)}
                             </td>
-                            <td className="py-1.5 px-3 text-emerald-400/90">
+                            <td className="py-1.5 px-3 text-emerald-400/90 font-medium">
                               {t.takeProfit.toFixed(digits)}
                             </td>
                             <td className="py-1.5 px-3 text-slate-200">
-                              {t.exitPrice ? t.exitPrice.toFixed(digits) : 'Active'}
+                              {t.exitPrice && !isUnresolved ? t.exitPrice.toFixed(digits) : (
+                                <span className="text-amber-400/90 font-medium">Active</span>
+                              )}
                             </td>
                             <td className="py-1.5 px-3">
                               <span
-                                className={`px-1.5 py-0.5 rounded text-[10px] ${
-                                  t.exitReason === 'TP'
-                                    ? 'bg-emerald-500/10 text-emerald-400'
-                                    : t.exitReason === 'SL'
-                                    ? 'bg-rose-500/10 text-rose-400'
-                                    : t.exitReason === 'TRAILING_STOP'
-                                    ? 'bg-sky-500/10 text-sky-400'
+                                className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                                  isWin
+                                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                    : isLoss
+                                    ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                                    : isUnresolved
+                                    ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                                     : 'bg-slate-800 text-slate-300'
                                 }`}
                               >
-                                {t.exitReason}
+                                {t.status} {t.exitReason && t.exitReason !== 'UNRESOLVED' ? `(${t.exitReason})` : ''}
                               </span>
-                            </td>
-                            <td
-                              className={`py-1.5 px-3 font-semibold ${
-                                t.pnlPips > 0
-                                  ? 'text-emerald-400'
-                                  : t.pnlPips < 0
-                                  ? 'text-rose-400'
-                                  : 'text-slate-400'
-                              }`}
-                            >
-                              {t.pnlPips > 0 ? '+' : ''}
-                              {t.pnlPips}
                             </td>
                             <td
                               className={`py-1.5 px-3 font-bold ${
@@ -333,7 +364,7 @@ export function TradeHistoryPanel({
                               }`}
                             >
                               {t.pnlR > 0 ? '+' : ''}
-                              {t.pnlR} R
+                              {t.pnlR.toFixed(2)} R
                             </td>
                             <td
                               className={`py-1.5 px-3 font-semibold ${
@@ -344,10 +375,23 @@ export function TradeHistoryPanel({
                                   : 'text-slate-400'
                               }`}
                             >
-                              {t.pnlCurrency > 0 ? '+' : ''}${t.pnlCurrency}
+                              {t.pnlCurrency > 0 ? '+' : ''}${t.pnlCurrency.toFixed(2)}
                             </td>
                             <td className="py-1.5 px-3 text-right">
                               <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onSelectTrade(t);
+                                }}
+                                className="px-2 py-0.5 rounded bg-slate-800 hover:bg-sky-500/20 text-slate-300 hover:text-sky-300 text-[10px] transition-colors"
+                              >
+                                Focus
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   onSelectTrade(t);

@@ -35,6 +35,13 @@ import {
   BarChart2,
   Activity,
   Layers,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  Crosshair,
+  ShieldAlert,
+  Target,
+  Clock,
 } from 'lucide-react';
 
 interface TradingChartProps {
@@ -44,6 +51,7 @@ interface TradingChartProps {
   onSelectTimeframe?: (tf: Timeframe) => void;
   trades: Trade[];
   selectedTrade: Trade | null;
+  onSelectTrade?: (trade: Trade) => void;
   indicatorConfig: IndicatorConfig;
   onToggleIndicator: (key: keyof IndicatorConfig) => void;
   onClearSelectedTrade?: () => void;
@@ -56,6 +64,7 @@ export function TradingChart({
   onSelectTimeframe,
   trades,
   selectedTrade,
+  onSelectTrade,
   indicatorConfig,
   onToggleIndicator,
   onClearSelectedTrade,
@@ -72,6 +81,13 @@ export function TradingChart({
   const entryLineRef = useRef<IPriceLine | null>(null);
   const slLineRef = useRef<IPriceLine | null>(null);
   const tpLineRef = useRef<IPriceLine | null>(null);
+  const exitLineRef = useRef<IPriceLine | null>(null);
+
+  // Synchronized refs for chart click events without recreating chart
+  const tradesRef = useRef(trades);
+  tradesRef.current = trades;
+  const onSelectTradeRef = useRef(onSelectTrade);
+  onSelectTradeRef.current = onSelectTrade;
 
   // Hover state for interactive header OHLC & EMA inspection
   const [hoveredTime, setHoveredTime] = useState<number | null>(null);
@@ -238,6 +254,39 @@ export function TradingChart({
       }
     });
 
+    // Chart click interaction: click signal marker or candle to select trade
+    chart.subscribeClick((param) => {
+      if (!param.point || !param.time) return;
+      const clickTime = typeof param.time === 'number' ? param.time : null;
+      if (!clickTime) return;
+
+      const currentTrades = tradesRef.current;
+      const handler = onSelectTradeRef.current;
+      if (!handler || !currentTrades || currentTrades.length === 0) return;
+
+      // 1. Direct hit on signalTime, entryTime, or exitTime
+      const exactTrade = currentTrades.find(
+        (t) =>
+          t.signalTime === clickTime ||
+          t.entryTime === clickTime ||
+          t.exitTime === clickTime
+      );
+
+      if (exactTrade) {
+        handler(exactTrade);
+        return;
+      }
+
+      // 2. Clicked within active trade duration
+      const activeTradeInBar = currentTrades.find(
+        (t) => t.entryTime <= clickTime && clickTime <= (t.exitTime || t.entryTime + 7200)
+      );
+
+      if (activeTradeInBar) {
+        handler(activeTradeInBar);
+      }
+    });
+
     // ResizeObserver ensures chart resizes smoothly when browser window or panels resize
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
@@ -357,31 +406,74 @@ export function TradingChart({
     const seriesMarkers: SeriesMarker<Time>[] = [];
 
     for (const trade of trades) {
-      const isLong = trade.direction === 'LONG';
+      const isBuy = trade.direction === 'BUY' || trade.direction === 'LONG';
       const isSelected = selectedTrade?.id === trade.id;
+      const isWin = trade.status === 'WIN';
+      const isLoss = trade.status === 'LOSS';
+      const isUnresolved = trade.status === 'UNRESOLVED' || trade.status === 'OPEN';
 
-      // Entry Marker
+      // Exact historical signal timestamp
+      const signalTimestamp = (trade.signalTime && trade.signalTime > 0
+        ? trade.signalTime
+        : trade.entryTime) as Time;
+
+      // Color and label according to trade outcome
+      let markerColor = '#94a3b8'; // Slate default / BE
+      let badgeLabel = isBuy ? 'BUY' : 'SELL';
+
+      if (isWin) {
+        markerColor = '#10b981'; // Emerald
+        badgeLabel = `${isBuy ? '▲ BUY' : '▼ SELL'} #${trade.index} [WIN +${trade.pnlR.toFixed(2)}R]`;
+      } else if (isLoss) {
+        markerColor = '#f43f5e'; // Rose
+        badgeLabel = `${isBuy ? '▲ BUY' : '▼ SELL'} #${trade.index} [LOSS ${trade.pnlR.toFixed(2)}R]`;
+      } else if (isUnresolved) {
+        markerColor = '#f59e0b'; // Amber
+        badgeLabel = `${isBuy ? '▲ BUY' : '▼ SELL'} #${trade.index} [UNRESOLVED]`;
+      } else {
+        badgeLabel = `${isBuy ? '▲ BUY' : '▼ SELL'} #${trade.index} [BE]`;
+      }
+
+      if (isSelected) {
+        badgeLabel = `★ ${badgeLabel}`;
+      }
+
+      // Signal / Entry Marker at historical signal timestamp
       seriesMarkers.push({
-        time: trade.entryTime as Time,
-        position: isLong ? 'belowBar' : 'aboveBar',
-        color: isLong ? '#10b981' : '#f43f5e',
-        shape: isLong ? 'arrowUp' : 'arrowDown',
-        text: `${trade.direction} #${trade.index}${isSelected ? ' ★' : ''}`,
+        time: signalTimestamp,
+        position: isBuy ? 'belowBar' : 'aboveBar',
+        color: markerColor,
+        shape: isBuy ? 'arrowUp' : 'arrowDown',
+        text: badgeLabel,
         size: isSelected ? 2 : 1,
       });
 
-      // Exit Marker
-      if (trade.exitTime && trade.exitTime > 0) {
-        const isWin = trade.status === 'WIN';
-        const isLoss = trade.status === 'LOSS';
-        const exitColor = isWin ? '#10b981' : isLoss ? '#f43f5e' : '#94a3b8';
+      // Exit Marker if trade has resolved/closed
+      if (trade.exitTime && trade.exitTime > 0 && trade.exitTime !== signalTimestamp) {
+        let exitColor = '#94a3b8';
+        let exitShape: 'circle' | 'square' = 'circle';
+        let exitLabel = `${trade.exitReason}`;
+
+        if (isWin) {
+          exitColor = '#10b981';
+          exitShape = 'circle';
+          exitLabel = `TP #${trade.index} (+${trade.pnlR.toFixed(2)}R)`;
+        } else if (isLoss) {
+          exitColor = '#f43f5e';
+          exitShape = 'square';
+          exitLabel = `SL #${trade.index} (${trade.pnlR.toFixed(2)}R)`;
+        } else if (isUnresolved) {
+          exitColor = '#f59e0b';
+          exitShape = 'circle';
+          exitLabel = `OPEN #${trade.index}`;
+        }
 
         seriesMarkers.push({
           time: trade.exitTime as Time,
-          position: isLong ? 'aboveBar' : 'belowBar',
+          position: isBuy ? 'aboveBar' : 'belowBar',
           color: exitColor,
-          shape: isWin ? 'circle' : 'square',
-          text: `${trade.exitReason} (${trade.pnlR > 0 ? '+' : ''}${trade.pnlR}R)`,
+          shape: exitShape,
+          text: isSelected ? `★ ${exitLabel}` : exitLabel,
           size: isSelected ? 2 : 1,
         });
       }
@@ -408,6 +500,10 @@ export function TradingChart({
       series.removePriceLine(tpLineRef.current);
       tpLineRef.current = null;
     }
+    if (exitLineRef.current) {
+      series.removePriceLine(exitLineRef.current);
+      exitLineRef.current = null;
+    }
 
     if (!selectedTrade) return;
 
@@ -418,7 +514,7 @@ export function TradingChart({
       lineWidth: 2,
       lineStyle: LineStyle.Solid,
       axisLabelVisible: true,
-      title: `ENTRY #${selectedTrade.index} (${selectedTrade.direction})`,
+      title: `ENTRY #${selectedTrade.index} (${selectedTrade.direction}): ${selectedTrade.entryPrice.toFixed(digits)}`,
     });
 
     // Stop Loss Line
@@ -428,7 +524,7 @@ export function TradingChart({
       lineWidth: 2,
       lineStyle: LineStyle.Dashed,
       axisLabelVisible: true,
-      title: `SL (${selectedTrade.stopLoss.toFixed(digits)})`,
+      title: `SL: ${selectedTrade.stopLoss.toFixed(digits)}`,
     });
 
     // Take Profit Line
@@ -438,8 +534,20 @@ export function TradingChart({
       lineWidth: 2,
       lineStyle: LineStyle.Dashed,
       axisLabelVisible: true,
-      title: `TP (${selectedTrade.takeProfit.toFixed(digits)})`,
+      title: `TP: ${selectedTrade.takeProfit.toFixed(digits)}`,
     });
+
+    // Exit Price Line if closed
+    if (selectedTrade.exitPrice && selectedTrade.exitPrice > 0 && selectedTrade.status !== 'UNRESOLVED') {
+      exitLineRef.current = series.createPriceLine({
+        price: selectedTrade.exitPrice,
+        color: selectedTrade.status === 'WIN' ? '#10b981' : '#f43f5e',
+        lineWidth: 1,
+        lineStyle: LineStyle.Dotted,
+        axisLabelVisible: true,
+        title: `EXIT #${selectedTrade.index} (${selectedTrade.exitReason}): ${selectedTrade.exitPrice.toFixed(digits)}`,
+      });
+    }
 
     // Zoom chart to trade window
     if (chartRef.current && selectedTrade.entryTime) {
@@ -447,8 +555,8 @@ export function TradingChart({
       const exitTime = selectedTrade.exitTime || selectedTrade.entryTime + 3600 * 4;
       const tfSeconds = TIMEFRAMES[timeframe]?.seconds || 900;
 
-      const fromTime = (selectedTrade.entryTime - tfSeconds * 15) as Time;
-      const toTime = (exitTime + tfSeconds * 20) as Time;
+      const fromTime = (selectedTrade.entryTime - tfSeconds * 12) as Time;
+      const toTime = (exitTime + tfSeconds * 16) as Time;
 
       try {
         timeScale.setVisibleRange({ from: fromTime, to: toTime });
@@ -457,6 +565,31 @@ export function TradingChart({
       }
     }
   }, [selectedTrade, digits, timeframe]);
+
+  // Derived indices for selected trade navigation
+  const currentTradeIdx = useMemo(() => {
+    if (!selectedTrade) return -1;
+    return trades.findIndex((t) => t.id === selectedTrade.id);
+  }, [trades, selectedTrade]);
+
+  const prevTrade = currentTradeIdx > 0 ? trades[currentTradeIdx - 1] : null;
+  const nextTrade =
+    currentTradeIdx >= 0 && currentTradeIdx < trades.length - 1
+      ? trades[currentTradeIdx + 1]
+      : null;
+
+  const handleZoomToSelectedTrade = useCallback(() => {
+    if (!chartRef.current || !selectedTrade) return;
+    const timeScale = chartRef.current.timeScale();
+    const tfSeconds = TIMEFRAMES[timeframe]?.seconds || 900;
+    const exitTime = selectedTrade.exitTime || selectedTrade.entryTime + 3600 * 4;
+    try {
+      timeScale.setVisibleRange({
+        from: (selectedTrade.entryTime - tfSeconds * 12) as Time,
+        to: (exitTime + tfSeconds * 16) as Time,
+      });
+    } catch {}
+  }, [selectedTrade, timeframe]);
 
   // Chart Actions
   const handleResetView = useCallback(() => {
@@ -686,53 +819,212 @@ export function TradingChart({
         </div>
       </div>
 
-      {/* Selected Trade Notice Banner */}
+      {/* Selected Trade Compact Details Panel */}
       {selectedTrade && (
-        <div className="absolute top-12 left-4 z-10 flex items-center gap-3 px-3 py-1.5 rounded-md bg-[#0f172a]/95 border border-sky-500/40 shadow-xl backdrop-blur text-xs">
-          <div className="flex items-center gap-1.5">
-            <span
-              className={`px-1.5 py-0.5 rounded font-mono font-bold text-[10px] ${
-                selectedTrade.direction === 'LONG'
-                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                  : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-              }`}
-            >
-              {selectedTrade.direction} #{selectedTrade.index}
-            </span>
-            <span className="text-slate-300">
-              Entry: <strong className="font-mono text-white">{selectedTrade.entryPrice.toFixed(digits)}</strong>
-            </span>
-            <span className="text-slate-400">|</span>
-            <span className="text-rose-400">
-              SL: <strong className="font-mono">{selectedTrade.stopLoss.toFixed(digits)}</strong>
-            </span>
-            <span className="text-slate-400">|</span>
-            <span className="text-emerald-400">
-              TP: <strong className="font-mono">{selectedTrade.takeProfit.toFixed(digits)}</strong>
-            </span>
-            <span className="text-slate-400">|</span>
-            <span
-              className={`font-semibold font-mono ${
-                selectedTrade.pnlR > 0
-                  ? 'text-emerald-400'
-                  : selectedTrade.pnlR < 0
-                  ? 'text-rose-400'
-                  : 'text-slate-300'
-              }`}
-            >
-              {selectedTrade.pnlR > 0 ? '+' : ''}
-              {selectedTrade.pnlR}R (${selectedTrade.pnlCurrency})
-            </span>
+        <div className="absolute top-12 left-3 sm:left-4 z-20 w-[92%] sm:w-[410px] max-w-[calc(100%-24px)] rounded-lg bg-[#0d1322]/95 border border-sky-500/50 shadow-2xl backdrop-blur-md text-xs font-mono select-none overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+          {/* Header Row */}
+          <div className="flex items-center justify-between px-3 py-2 bg-[#11192e] border-b border-slate-800">
+            <div className="flex items-center gap-2">
+              <span
+                className={`px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase border ${
+                  selectedTrade.direction === 'BUY' || selectedTrade.direction === 'LONG'
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                    : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                }`}
+              >
+                {selectedTrade.direction} #{selectedTrade.index}
+              </span>
+              <span
+                className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                  selectedTrade.status === 'WIN'
+                    ? 'bg-emerald-500/15 text-emerald-400'
+                    : selectedTrade.status === 'LOSS'
+                    ? 'bg-rose-500/15 text-rose-400'
+                    : selectedTrade.status === 'BREAKEVEN'
+                    ? 'bg-slate-700 text-slate-300'
+                    : 'bg-amber-500/15 text-amber-400'
+                }`}
+              >
+                {selectedTrade.status} ({selectedTrade.exitReason})
+              </span>
+              <span
+                className={`text-[11px] font-bold ${
+                  selectedTrade.pnlR > 0
+                    ? 'text-emerald-400'
+                    : selectedTrade.pnlR < 0
+                    ? 'text-rose-400'
+                    : 'text-slate-400'
+                }`}
+              >
+                {selectedTrade.pnlR > 0 ? '+' : ''}
+                {selectedTrade.pnlR.toFixed(2)} R
+              </span>
+            </div>
+
+            {/* Quick Actions & Navigation */}
+            <div className="flex items-center gap-1 text-slate-400">
+              {onSelectTrade && (
+                <>
+                  <button
+                    onClick={() => prevTrade && onSelectTrade(prevTrade)}
+                    disabled={!prevTrade}
+                    title="Previous Trade"
+                    className="p-1 rounded hover:bg-slate-800 disabled:opacity-20 hover:text-white transition-colors"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => nextTrade && onSelectTrade(nextTrade)}
+                    disabled={!nextTrade}
+                    title="Next Trade"
+                    className="p-1 rounded hover:bg-slate-800 disabled:opacity-20 hover:text-white transition-colors"
+                  >
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </>
+              )}
+              <button
+                onClick={handleZoomToSelectedTrade}
+                title="Center & Zoom on Trade"
+                className="p-1 rounded hover:bg-slate-800 hover:text-sky-400 transition-colors"
+              >
+                <Crosshair className="w-3.5 h-3.5" />
+              </button>
+              {onClearSelectedTrade && (
+                <button
+                  onClick={onClearSelectedTrade}
+                  title="Close Details Panel"
+                  className="p-1 rounded hover:bg-slate-800 hover:text-rose-400 transition-colors ml-1"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           </div>
 
-          {onClearSelectedTrade && (
-            <button
-              onClick={onClearSelectedTrade}
-              className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 text-[10px] ml-1 transition-colors"
-            >
-              Clear Focus
-            </button>
-          )}
+          {/* Details Body */}
+          <div className="p-3 space-y-2 text-[11px]">
+            {/* Strategy Context: Signal Reason */}
+            <div className="bg-slate-900/80 p-2 rounded border border-slate-800/80">
+              <div className="text-[10px] uppercase tracking-wider text-slate-400 mb-0.5">
+                Signal Reason
+              </div>
+              <div className="text-slate-200 text-xs font-sans leading-tight">
+                {selectedTrade.signalReason || 'H1 Bias agreement with M15 zone retest & rejection'}
+              </div>
+            </div>
+
+            {/* Multi-Timeframe Alignment: H1 Bias & Risk:Reward */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-slate-900/60 p-2 rounded border border-slate-800/60">
+                <div className="text-[10px] uppercase tracking-wider text-slate-400">
+                  H1 Bias
+                </div>
+                <div className="mt-0.5 font-bold flex items-center gap-1.5">
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      selectedTrade.h1Bias === 'BUY'
+                        ? 'bg-emerald-400'
+                        : selectedTrade.h1Bias === 'SELL'
+                        ? 'bg-rose-400'
+                        : 'bg-amber-400'
+                    }`}
+                  />
+                  <span
+                    className={
+                      selectedTrade.h1Bias === 'BUY'
+                        ? 'text-emerald-400'
+                        : selectedTrade.h1Bias === 'SELL'
+                        ? 'text-rose-400'
+                        : 'text-amber-400'
+                    }
+                  >
+                    {selectedTrade.h1Bias ||
+                      (selectedTrade.direction === 'BUY' || selectedTrade.direction === 'LONG'
+                        ? 'BUY'
+                        : 'SELL')}
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-slate-900/60 p-2 rounded border border-slate-800/60">
+                <div className="text-[10px] uppercase tracking-wider text-slate-400">
+                  Risk-to-Reward
+                </div>
+                <div className="mt-0.5 text-sky-400 font-bold">
+                  1:{selectedTrade.riskRewardRatio ? selectedTrade.riskRewardRatio.toFixed(1) : '2.0'}
+                </div>
+              </div>
+            </div>
+
+            {/* M15 Confirmation */}
+            <div className="bg-slate-900/60 p-2 rounded border border-slate-800/60">
+              <div className="text-[10px] uppercase tracking-wider text-slate-400">
+                M15 Confirmation
+              </div>
+              <div className="mt-0.5 text-slate-200 text-[11px]">
+                {selectedTrade.m15Confirmation || 'Confirmed swing level + EMA zone touch'}
+              </div>
+            </div>
+
+            {/* Price Levels Grid: Entry, SL, TP, Exit */}
+            <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800/60">
+              <div className="flex items-center justify-between py-0.5">
+                <span className="text-slate-400">Entry:</span>
+                <span className="text-sky-300 font-bold">{selectedTrade.entryPrice.toFixed(digits)}</span>
+              </div>
+              <div className="flex items-center justify-between py-0.5">
+                <span className="text-slate-400">Stop Loss:</span>
+                <span className="text-rose-400 font-bold">{selectedTrade.stopLoss.toFixed(digits)}</span>
+              </div>
+              <div className="flex items-center justify-between py-0.5">
+                <span className="text-slate-400">Take Profit:</span>
+                <span className="text-emerald-400 font-bold">{selectedTrade.takeProfit.toFixed(digits)}</span>
+              </div>
+              <div className="flex items-center justify-between py-0.5">
+                <span className="text-slate-400">Exit Price:</span>
+                <span
+                  className={`font-bold ${
+                    selectedTrade.exitPrice && selectedTrade.status !== 'UNRESOLVED'
+                      ? 'text-slate-200'
+                      : 'text-amber-400'
+                  }`}
+                >
+                  {selectedTrade.exitPrice && selectedTrade.status !== 'UNRESOLVED'
+                    ? selectedTrade.exitPrice.toFixed(digits)
+                    : 'Active / Open'}
+                </span>
+              </div>
+            </div>
+
+            {/* Result & PnL Strip */}
+            <div className="flex items-center justify-between px-2 py-1.5 bg-[#090d16] rounded border border-slate-800 text-[11px]">
+              <span className="text-slate-400">Result:</span>
+              <div className="flex items-center gap-2">
+                <span
+                  className={`font-bold ${
+                    selectedTrade.pnlR > 0
+                      ? 'text-emerald-400'
+                      : selectedTrade.pnlR < 0
+                      ? 'text-rose-400'
+                      : 'text-slate-300'
+                  }`}
+                >
+                  {selectedTrade.status} ({selectedTrade.pnlR > 0 ? '+' : ''}
+                  {selectedTrade.pnlR.toFixed(2)} R)
+                </span>
+                <span className="text-slate-500">|</span>
+                <span
+                  className={
+                    selectedTrade.pnlCurrency >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                  }
+                >
+                  {selectedTrade.pnlCurrency >= 0 ? '+' : '-'}$
+                  {Math.abs(selectedTrade.pnlCurrency).toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

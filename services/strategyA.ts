@@ -690,6 +690,10 @@ export function runStrategyABacktest(
                 realizedR: 0,
                 holdingBars: 0,
                 simultaneousTouchResolvedToSL: false,
+                signalReason: signal.rationale,
+                h1Bias: h1Trend.bias,
+                m15Confirmation: `M15 EMA50 zone touch at ${zoneCheck.zoneLevel.toFixed(digits)} + ${rejection.type} (${(rejection.wickRatio * 100).toFixed(0)}% wick)`,
+                riskRewardRatio: params.riskRewardRatio,
               };
             }
           }

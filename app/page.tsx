@@ -179,6 +179,7 @@ export default function TradeLabPage() {
           onSelectTimeframe={handleSelectTimeframe}
           trades={backtestResult.trades}
           selectedTrade={selectedTrade}
+          onSelectTrade={(t) => setSelectedTradeId(t.id)}
           indicatorConfig={indicatorConfig}
           onToggleIndicator={handleToggleIndicator}
           onClearSelectedTrade={() => setSelectedTradeId(null)}

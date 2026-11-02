@@ -72,6 +72,10 @@ export interface SimulatedTrade {
   realizedR: number; // e.g. +2.0R or -1.0R
   holdingBars: number;
   simultaneousTouchResolvedToSL: boolean;
+  signalReason?: string;
+  h1Bias?: TrendBias;
+  m15Confirmation?: string;
+  riskRewardRatio?: number;
 }
 
 export interface StrategyAParameters {

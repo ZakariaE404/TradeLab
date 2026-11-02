@@ -38,9 +38,16 @@ export interface Candle {
   volume: number;
 }
 
-export type TradeDirection = 'LONG' | 'SHORT';
-export type TradeStatus = 'WIN' | 'LOSS' | 'BREAKEVEN' | 'OPEN';
-export type ExitReason = 'TP' | 'SL' | 'TRAILING_STOP' | 'SIGNAL_CLOSE' | 'OPEN';
+export type TradeDirection = 'LONG' | 'SHORT' | 'BUY' | 'SELL';
+export type TradeStatus = 'WIN' | 'LOSS' | 'BREAKEVEN' | 'UNRESOLVED' | 'OPEN';
+export type ExitReason =
+  | 'TP'
+  | 'SL'
+  | 'TRAILING_STOP'
+  | 'SIGNAL_CLOSE'
+  | 'UNRESOLVED'
+  | 'MAX_BARS'
+  | 'OPEN';
 
 export interface Trade {
   id: string;
@@ -48,6 +55,8 @@ export interface Trade {
   symbol: ForexSymbol;
   timeframe: Timeframe;
   direction: TradeDirection;
+  signalTime?: number;
+  signalIndex?: number;
   entryTime: number;
   entryPrice: number;
   entryIndex: number;
@@ -64,6 +73,12 @@ export interface Trade {
   pnlR: number; // e.g. +2.0 or -1.0
   holdingBars: number;
   riskAmount: number;
+  // Strategy & Signal details for chart markers & inspection
+  signalReason?: string;
+  h1Bias?: string;
+  m15Confirmation?: string;
+  riskRewardRatio?: number;
+  simultaneousTouchResolvedToSL?: boolean;
 }
 
 export type StrategyType =
@@ -104,9 +119,12 @@ export interface BacktestResult {
   winningTrades: number;
   losingTrades: number;
   breakevenTrades: number;
+  unresolvedTrades?: number;
   winRate: number; // 0 - 100%
   profitFactor: number;
   netR: number;
+  grossSimulatedR?: number;
+  isGrossSimulated?: boolean;
   totalPnlCurrency: number;
   maxDrawdownR: number;
   maxDrawdownPercent: number;
