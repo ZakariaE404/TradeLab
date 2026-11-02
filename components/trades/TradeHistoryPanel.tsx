@@ -392,19 +392,6 @@ export function TradeHistoryPanel({
                         );
                       })}
                     </tbody>
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onSelectTrade(t);
-                                }}
-                                className="px-2 py-0.5 rounded bg-slate-800 hover:bg-sky-500/20 text-slate-300 hover:text-sky-300 text-[10px] transition-colors"
-                              >
-                                Focus
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
                   </table>
                 </div>
               )}
