@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+/* Custom crisp dark scrollbars for trading terminal tables and panels */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0b0e14;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e2638;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2a364f;
+}
+
+/* Custom tabular number styling */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}

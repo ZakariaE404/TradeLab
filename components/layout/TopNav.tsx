@@ -1,0 +1,205 @@
+'use client';
+
+import React from 'react';
+import {
+  ForexSymbol,
+  Timeframe,
+  StrategyParameters,
+} from '@/types/trading';
+import { FOREX_SYMBOLS, TIMEFRAMES, MarketRegime } from '@/services/marketData';
+import {
+  SlidersHorizontal,
+  Play,
+  RotateCw,
+  Upload,
+  Activity,
+  CheckCircle2,
+  FileSpreadsheet,
+  ChevronDown,
+  Layers,
+  Sparkles,
+  Info,
+} from 'lucide-react';
+
+interface TopNavProps {
+  symbol: ForexSymbol;
+  onSelectSymbol: (symbol: ForexSymbol) => void;
+  timeframe: Timeframe;
+  onSelectTimeframe: (tf: Timeframe) => void;
+  candleCount: number;
+  marketRegime: MarketRegime;
+  onChangeRegime: (regime: MarketRegime) => void;
+  onRunBacktest: () => void;
+  onRegenerateData: () => void;
+  onOpenImportModal: () => void;
+  onToggleSettings: () => void;
+  isSettingsOpen: boolean;
+  isCustomData: boolean;
+  strategyParams: StrategyParameters;
+}
+
+export function TopNav({
+  symbol,
+  onSelectSymbol,
+  timeframe,
+  onSelectTimeframe,
+  candleCount,
+  marketRegime,
+  onChangeRegime,
+  onRunBacktest,
+  onRegenerateData,
+  onOpenImportModal,
+  onToggleSettings,
+  isSettingsOpen,
+  isCustomData,
+  strategyParams,
+}: TopNavProps) {
+  const symbolMeta = FOREX_SYMBOLS[symbol];
+  const allSymbols = Object.keys(FOREX_SYMBOLS) as ForexSymbol[];
+  const allTimeframes = Object.keys(TIMEFRAMES) as Timeframe[];
+
+  return (
+    <header className="h-14 bg-[#080b11] border-b border-slate-800/90 px-3 md:px-4 flex items-center justify-between gap-3 select-none shrink-0 z-20">
+      {/* Left: Branding & Pairs */}
+      <div className="flex items-center gap-3 md:gap-4 overflow-x-auto no-scrollbar py-1">
+        {/* Logo */}
+        <div className="flex items-center gap-2 pr-2 border-r border-slate-800">
+          <div className="w-7 h-7 rounded-md bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-lg shadow-emerald-500/20 text-black font-black text-xs tracking-tighter">
+            TL
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5 leading-none">
+              <span className="font-bold text-sm tracking-tight text-white font-mono">
+                Trade<span className="text-emerald-400">Lab</span>
+              </span>
+              <span className="text-[9px] uppercase tracking-wider px-1 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">
+                MVP
+              </span>
+            </div>
+            <div className="text-[9px] text-slate-500 hidden sm:block tracking-wide">
+              Forex Strategy & Backtest Terminal
+            </div>
+          </div>
+        </div>
+
+        {/* Symbol Selector Dropdown */}
+        <div className="relative flex items-center">
+          <select
+            value={symbol}
+            onChange={(e) => onSelectSymbol(e.target.value as ForexSymbol)}
+            className="appearance-none bg-[#111726] hover:bg-[#161f33] text-slate-100 text-xs font-mono font-bold pl-2.5 pr-7 py-1.5 rounded border border-slate-800 hover:border-slate-700 focus:outline-none focus:border-emerald-500 cursor-pointer transition-colors"
+          >
+            {allSymbols.map((s) => (
+              <option key={s} value={s} className="bg-[#111726] text-slate-200">
+                [DEMO] {s} ({FOREX_SYMBOLS[s].name.split('/')[0].trim()})
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 pointer-events-none" />
+        </div>
+
+        {/* Timeframe Buttons */}
+        <div className="flex items-center bg-[#111726] p-0.5 rounded border border-slate-800">
+          {allTimeframes.map((tf) => (
+            <button
+              key={tf}
+              onClick={() => onSelectTimeframe(tf)}
+              className={`px-2 py-1 rounded text-xs font-mono font-medium transition-colors ${
+                timeframe === tf
+                  ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+              }`}
+            >
+              {TIMEFRAMES[tf].label}
+            </button>
+          ))}
+        </div>
+
+        {/* Data Status Indicator */}
+        <div className="hidden lg:flex items-center gap-2 pl-2 border-l border-slate-800 text-xs text-slate-400">
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-[#0d1322] border border-slate-800/80">
+            <span
+              className={`w-2 h-2 rounded-full ${
+                isCustomData ? 'bg-amber-400' : 'bg-emerald-400 animate-pulse'
+              }`}
+            />
+            <span className="font-mono text-[11px] text-slate-300">
+              {isCustomData ? 'CUSTOM CSV' : 'DEMO FEED'}
+            </span>
+            <span className="text-slate-600">|</span>
+            <span className="font-mono text-[11px] text-slate-400">{candleCount} Bars</span>
+            <span className="text-slate-600">|</span>
+            <span className="text-[10px] text-slate-500 font-mono">
+              Sprd: {symbolMeta.typicalSpreadPips}p
+            </span>
+          </div>
+
+          {/* Market Regime Switcher */}
+          {!isCustomData && (
+            <div className="flex items-center">
+              <select
+                value={marketRegime}
+                onChange={(e) => onChangeRegime(e.target.value as MarketRegime)}
+                className="bg-[#111726] hover:bg-[#161f33] text-[11px] text-slate-300 py-1 px-2 rounded border border-slate-800 hover:border-slate-700 focus:outline-none cursor-pointer"
+                title="Select simulated market environment"
+              >
+                <option value="mixed">Regime: Mixed Cycles</option>
+                <option value="trending_bull">Regime: Bullish Trend</option>
+                <option value="trending_bear">Regime: Bearish Trend</option>
+                <option value="ranging_high_vol">Regime: Volatile Range</option>
+              </select>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Right: Actions & Settings */}
+      <div className="flex items-center gap-2 shrink-0">
+        {/* Re-generate Demo Data */}
+        {!isCustomData && (
+          <button
+            onClick={onRegenerateData}
+            title="Generate new deterministic sample"
+            className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-[#111726] border border-transparent hover:border-slate-800 rounded transition-colors hidden sm:flex items-center gap-1.5 text-xs"
+          >
+            <RotateCw className="w-3.5 h-3.5" />
+            <span className="hidden xl:inline">New Sample</span>
+          </button>
+        )}
+
+        {/* Import CSV Modal Button */}
+        <button
+          onClick={onOpenImportModal}
+          title="Import custom OHLCV CSV data"
+          className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-[#111726] border border-transparent hover:border-slate-800 rounded transition-colors flex items-center gap-1.5 text-xs"
+        >
+          <Upload className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Import CSV</span>
+        </button>
+
+        {/* Primary Action: Run Backtest */}
+        <button
+          onClick={onRunBacktest}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/20 active:scale-95 transition-all cursor-pointer"
+        >
+          <Play className="w-3.5 h-3.5 fill-slate-950" />
+          <span>Run Backtest</span>
+        </button>
+
+        {/* Strategy Settings Drawer Toggle */}
+        <button
+          onClick={onToggleSettings}
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded border text-xs font-medium transition-colors ${
+            isSettingsOpen
+              ? 'bg-[#1e273d] border-emerald-500/50 text-emerald-400'
+              : 'bg-[#111726] border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white'
+          }`}
+          title="Adjust strategy parameters & risk controls"
+        >
+          <SlidersHorizontal className="w-3.5 h-3.5" />
+          <span className="hidden md:inline">Strategy</span>
+        </button>
+      </div>
+    </header>
+  );
+}
