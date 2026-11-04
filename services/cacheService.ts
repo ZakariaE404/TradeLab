@@ -218,6 +218,9 @@ export async function setCachedCandles(key: string, data: Candle[]): Promise<voi
   }
 }
 
+export const getCachedRealCandles = getCachedCandles;
+export const setCachedRealCandles = setCachedCandles;
+
 /**
  * Indicator Caching in IndexedDB
  */

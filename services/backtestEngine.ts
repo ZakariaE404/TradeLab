@@ -32,6 +32,8 @@ export const DEFAULT_STRATEGY_PARAMS: StrategyParameters = {
   riskPercent: 1.0,
   includeSpread: true,
   spreadPips: 1.2,
+  commissionPerLot: 7.0,
+  slippagePips: 0.5,
   strategyA: DEFAULT_STRATEGY_A_PARAMS,
 };
 
@@ -117,7 +119,8 @@ export function runBacktest(
   candles: Candle[],
   params: StrategyParameters,
   symbol: ForexSymbol,
-  timeframe: Timeframe
+  timeframe: Timeframe,
+  providedH1Candles?: Candle[] | null
 ): BacktestResult {
   if (!candles || candles.length < 50) {
     return createEmptyResult(params.accountBalance);
@@ -132,7 +135,7 @@ export function runBacktest(
       riskPercent: params.riskPercent,
       riskRewardRatio: params.riskRewardRatio || stratAParams.riskRewardRatio,
     };
-    const stratAResult = runStrategyABacktest(candles, null, mergedParams, symbol);
+    const stratAResult = runStrategyABacktest(candles, providedH1Candles || null, mergedParams, symbol);
 
     const mappedTrades: Trade[] = stratAResult.trades.map((st) => ({
       id: st.id,
@@ -165,9 +168,16 @@ export function runBacktest(
       simultaneousTouchResolvedToSL: st.simultaneousTouchResolvedToSL,
     }));
 
-    const compiled = compileBacktestResults(mappedTrades, params.accountBalance);
+    const costModel = {
+      spreadPips: params.includeSpread ? params.spreadPips : 0,
+      commissionPerLot: params.commissionPerLot ?? 7.0,
+      slippagePips: params.slippagePips ?? 0.5,
+    };
+
+    const compiled = compileBacktestResults(mappedTrades, params.accountBalance, costModel);
     return {
       ...compiled,
+      costModel,
       assumptions: STRATEGY_A_ASSUMPTIONS,
     };
   }
@@ -450,7 +460,13 @@ export function runBacktest(
     trades.push(activeTrade);
   }
 
-  return compileBacktestResults(trades, params.accountBalance);
+  const costModel = {
+    spreadPips: params.includeSpread ? params.spreadPips : 0,
+    commissionPerLot: params.commissionPerLot ?? 7.0,
+    slippagePips: params.slippagePips ?? 0.5,
+  };
+
+  return compileBacktestResults(trades, params.accountBalance, costModel);
 }
 
 /**
@@ -501,7 +517,11 @@ function finalizeTrade(
 /**
  * Aggregates all trade statistics, equity progression, and drawdown curves
  */
-function compileBacktestResults(trades: Trade[], startingBalance: number): BacktestResult {
+function compileBacktestResults(
+  trades: Trade[],
+  startingBalance: number,
+  costModel?: { spreadPips: number; commissionPerLot: number; slippagePips: number }
+): BacktestResult {
   const resolvedTrades = trades.filter((t) => t.status !== 'OPEN' && t.status !== 'UNRESOLVED');
   const unresolvedTrades = trades.filter((t) => t.status === 'OPEN' || t.status === 'UNRESOLVED').length;
   const totalResolved = resolvedTrades.length;
@@ -609,6 +629,60 @@ function compileBacktestResults(trades: Trade[], startingBalance: number): Backt
   const longWinRate = longCount > 0 ? Number(((longWins / longCount) * 100).toFixed(1)) : 0;
   const shortWinRate = shortCount > 0 ? Number(((shortWins / shortCount) * 100).toFixed(1)) : 0;
 
+  // Monthly Performance Breakdown
+  const monthMap = new Map<
+    string,
+    {
+      tradesCount: number;
+      winningTrades: number;
+      losingTrades: number;
+      netR: number;
+      pnlCurrency: number;
+    }
+  >();
+
+  for (const t of resolvedTrades) {
+    const d = new Date(t.entryTime * 1000);
+    const monthKey = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+    if (!monthMap.has(monthKey)) {
+      monthMap.set(monthKey, {
+        tradesCount: 0,
+        winningTrades: 0,
+        losingTrades: 0,
+        netR: 0,
+        pnlCurrency: 0,
+      });
+    }
+    const m = monthMap.get(monthKey)!;
+    m.tradesCount++;
+    if (t.status === 'WIN') m.winningTrades++;
+    if (t.status === 'LOSS') m.losingTrades++;
+    m.netR += t.pnlR;
+    m.pnlCurrency += t.pnlCurrency;
+  }
+
+  const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const monthlyPerformance = Array.from(monthMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([monthKey, data]) => {
+      const [year, monthNum] = monthKey.split('-');
+      const label = `${MONTH_NAMES[parseInt(monthNum, 10) - 1]} ${year}`;
+      const mWinRate =
+        data.tradesCount > 0
+          ? Number(((data.winningTrades / data.tradesCount) * 100).toFixed(1))
+          : 0;
+      return {
+        monthKey,
+        label,
+        tradesCount: data.tradesCount,
+        winningTrades: data.winningTrades,
+        losingTrades: data.losingTrades,
+        winRate: mWinRate,
+        netR: Number(data.netR.toFixed(2)),
+        profitCurrency: Number(data.pnlCurrency.toFixed(2)),
+      };
+    });
+
   return {
     trades,
     totalTrades: trades.length,
@@ -620,7 +694,7 @@ function compileBacktestResults(trades: Trade[], startingBalance: number): Backt
     profitFactor,
     netR: Number(netR.toFixed(2)),
     grossSimulatedR: Number(grossProfitR.toFixed(2)),
-    isGrossSimulated: true,
+    isGrossSimulated: false,
     totalPnlCurrency: Number(totalPnlCurrency.toFixed(2)),
     maxDrawdownR: Number(maxDrawdownR.toFixed(2)),
     maxDrawdownPercent: Number(maxDrawdownPercent.toFixed(2)),
@@ -634,6 +708,12 @@ function compileBacktestResults(trades: Trade[], startingBalance: number): Backt
     shortTradesCount: shortCount,
     shortWinRate,
     equityCurve,
+    monthlyPerformance,
+    costModel: costModel || {
+      spreadPips: 0,
+      commissionPerLot: 7.0,
+      slippagePips: 0.5,
+    },
   };
 }
 
@@ -649,7 +729,12 @@ function createEmptyResult(startingBalance: number): BacktestResult {
     profitFactor: 0,
     netR: 0,
     grossSimulatedR: 0,
-    isGrossSimulated: true,
+    isGrossSimulated: false,
+    costModel: {
+      spreadPips: 0,
+      commissionPerLot: 7.0,
+      slippagePips: 0.5,
+    },
     totalPnlCurrency: 0,
     maxDrawdownR: 0,
     maxDrawdownPercent: 0,
@@ -672,5 +757,6 @@ function createEmptyResult(startingBalance: number): BacktestResult {
         drawdownR: 0,
       },
     ],
+    monthlyPerformance: [],
   };
 }

@@ -9,6 +9,27 @@ export type ForexSymbol =
   | 'NZD/USD'
   | 'XAU/USD';
 
+export type DataSourceMode = 'DEMO' | 'REAL';
+
+export interface RealDataState {
+  provider: 'Twelve Data';
+  instrument: string;
+  symbol?: string;
+  timeframe: Timeframe;
+  candleCount: number;
+  lastUpdated: number | null; // epoch ms
+  isCurrentCandleForming: boolean;
+  formingCandle?: Candle | null;
+  closedCandlesCount?: number;
+  outputsize: number;
+  startDate?: string;
+  endDate?: string;
+  isLoading: boolean;
+  error: string | null;
+  errorCode?: string;
+  missingGapsCount: number;
+}
+
 export interface SymbolMeta {
   symbol: ForexSymbol;
   name: string;
@@ -109,8 +130,21 @@ export interface StrategyParameters {
   riskPercent: number; // e.g. 1.0%
   includeSpread: boolean;
   spreadPips: number;
+  commissionPerLot?: number; // e.g. $7 per standard round-turn lot
+  slippagePips?: number; // e.g. 0.5 pips execution slippage
   // Strategy A specific configuration (optional)
   strategyA?: import('./strategyA').StrategyAParameters;
+}
+
+export interface MonthlyPerformance {
+  monthKey: string; // e.g. '2024-10'
+  label: string; // e.g. 'Oct 2024'
+  tradesCount: number;
+  winningTrades: number;
+  losingTrades: number;
+  winRate: number;
+  netR: number;
+  profitCurrency: number;
 }
 
 export interface BacktestResult {
@@ -138,7 +172,13 @@ export interface BacktestResult {
   shortTradesCount: number;
   shortWinRate: number;
   equityCurve: EquityPoint[];
+  monthlyPerformance?: MonthlyPerformance[];
   assumptions?: string[];
+  costModel?: {
+    spreadPips: number;
+    commissionPerLot: number;
+    slippagePips: number;
+  };
 }
 
 export interface EquityPoint {

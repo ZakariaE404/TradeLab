@@ -523,6 +523,41 @@ export function StrategySettingsDrawer({
               className="w-4 h-4 accent-emerald-500 cursor-pointer"
             />
           </div>
+
+          {/* Slippage & Commission */}
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <span className="text-[10px] text-slate-400">Execution Slippage</span>
+              <div className="flex items-center gap-1 mt-1">
+                <input
+                  type="number"
+                  min="0"
+                  max="5"
+                  step="0.1"
+                  value={params.slippagePips !== undefined ? params.slippagePips : 0.5}
+                  onChange={(e) => handleUpdate('slippagePips', parseFloat(e.target.value) || 0)}
+                  className="w-full bg-[#111726] border border-slate-800 rounded p-1.5 text-slate-200 font-mono text-xs"
+                />
+                <span className="text-[10px] text-slate-400">pips</span>
+              </div>
+            </div>
+
+            <div>
+              <span className="text-[10px] text-slate-400">ECN Commission</span>
+              <div className="flex items-center gap-1 mt-1">
+                <input
+                  type="number"
+                  min="0"
+                  max="20"
+                  step="0.5"
+                  value={params.commissionPerLot !== undefined ? params.commissionPerLot : 7.0}
+                  onChange={(e) => handleUpdate('commissionPerLot', parseFloat(e.target.value) || 0)}
+                  className="w-full bg-[#111726] border border-slate-800 rounded p-1.5 text-slate-200 font-mono text-xs"
+                />
+                <span className="text-[10px] text-slate-400">$/lot</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

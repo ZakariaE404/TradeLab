@@ -110,48 +110,57 @@ To add a new strategy (e.g. `Strategy B: SuperTrend + Volume Delta`):
 
 ---
 
-## 5. How to Replace Demo Data with a Real Market-Data Provider
+## 5. Real Market Data Mode (Twelve Data API)
 
-The architecture is built with an abstraction layer that allows dropping in live or historical broker feeds (e.g. MetaTrader 5, OANDA, Interactive Brokers, TwelveData, Polygon.io):
+TradeLab supports dual operational modes: **DEMO MODE** (synthetic procedural market cycles or imported CSV) and **REAL DATA MODE** (Twelve Data API).
 
-1. **Standard Candle Schema**:
-   All charting, indicator calculations, and backtests consume the uniform schema defined in `types/trading.ts`:
-   ```typescript
-   export interface Candle {
-     time: number;   // Unix epoch seconds
-     open: number;
-     high: number;
-     low: number;
-     close: number;
-     volume: number;
-   }
+### Supported Instruments & Timeframes
+- **Gold (`XAU/USD`)** (Twelve Data symbol format: `XAU/USD`)
+- **Forex Majors**: `EUR/USD`, `GBP/USD`, `USD/JPY`, `AUD/USD`, `USD/CAD`, `USD/CHF`
+- **Timeframes**: `15m` (`15min`) and `1h` (`1h`)
+
+### API Security & Configuration
+Twelve Data API keys are strictly stored server-side and never exposed to client-side code:
+1. Obtain an API key from [Twelve Data](https://twelvedata.com).
+2. Copy `.env.example` to `.env.local`:
+   ```bash
+   cp .env.example .env.local
    ```
-
-2. **Replace the Candle Source in `app/page.tsx`**:
-   Currently, demo candles are loaded via `generateForexCandles` or custom CSV upload.
-   To connect an external API provider:
-   ```typescript
-   // Example service adapter: services/liveMarketData.ts
-   export async function fetchLiveForexCandles(symbol: string, timeframe: string): Promise<Candle[]> {
-     const response = await fetch(`/api/market-data?symbol=${symbol}&tf=${timeframe}`);
-     const raw = await response.json();
-     return raw.map((b: any) => ({
-       time: Math.floor(new Date(b.timestamp).getTime() / 1000),
-       open: Number(b.open),
-       high: Number(b.high),
-       low: Number(b.low),
-       close: Number(b.close),
-       volume: Number(b.volume || 1),
-     }));
-   }
+3. Set your API key:
+   ```env
+   TWELVE_DATA_API_KEY="your_api_key_here"
    ```
+4. Client requests flow through the secure server API proxy at `app/api/market-data/route.ts`.
+5. **No Silent Synthetic Fallbacks**: If the Twelve Data API is unreachable, quota is exceeded, or key is missing, TradeLab displays an explicit error banner and maintains strict distinction between Real and Demo data.
 
-3. **Offline Caching**:
-   `services/cacheService.ts` already stores candle arrays in IndexedDB (`TradeLab_Cache_v1/candles`). Once fetched from a real market API, bars are automatically cached locally so users do not burn API quotas on repeated page loads.
+### Twelve Data Quotas & Caching
+- **Free Tier Rate Limits**: 8 API credits per minute, 800 calls per day.
+- **IndexedDB Client Caching**: Downloaded real historical candles are cached in IndexedDB (`TradeLab_Cache_v1/real_candles`). Subsequent visits load instantly without consuming API credits.
+- **Forming Candle Detection**: The terminal automatically distinguishes between the active, in-progress forming candle and completed closed bars to guarantee zero intra-bar repaint bias.
 
 ---
 
-## 6. Known Limitations
+## 6. Execution Costs & Monthly Performance Analytics
+
+In Real Market Data mode, backtests simulate institutional execution parameters:
+- **Bid/Ask Spread**: Configurable in pips (e.g. 2.0 pips for Gold).
+- **ECN Commission**: Configurable in $/lot (default institutional $7.00/lot round-turn).
+- **Execution Slippage**: Configurable in pips (default 0.5 pips).
+- **Simultaneous SL/TP Resolution**: Conservative tie-breaker resolves simultaneous touches to Stop Loss first.
+- **Monthly Analytics**: Performance breakdown grouped by calendar month (`YYYY-MM`) reporting win rate, net R, and pip gains.
+
+---
+
+## 7. Python & MetaTrader 5 (MT5) Roadmap
+
+While Twelve Data powers real historical data and market analysis inside the web terminal, full automated order execution and tick-level modeling will interface with Python / MT5:
+1. **Low-Latency Order Execution**: MetaTrader 5 terminal Python API (`MetaTrader5` package) for direct broker order placement, bracket orders (SL/TP), and position lifecycle management.
+2. **Tick Data & DOM Order Book**: Level 2 market depth and tick-by-tick order flow analysis.
+3. **Execution Bot Gateway**: A lightweight local FastAPI or WebSocket bridge connecting TradeLab UI triggers to local MT5 accounts.
+
+---
+
+## 8. Known Limitations
 
 1. **Client-Side Compute Boundary**:
    - Backtesting runs synchronously/asynchronously inside the browser's JavaScript engine. Very large datasets (> 100,000 candles) should be downsampled or run in a Web Worker to keep the main UI thread at 60 FPS.

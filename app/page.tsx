@@ -4,8 +4,10 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import {
   BacktestResult,
   Candle,
+  DataSourceMode,
   ForexSymbol,
   IndicatorConfig,
+  RealDataState,
   StrategyParameters,
   Timeframe,
   Trade,
@@ -15,6 +17,7 @@ import {
   FOREX_SYMBOLS,
   MarketRegime,
 } from '@/services/marketData';
+import { fetchTwelveDataCandles } from '@/services/realMarketData';
 import {
   DEFAULT_STRATEGY_PARAMS,
   runBacktest,
@@ -40,6 +43,7 @@ import { StatsBar } from '@/components/stats/StatsBar';
 import { TradeHistoryPanel } from '@/components/trades/TradeHistoryPanel';
 import { StrategySettingsDrawer } from '@/components/settings/StrategySettingsDrawer';
 import { ImportDataModal } from '@/components/common/ImportDataModal';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 const TradingChart = dynamic(
   () => import('@/components/chart/TradingChart').then((mod) => mod.TradingChart),
@@ -88,7 +92,27 @@ export default function TradeLabPage() {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedTradeId, setSelectedTradeId] = useState<string | null>(null);
 
-  // 5. Cache & Performance State
+  // 5. Data Source Mode & Real Market Data State
+  const [dataSourceMode, setDataSourceMode] = useState<DataSourceMode>('DEMO');
+  const [outputsize, setOutputsize] = useState<number>(500);
+  const [realH1Candles, setRealH1Candles] = useState<Candle[] | null>(null);
+  const [realDataState, setRealDataState] = useState<RealDataState>({
+    provider: 'Twelve Data',
+    instrument: 'XAU/USD',
+    symbol: 'XAU/USD',
+    timeframe: '15m',
+    candleCount: 0,
+    outputsize: 500,
+    isLoading: false,
+    error: null,
+    lastUpdated: null,
+    isCurrentCandleForming: false,
+    formingCandle: null,
+    closedCandlesCount: 0,
+    missingGapsCount: 0,
+  });
+
+  // 6. Cache & Performance State
   const [activeCandles, setActiveCandles] = useState<Candle[]>(() =>
     generateForexCandles('XAUUSDm', '15m', 42, undefined, 'mixed')
   );
@@ -129,7 +153,7 @@ export default function TradeLabPage() {
     });
   };
 
-  // 6. Candle Generation & IndexedDB Caching
+  // 7. Candle Generation, Real Data Fetching & IndexedDB Caching
   useEffect(() => {
     let isCancelled = false;
 
@@ -138,6 +162,71 @@ export default function TradeLabPage() {
         setActiveCandles(customCandles.candles);
         return;
       }
+
+      if (dataSourceMode === 'REAL') {
+        setRealDataState((prev) => ({
+          ...prev,
+          isLoading: true,
+          error: null,
+          symbol: symbol === 'XAUUSDm' ? 'XAU/USD' : symbol,
+          timeframe,
+        }));
+
+        try {
+          const result = await fetchTwelveDataCandles(symbol, timeframe, { outputsize });
+          if (isCancelled) return;
+
+          if (result.success && result.candles.length > 0) {
+            setActiveCandles(result.candles);
+            setRealDataState({
+              provider: 'Twelve Data',
+              instrument: symbol === 'XAUUSDm' ? 'XAU/USD' : symbol,
+              symbol: symbol === 'XAUUSDm' ? 'XAU/USD' : symbol,
+              timeframe,
+              candleCount: result.candles.length,
+              outputsize,
+              isLoading: false,
+              error: null,
+              lastUpdated: result.meta.lastUpdated,
+              isCurrentCandleForming: result.meta.isCurrentCandleForming,
+              formingCandle: result.formingCandle,
+              closedCandlesCount: result.closedCandles.length,
+              missingGapsCount: result.meta.missingGaps.length,
+            });
+
+            // Fetch H1 candles for multi-timeframe Strategy A if current timeframe is 15m
+            if (timeframe === '15m') {
+              const h1Result = await fetchTwelveDataCandles(symbol, '1h', {
+                outputsize: Math.max(100, Math.ceil(outputsize / 4)),
+              });
+              if (!isCancelled && h1Result.success && h1Result.candles.length > 0) {
+                setRealH1Candles(h1Result.candles);
+              }
+            } else {
+              setRealH1Candles(null);
+            }
+          } else {
+            setRealDataState((prev) => ({
+              ...prev,
+              isLoading: false,
+              error: result.error || 'Failed to fetch real market data',
+              errorCode: result.errorCode,
+            }));
+          }
+        } catch (err: any) {
+          if (isCancelled) return;
+          setRealDataState((prev) => ({
+            ...prev,
+            isLoading: false,
+            error: err.message || 'Network error fetching Twelve Data candles',
+          }));
+        }
+        return;
+      }
+
+      // DEMO mode
+      setRealH1Candles(null);
+      setRealDataState((prev) => ({ ...prev, error: null, isLoading: false }));
 
       const cacheKey = getCandlesCacheKey(symbol, timeframe, marketSeed, marketRegime);
       const cached = await getCachedCandles(cacheKey);
@@ -159,9 +248,64 @@ export default function TradeLabPage() {
     return () => {
       isCancelled = true;
     };
-  }, [symbol, timeframe, marketSeed, marketRegime, customCandles]);
+  }, [dataSourceMode, symbol, timeframe, outputsize, marketSeed, marketRegime, customCandles]);
 
-  // 7. Backtest Execution with IndexedDB Caching Layer
+  // 8. Manual Refresh Handler for Real Market Data
+  const handleRefreshRealData = useCallback(async () => {
+    if (dataSourceMode !== 'REAL') return;
+
+    setRealDataState((prev) => ({ ...prev, isLoading: true, error: null }));
+    try {
+      const result = await fetchTwelveDataCandles(symbol, timeframe, {
+        outputsize,
+        forceRefresh: true,
+      });
+
+      if (result.success && result.candles.length > 0) {
+        setActiveCandles(result.candles);
+        setRealDataState({
+          provider: 'Twelve Data',
+          instrument: symbol === 'XAUUSDm' ? 'XAU/USD' : symbol,
+          symbol: symbol === 'XAUUSDm' ? 'XAU/USD' : symbol,
+          timeframe,
+          candleCount: result.candles.length,
+          outputsize,
+          isLoading: false,
+          error: null,
+          lastUpdated: result.meta.lastUpdated,
+          isCurrentCandleForming: result.meta.isCurrentCandleForming,
+          formingCandle: result.formingCandle,
+          closedCandlesCount: result.closedCandles.length,
+          missingGapsCount: result.meta.missingGaps.length,
+        });
+
+        if (timeframe === '15m') {
+          const h1Result = await fetchTwelveDataCandles(symbol, '1h', {
+            outputsize: Math.max(100, Math.ceil(outputsize / 4)),
+            forceRefresh: true,
+          });
+          if (h1Result.success && h1Result.candles.length > 0) {
+            setRealH1Candles(h1Result.candles);
+          }
+        }
+      } else {
+        setRealDataState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: result.error || 'Failed to refresh real market data',
+          errorCode: result.errorCode,
+        }));
+      }
+    } catch (err: any) {
+      setRealDataState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: err.message || 'Network error refreshing Twelve Data candles',
+      }));
+    }
+  }, [dataSourceMode, symbol, timeframe, outputsize]);
+
+  // 9. Backtest Execution with IndexedDB Caching Layer
   const evaluationIdRef = useRef(0);
 
   useEffect(() => {
@@ -188,7 +332,7 @@ export default function TradeLabPage() {
         requestAnimationFrame(async () => {
           if (evaluationIdRef.current !== currentEvalId) return;
 
-          const result = runBacktest(activeCandles, strategyParams, symbol, timeframe);
+          const result = runBacktest(activeCandles, strategyParams, symbol, timeframe, realH1Candles);
           const savedTimestamp = await setCachedBacktest(cacheKey, result);
 
           if (evaluationIdRef.current !== currentEvalId) return;
@@ -199,7 +343,7 @@ export default function TradeLabPage() {
         });
       }
     })();
-  }, [activeCandles, strategyParams, symbol, timeframe]);
+  }, [activeCandles, strategyParams, symbol, timeframe, realH1Candles]);
 
   // Derive selected trade from current result
   const selectedTrade = useMemo(() => {
@@ -233,6 +377,10 @@ export default function TradeLabPage() {
   };
 
   const handleRegenerateData = () => {
+    if (dataSourceMode === 'REAL') {
+      handleRefreshRealData();
+      return;
+    }
     setMarketSeed(Math.floor(Math.random() * 100000) + 1);
     setCustomCandles(null);
     setSelectedTradeId(null);
@@ -251,6 +399,11 @@ export default function TradeLabPage() {
   const handleClearCache = async () => {
     setCalculationStatus('computing');
     await clearAllCache();
+
+    if (dataSourceMode === 'REAL') {
+      await handleRefreshRealData();
+      return;
+    }
 
     // Re-generate fresh candles and compute
     const freshSeed = Math.floor(Math.random() * 100000) + 1;
@@ -294,7 +447,50 @@ export default function TradeLabPage() {
         calculationStatus={calculationStatus}
         lastCalculatedAt={lastCalculatedAt}
         onClearCache={handleClearCache}
+        dataSourceMode={dataSourceMode}
+        onSelectDataSourceMode={(mode) => {
+          setDataSourceMode(mode);
+          setCustomCandles(null);
+          setSelectedTradeId(null);
+        }}
+        realDataState={realDataState}
+        onRefreshRealData={handleRefreshRealData}
+        outputsize={outputsize}
+        onChangeOutputsize={(size) => setOutputsize(size)}
       />
+
+      {/* Real Data Error Alert Banner */}
+      {dataSourceMode === 'REAL' && realDataState.error && (
+        <div className="bg-rose-950/90 border-b border-rose-500/40 px-4 py-2 flex items-center justify-between text-xs text-rose-200 shrink-0 z-10 animate-fadeIn">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+            <div>
+              <span className="font-semibold text-white">Twelve Data API:</span>{' '}
+              <span>{realDataState.error}</span>
+              {realDataState.errorCode === 'MISSING_API_KEY' && (
+                <span className="ml-1 text-rose-300 font-mono">
+                  (Configure TWELVE_DATA_API_KEY in your environment or .env.local)
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={handleRefreshRealData}
+              className="px-2 py-0.5 bg-rose-800 hover:bg-rose-700 text-white rounded text-[11px] font-medium transition cursor-pointer flex items-center gap-1"
+            >
+              <RefreshCw className="w-3 h-3" />
+              <span>Retry</span>
+            </button>
+            <button
+              onClick={() => setDataSourceMode('DEMO')}
+              className="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[11px] font-medium transition cursor-pointer"
+            >
+              Switch to Demo
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 2. Compact Statistics Strip */}
       <StatsBar

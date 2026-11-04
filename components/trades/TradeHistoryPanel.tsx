@@ -492,6 +492,65 @@ export function TradeHistoryPanel({
                 </div>
               </div>
 
+              {/* Monthly Performance Breakdown */}
+              {result.monthlyPerformance && result.monthlyPerformance.length > 0 && (
+                <div className="p-3.5 rounded bg-[#0d121f] border border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between text-slate-200 font-semibold text-[11px]">
+                    <div className="flex items-center gap-1.5">
+                      <BarChart3 className="w-3.5 h-3.5 text-sky-400" />
+                      <span>Monthly Performance Breakdown</span>
+                    </div>
+                    <span className="text-[10px] text-slate-500 font-mono">
+                      {result.monthlyPerformance.length} Active Month(s)
+                    </span>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left font-mono text-[11px]">
+                      <thead>
+                        <tr className="border-b border-slate-800 text-slate-400 text-[10px] uppercase">
+                          <th className="py-1 px-2">Month</th>
+                          <th className="py-1 px-2">Trades</th>
+                          <th className="py-1 px-2">Win Rate</th>
+                          <th className="py-1 px-2">Net R</th>
+                          <th className="py-1 px-2 text-right">Net Profit ($)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/40">
+                        {result.monthlyPerformance.map((m) => (
+                          <tr key={m.monthKey} className="hover:bg-slate-800/20">
+                            <td className="py-1 px-2 font-medium text-slate-300">{m.label}</td>
+                            <td className="py-1 px-2 text-slate-400">
+                              {m.tradesCount} ({m.winningTrades}W / {m.losingTrades}L)
+                            </td>
+                            <td className="py-1 px-2 font-bold text-slate-200">{m.winRate}%</td>
+                            <td
+                              className={`py-1 px-2 font-bold ${
+                                m.netR > 0
+                                  ? 'text-emerald-400'
+                                  : m.netR < 0
+                                  ? 'text-rose-400'
+                                  : 'text-slate-400'
+                              }`}
+                            >
+                              {m.netR > 0 ? '+' : ''}
+                              {m.netR.toFixed(2)} R
+                            </td>
+                            <td
+                              className={`py-1 px-2 text-right font-bold ${
+                                m.profitCurrency >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                              }`}
+                            >
+                              {m.profitCurrency >= 0 ? '+' : ''}${m.profitCurrency.toFixed(2)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
               {/* Strategy A Documented Assumptions & Audit Log */}
               {result.assumptions && result.assumptions.length > 0 && (
                 <div className="p-3.5 rounded bg-[#0d121f] border border-slate-800 space-y-2">
