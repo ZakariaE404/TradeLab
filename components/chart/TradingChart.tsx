@@ -317,6 +317,10 @@ export function TradingChart({
       ema50SeriesRef.current = null;
       ema200SeriesRef.current = null;
       markersPluginRef.current = null;
+      entryLineRef.current = null;
+      slLineRef.current = null;
+      tpLineRef.current = null;
+      exitLineRef.current = null;
     };
   }, []); // Run strictly once on mount to avoid rebuilding chart
 
@@ -335,7 +339,13 @@ export function TradingChart({
 
   // 3. Update candle and volume data without recreating chart
   useEffect(() => {
-    if (!candleSeriesRef.current || !volumeSeriesRef.current || candles.length === 0) return;
+    if (!candleSeriesRef.current || !volumeSeriesRef.current) return;
+
+    if (candles.length === 0) {
+      candleSeriesRef.current.setData([]);
+      volumeSeriesRef.current.setData([]);
+      return;
+    }
 
     const chartCandles = candles.map((c) => ({
       time: c.time as Time,
@@ -440,6 +450,7 @@ export function TradingChart({
 
       // Signal / Entry Marker at historical signal timestamp
       seriesMarkers.push({
+        id: `entry-${trade.id}`,
         time: signalTimestamp,
         position: isBuy ? 'belowBar' : 'aboveBar',
         color: markerColor,
@@ -448,8 +459,13 @@ export function TradingChart({
         size: isSelected ? 2 : 1,
       });
 
-      // Exit Marker if trade has resolved/closed
-      if (trade.exitTime && trade.exitTime > 0 && trade.exitTime !== signalTimestamp) {
+      // Exit Marker only if trade has truly resolved/closed
+      if (
+        !isUnresolved &&
+        trade.exitTime &&
+        trade.exitTime > 0 &&
+        trade.exitTime !== signalTimestamp
+      ) {
         let exitColor = '#94a3b8';
         let exitShape: 'circle' | 'square' = 'circle';
         let exitLabel = `${trade.exitReason}`;
@@ -462,13 +478,10 @@ export function TradingChart({
           exitColor = '#f43f5e';
           exitShape = 'square';
           exitLabel = `SL #${trade.index} (${trade.pnlR.toFixed(2)}R)`;
-        } else if (isUnresolved) {
-          exitColor = '#f59e0b';
-          exitShape = 'circle';
-          exitLabel = `OPEN #${trade.index}`;
         }
 
         seriesMarkers.push({
+          id: `exit-${trade.id}`,
           time: trade.exitTime as Time,
           position: isBuy ? 'aboveBar' : 'belowBar',
           color: exitColor,
@@ -549,22 +562,26 @@ export function TradingChart({
       });
     }
 
-    // Zoom chart to trade window
-    if (chartRef.current && selectedTrade.entryTime) {
+    // Zoom chart to trade window safely clamped to candle range
+    if (chartRef.current && selectedTrade.entryTime && candles.length > 0) {
       const timeScale = chartRef.current.timeScale();
       const exitTime = selectedTrade.exitTime || selectedTrade.entryTime + 3600 * 4;
       const tfSeconds = TIMEFRAMES[timeframe]?.seconds || 900;
 
-      const fromTime = (selectedTrade.entryTime - tfSeconds * 12) as Time;
-      const toTime = (exitTime + tfSeconds * 16) as Time;
+      const minTime = candles[0].time;
+      const maxTime = candles[candles.length - 1].time;
+      const fromTime = Math.max(minTime, selectedTrade.entryTime - tfSeconds * 12) as Time;
+      const toTime = Math.min(maxTime, exitTime + tfSeconds * 16) as Time;
 
-      try {
-        timeScale.setVisibleRange({ from: fromTime, to: toTime });
-      } catch {
-        // Range out of bounds fallback
+      if (Number(toTime) > Number(fromTime)) {
+        try {
+          timeScale.setVisibleRange({ from: fromTime, to: toTime });
+        } catch {
+          // Range out of bounds fallback
+        }
       }
     }
-  }, [selectedTrade, digits, timeframe]);
+  }, [selectedTrade, digits, timeframe, candles]);
 
   // Derived indices for selected trade navigation
   const currentTradeIdx = useMemo(() => {
@@ -579,17 +596,21 @@ export function TradingChart({
       : null;
 
   const handleZoomToSelectedTrade = useCallback(() => {
-    if (!chartRef.current || !selectedTrade) return;
+    if (!chartRef.current || !selectedTrade || candles.length === 0) return;
     const timeScale = chartRef.current.timeScale();
     const tfSeconds = TIMEFRAMES[timeframe]?.seconds || 900;
     const exitTime = selectedTrade.exitTime || selectedTrade.entryTime + 3600 * 4;
-    try {
-      timeScale.setVisibleRange({
-        from: (selectedTrade.entryTime - tfSeconds * 12) as Time,
-        to: (exitTime + tfSeconds * 16) as Time,
-      });
-    } catch {}
-  }, [selectedTrade, timeframe]);
+    const minTime = candles[0].time;
+    const maxTime = candles[candles.length - 1].time;
+    const fromTime = Math.max(minTime, selectedTrade.entryTime - tfSeconds * 12) as Time;
+    const toTime = Math.min(maxTime, exitTime + tfSeconds * 16) as Time;
+
+    if (Number(toTime) > Number(fromTime)) {
+      try {
+        timeScale.setVisibleRange({ from: fromTime, to: toTime });
+      } catch {}
+    }
+  }, [selectedTrade, timeframe, candles]);
 
   // Chart Actions
   const handleResetView = useCallback(() => {

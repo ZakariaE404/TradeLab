@@ -218,7 +218,9 @@ export function runBacktest(
       activeTrade.holdingBars++;
       let isClosed = false;
 
-      if (activeTrade.direction === 'LONG') {
+      const isLong = activeTrade.direction === 'LONG' || activeTrade.direction === 'BUY';
+
+      if (isLong) {
         // Trailing stop evaluation
         if (params.useTrailingStop) {
           const currentProfit = candle.high - activeTrade.entryPrice;
@@ -443,6 +445,7 @@ export function runBacktest(
     activeTrade.exitPrice = lastCandle.close;
     activeTrade.exitIndex = candles.length - 1;
     activeTrade.exitReason = 'OPEN';
+    activeTrade.status = 'UNRESOLVED';
     finalizeTrade(activeTrade, pipSize, digits, currentBalance, params.riskPercent);
     trades.push(activeTrade);
   }
@@ -460,10 +463,10 @@ function finalizeTrade(
   accountBalance: number,
   riskPercent: number
 ) {
-  const pipsDiff =
-    trade.direction === 'LONG'
-      ? (trade.exitPrice - trade.entryPrice) / pipSize
-      : (trade.entryPrice - trade.exitPrice) / pipSize;
+  const isLong = trade.direction === 'LONG' || trade.direction === 'BUY';
+  const pipsDiff = isLong
+    ? (trade.exitPrice - trade.entryPrice) / pipSize
+    : (trade.entryPrice - trade.exitPrice) / pipSize;
 
   trade.pnlPips = Number(pipsDiff.toFixed(1));
 
@@ -475,6 +478,16 @@ function finalizeTrade(
   // Currency PnL based on simulated account risk
   const riskDollar = accountBalance * (riskPercent / 100);
   trade.pnlCurrency = Number((pnlR * riskDollar).toFixed(2));
+
+  if (
+    trade.status === 'UNRESOLVED' ||
+    trade.status === 'OPEN' ||
+    trade.exitReason === 'OPEN' ||
+    trade.exitReason === 'UNRESOLVED'
+  ) {
+    trade.status = 'UNRESOLVED';
+    return;
+  }
 
   if (trade.pnlR >= 0.1) {
     trade.status = 'WIN';

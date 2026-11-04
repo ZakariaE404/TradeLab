@@ -17,7 +17,7 @@ export interface BollingerBandsPoint {
  */
 export function calculateSMA(candles: Candle[], period: number): IndicatorPoint[] {
   const result: IndicatorPoint[] = [];
-  if (candles.length < period) return result;
+  if (!candles || candles.length < period || period <= 0) return result;
 
   let sum = 0;
   for (let i = 0; i < candles.length; i++) {
@@ -40,7 +40,7 @@ export function calculateSMA(candles: Candle[], period: number): IndicatorPoint[
  */
 export function calculateEMA(candles: Candle[], period: number): IndicatorPoint[] {
   const result: IndicatorPoint[] = [];
-  if (candles.length < period) return result;
+  if (!candles || candles.length < period || period <= 0) return result;
 
   const multiplier = 2 / (period + 1);
 
@@ -73,6 +73,7 @@ export function calculateEMA(candles: Candle[], period: number): IndicatorPoint[
  * Calculate Average True Range (ATR)
  */
 export function calculateATR(candles: Candle[], period: number = 14): number[] {
+  if (!candles || candles.length === 0 || period <= 0) return [];
   const tr: number[] = [];
   if (candles.length < 2) return candles.map(() => 0);
 
@@ -113,7 +114,7 @@ export function calculateATR(candles: Candle[], period: number = 14): number[] {
  */
 export function calculateRSI(candles: Candle[], period: number = 14): IndicatorPoint[] {
   const result: IndicatorPoint[] = [];
-  if (candles.length <= period) return result;
+  if (!candles || candles.length <= period || period <= 0) return result;
 
   let gains = 0;
   let losses = 0;
@@ -167,7 +168,7 @@ export function calculateBollingerBands(
   stdDevMultiplier: number = 2.0
 ): BollingerBandsPoint[] {
   const result: BollingerBandsPoint[] = [];
-  if (candles.length < period) return result;
+  if (!candles || candles.length < period || period <= 0) return result;
 
   for (let i = period - 1; i < candles.length; i++) {
     let sum = 0;

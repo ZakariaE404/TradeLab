@@ -300,14 +300,15 @@ export function evaluateH1Trend(
 /**
  * Finds the latest CLOSED H1 candle for a given M15 candle timestamp.
  * An H1 candle opening at T closes at T + 3600.
- * An M15 candle opening at t closes at t + 900.
- * To avoid future lookahead: the H1 candle must have closed at or before t + 900.
+ * An M15 candle opening at t closes at t + candleIntervalSeconds.
+ * To avoid future lookahead: the H1 candle must have closed at or before t + candleIntervalSeconds.
  */
 export function getLatestClosedH1Index(
   m15CandleTime: number,
-  h1Candles: Candle[]
+  h1Candles: Candle[],
+  candleIntervalSeconds: number = 900
 ): number {
-  const m15CloseTime = m15CandleTime + 900;
+  const m15CloseTime = m15CandleTime + candleIntervalSeconds;
   let low = 0;
   let high = h1Candles.length - 1;
   let bestIdx = -1;
@@ -455,6 +456,10 @@ export function runStrategyABacktest(
   const slBufferPrice = params.stopLossBufferPips * pipSize;
   const minSlPrice = params.minStopLossPips * pipSize;
 
+  const detectedInterval =
+    m15Candles.length >= 2 ? Math.abs(m15Candles[1].time - m15Candles[0].time) : 900;
+  const candleInterval = detectedInterval > 0 ? detectedInterval : 900;
+
   for (let i = minWarmup; i < m15Candles.length; i++) {
     const candle = m15Candles[i];
 
@@ -550,7 +555,7 @@ export function runStrategyABacktest(
     // 2. Evaluate M15 Entry Signal at candle CLOSE (only if no open trade or multiple allowed)
     if (!activeTrade || params.allowMultiplePositions) {
       // Find latest CLOSED H1 candle for M15 bar i (ZERO lookahead)
-      const closedH1Index = getLatestClosedH1Index(candle.time, h1Candles);
+      const closedH1Index = getLatestClosedH1Index(candle.time, h1Candles, candleInterval);
       if (closedH1Index < 0) continue;
 
       const h1Trend = evaluateH1Trend(

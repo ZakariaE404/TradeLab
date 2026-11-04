@@ -141,10 +141,18 @@ export function getBacktestCacheKey(
     stratType,
     rr: params.riskRewardRatio,
     riskPct: params.riskPercent,
+    balance: params.accountBalance,
     spread: params.includeSpread ? params.spreadPips : 0,
     ...(stratType === 'strategy_a' ? params.strategyA : {}),
     ...(stratType === 'ema_pullback'
-      ? { fast: params.fastEma, slow: params.slowEma, trend: params.trendEma, mult: params.atrStopMultiplier }
+      ? {
+          fast: params.fastEma,
+          slow: params.slowEma,
+          trend: params.trendEma,
+          mult: params.atrStopMultiplier,
+          trail: params.useTrailingStop,
+          trailR: params.trailingStopTriggerR,
+        }
       : {}),
     ...(stratType === 'breakout_retest' ? { fast: params.fastEma, mult: params.atrStopMultiplier } : {}),
     ...(stratType === 'rsi_mean_reversion'
