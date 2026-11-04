@@ -28,7 +28,20 @@ function toTwelveDataSymbol(symbol: string): string {
 
 export async function GET(request: NextRequest) {
   try {
-    const apiKey = process.env.TWELVE_DATA_API_KEY;
+    let apiKey = process.env.TWELVE_DATA_API_KEY;
+
+    // Support client-supplied key via header or query param when server env is not configured
+    const headerKey = request.headers.get('x-twelve-data-key');
+    const { searchParams } = new URL(request.url);
+    const queryKey = searchParams.get('apiKey');
+
+    if (!apiKey || apiKey.trim() === '' || apiKey === 'your_twelve_data_api_key_here') {
+      if (headerKey && headerKey.trim()) {
+        apiKey = headerKey.trim();
+      } else if (queryKey && queryKey.trim()) {
+        apiKey = queryKey.trim();
+      }
+    }
 
     // Check if API key is configured
     if (!apiKey || apiKey.trim() === '' || apiKey === 'your_twelve_data_api_key_here') {
@@ -37,14 +50,13 @@ export async function GET(request: NextRequest) {
           success: false,
           code: 'MISSING_API_KEY',
           error:
-            'Twelve Data API key is not configured. Please set TWELVE_DATA_API_KEY in your .env.local file.',
+            'Twelve Data API key is not configured. Please set TWELVE_DATA_API_KEY in your .env.local file or enter your API key in the terminal.',
           help: 'You can get a free API key at https://twelvedata.com (Free tier provides 800 API calls/day, 8 credits/min).',
         },
         { status: 401 }
       );
     }
 
-    const { searchParams } = new URL(request.url);
     const rawSymbol = searchParams.get('symbol') || 'XAU/USD';
     const rawInterval = searchParams.get('interval') || '15m';
     const outputsize = Math.min(Math.max(parseInt(searchParams.get('outputsize') || '500', 10), 10), 5000);

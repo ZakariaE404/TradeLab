@@ -31,6 +31,21 @@ export interface FetchRealCandlesOptions {
   startDate?: string;
   endDate?: string;
   forceRefresh?: boolean;
+  apiKey?: string;
+}
+
+export function getStoredUserApiKey(): string {
+  if (typeof window === 'undefined') return '';
+  return localStorage.getItem('twelve_data_client_key') || '';
+}
+
+export function setStoredUserApiKey(key: string): void {
+  if (typeof window === 'undefined') return;
+  if (!key || key.trim() === '') {
+    localStorage.removeItem('twelve_data_client_key');
+  } else {
+    localStorage.setItem('twelve_data_client_key', key.trim());
+  }
 }
 
 /**
@@ -231,11 +246,17 @@ export async function fetchTwelveDataCandles(
     if (startDate) queryParams.set('start_date', startDate);
     if (endDate) queryParams.set('end_date', endDate);
 
+    const userKey = options.apiKey || getStoredUserApiKey();
+    const reqHeaders: Record<string, string> = {
+      'Accept': 'application/json',
+    };
+    if (userKey) {
+      reqHeaders['x-twelve-data-key'] = userKey;
+    }
+
     const response = await fetch(`/api/market-data?${queryParams.toString()}`, {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-      },
+      headers: reqHeaders,
     });
 
     const data = await response.json();

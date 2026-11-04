@@ -43,7 +43,8 @@ import { StatsBar } from '@/components/stats/StatsBar';
 import { TradeHistoryPanel } from '@/components/trades/TradeHistoryPanel';
 import { StrategySettingsDrawer } from '@/components/settings/StrategySettingsDrawer';
 import { ImportDataModal } from '@/components/common/ImportDataModal';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { ApiKeyModal } from '@/components/common/ApiKeyModal';
+import { AlertTriangle, RefreshCw, Key } from 'lucide-react';
 
 const TradingChart = dynamic(
   () => import('@/components/chart/TradingChart').then((mod) => mod.TradingChart),
@@ -90,6 +91,7 @@ export default function TradeLabPage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isHistoryCollapsed, setIsHistoryCollapsed] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
   const [selectedTradeId, setSelectedTradeId] = useState<string | null>(null);
 
   // 5. Data Source Mode & Real Market Data State
@@ -355,14 +357,15 @@ export default function TradeLabPage() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (isImportModalOpen) setIsImportModalOpen(false);
+        if (isApiKeyModalOpen) setIsApiKeyModalOpen(false);
+        else if (isImportModalOpen) setIsImportModalOpen(false);
         else if (isSettingsOpen) setIsSettingsOpen(false);
         else if (selectedTradeId) setSelectedTradeId(null);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isImportModalOpen, isSettingsOpen, selectedTradeId]);
+  }, [isApiKeyModalOpen, isImportModalOpen, isSettingsOpen, selectedTradeId]);
 
   // Handlers
   const handleSelectSymbol = (newSymbol: ForexSymbol) => {
@@ -457,6 +460,7 @@ export default function TradeLabPage() {
         onRefreshRealData={handleRefreshRealData}
         outputsize={outputsize}
         onChangeOutputsize={(size) => setOutputsize(size)}
+        onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
       />
 
       {/* Real Data Error Alert Banner */}
@@ -476,15 +480,23 @@ export default function TradeLabPage() {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button
+              onClick={() => setIsApiKeyModalOpen(true)}
+              className="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded text-[11px] transition cursor-pointer flex items-center gap-1 shadow-sm"
+              title="Enter your Twelve Data API key"
+            >
+              <Key className="w-3 h-3" />
+              <span>Enter API Key</span>
+            </button>
+            <button
               onClick={handleRefreshRealData}
-              className="px-2 py-0.5 bg-rose-800 hover:bg-rose-700 text-white rounded text-[11px] font-medium transition cursor-pointer flex items-center gap-1"
+              className="px-2 py-1 bg-rose-800 hover:bg-rose-700 text-white rounded text-[11px] font-medium transition cursor-pointer flex items-center gap-1"
             >
               <RefreshCw className="w-3 h-3" />
               <span>Retry</span>
             </button>
             <button
               onClick={() => setDataSourceMode('DEMO')}
-              className="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[11px] font-medium transition cursor-pointer"
+              className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[11px] font-medium transition cursor-pointer"
             >
               Switch to Demo
             </button>
@@ -537,6 +549,13 @@ export default function TradeLabPage() {
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
         onImportCandles={handleImportCandles}
+      />
+
+      {/* 7. Twelve Data API Key Configuration Modal */}
+      <ApiKeyModal
+        isOpen={isApiKeyModalOpen}
+        onClose={() => setIsApiKeyModalOpen(false)}
+        onSave={() => handleRefreshRealData()}
       />
     </div>
   );

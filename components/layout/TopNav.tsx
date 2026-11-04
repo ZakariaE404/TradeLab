@@ -28,6 +28,7 @@ import {
   Radio,
   RefreshCw,
   AlertTriangle,
+  Key,
 } from 'lucide-react';
 
 interface TopNavProps {
@@ -55,6 +56,7 @@ interface TopNavProps {
   onRefreshRealData?: () => void;
   onChangeOutputsize?: (size: number) => void;
   outputsize?: number;
+  onOpenApiKeyModal?: () => void;
 }
 
 export function TopNav({
@@ -81,6 +83,7 @@ export function TopNav({
   onRefreshRealData,
   onChangeOutputsize,
   outputsize = 500,
+  onOpenApiKeyModal,
 }: TopNavProps) {
   const symbolMeta = FOREX_SYMBOLS[symbol] || FOREX_SYMBOLS['XAUUSDm'];
   const allSymbols = Object.keys(FOREX_SYMBOLS) as ForexSymbol[];
@@ -226,6 +229,18 @@ export function TopNav({
                 <option value={2000}>Last 2,000 Bars</option>
               </select>
             </div>
+          )}
+
+          {/* Quick API Key Button for REAL data */}
+          {dataSourceMode === 'REAL' && onOpenApiKeyModal && (
+            <button
+              onClick={onOpenApiKeyModal}
+              className="px-2 py-1 bg-[#111726] hover:bg-[#182238] border border-slate-800 hover:border-amber-500/50 text-amber-400 rounded text-[11px] font-mono flex items-center gap-1 transition cursor-pointer"
+              title="Configure Twelve Data API Key"
+            >
+              <Key className="w-3 h-3" />
+              <span className="hidden sm:inline">API Key</span>
+            </button>
           )}
 
           {/* Engine Calculation & Cache Status Badge */}
