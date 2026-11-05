@@ -114,11 +114,11 @@ describe('Real Backtesting Engine - Transaction Costs & Monthly Breakdown', () =
     const result = runBacktest(candles, DEFAULT_STRATEGY_PARAMS, 'XAUUSDm', '15m');
     assert.ok(Array.isArray(result.monthlyPerformance));
     for (const month of result.monthlyPerformance) {
-      assert.match(month.month, /^\d{4}-\d{2}$/);
-      assert.ok(typeof month.trades === 'number');
+      assert.match(month.monthKey, /^\d{4}-\d{2}$/);
+      assert.ok(typeof month.tradesCount === 'number');
       assert.ok(typeof month.winRate === 'number');
       assert.ok(typeof month.netR === 'number');
-      assert.ok(typeof month.profitPips === 'number');
+      assert.ok(typeof month.profitCurrency === 'number');
     }
   });
 });

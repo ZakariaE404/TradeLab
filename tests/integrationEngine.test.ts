@@ -8,7 +8,7 @@ import { DEFAULT_STRATEGY_A_PARAMS } from '../services/strategyA';
 describe('Strategy Engine & Chart Signals Integration', () => {
   it('should generate simulated trades with precise historical timestamps and strategy rationale', () => {
     // 1200 M15 candles provide 300 H1 candles, ensuring H1 EMA 200 is fully formed
-    const candles = generateForexCandles('XAUUSDm', '15m', 101, 1200, 'trending_bullish');
+    const candles = generateForexCandles('XAUUSDm', '15m', 101, 1200, 'trending_bull');
     const result = runBacktest(candles, DEFAULT_STRATEGY_PARAMS, 'XAUUSDm', '15m');
 
     assert.ok(result.trades.length > 0, 'Backtest should yield simulated trades on 1200 candles');
@@ -85,7 +85,7 @@ describe('Strategy Engine & Chart Signals Integration', () => {
 
 describe('Trade History Generation & Filtering', () => {
   it('should generate trade history directly from backtest results with all required fields', () => {
-    const candles = generateForexCandles('XAUUSDm', '15m', 777, 1200, 'volatile');
+    const candles = generateForexCandles('XAUUSDm', '15m', 777, 1200, 'ranging_high_vol');
     const result = runBacktest(candles, DEFAULT_STRATEGY_PARAMS, 'XAUUSDm', '15m');
 
     assert.ok(result.trades.length > 0);
@@ -151,7 +151,7 @@ describe('Statistics Precision & Safe Edge Case Handling', () => {
   });
 
   it('should accurately calculate total trades, win rate, net R, profit factor, max DD, and avg win/loss R', () => {
-    const candles = generateForexCandles('XAUUSDm', '15m', 888, 1200, 'trending_bullish');
+    const candles = generateForexCandles('XAUUSDm', '15m', 888, 1200, 'trending_bull');
     const result = runBacktest(candles, DEFAULT_STRATEGY_PARAMS, 'XAUUSDm', '15m');
 
     assert.ok(result.totalTrades > 0, 'Should have trades on 1200 bars');
@@ -174,7 +174,7 @@ describe('Statistics Precision & Safe Edge Case Handling', () => {
   });
 
   it('should update trades, markers, and statistics when strategy parameters or market regimes change', () => {
-    const candles1 = generateForexCandles('XAUUSDm', '15m', 12345, 1200, 'trending_bullish');
+    const candles1 = generateForexCandles('XAUUSDm', '15m', 12345, 1200, 'trending_bull');
     const result1 = runBacktest(candles1, DEFAULT_STRATEGY_PARAMS, 'XAUUSDm', '15m');
 
     // Change Risk:Reward ratio parameter

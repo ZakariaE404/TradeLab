@@ -84,11 +84,11 @@ export function ApiKeyModal({ isOpen, onClose, onSave }: ApiKeyModalProps) {
             <div className="flex items-start gap-2 text-slate-300">
               <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
               <span className="text-[11px] text-slate-400 leading-relaxed">
-                Your key is stored securely in your browser's local storage and passed directly to your local proxy route. It is never logged or exposed.
+                Your key is stored securely in your browser&apos;s local storage and passed directly to your local proxy route. It is never logged or exposed.
               </span>
             </div>
             <div className="flex items-center justify-between pt-1 border-t border-slate-800/80">
-              <span className="text-[11px] text-slate-400">Don't have an API key?</span>
+              <span className="text-[11px] text-slate-400">Don&apos;t have an API key?</span>
               <a
                 href="https://twelvedata.com"
                 target="_blank"

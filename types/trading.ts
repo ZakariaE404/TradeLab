@@ -59,6 +59,43 @@ export interface Candle {
   volume: number;
 }
 
+export interface IndicatorEnrichedCandle extends Candle {
+  ema50?: number | null;
+  ema200?: number | null;
+  atr14?: number | null;
+}
+
+export interface HistoricalDataConfig {
+  symbol: ForexSymbol;
+  mode: DataSourceMode;
+  m15Bars?: number;
+  h1Bars?: number;
+  h1WarmupTarget?: number;
+  apiKey?: string;
+  forceRefresh?: boolean;
+}
+
+export interface HistoricalDataset {
+  symbol: ForexSymbol;
+  mode: DataSourceMode;
+  m15Candles: Candle[];
+  h1Candles: Candle[];
+  m15Enriched: IndicatorEnrichedCandle[];
+  h1Enriched: IndicatorEnrichedCandle[];
+  m15Ema50Map: Map<number, number>;
+  m15Ema200Map: Map<number, number>;
+  m15Atr14Map: Map<number, number>;
+  h1Ema50Map: Map<number, number>;
+  h1Ema200Map: Map<number, number>;
+  h1Atr14Map: Map<number, number>;
+  evaluationStartIndex: number;
+  m15WarmupBarsCount: number;
+  h1WarmupBarsCount: number;
+  m15Gaps: Array<{ expectedTime: number; gapDurationSeconds: number; missingBarsCount: number }>;
+  h1Gaps: Array<{ expectedTime: number; gapDurationSeconds: number; missingBarsCount: number }>;
+  isRealData: boolean;
+}
+
 export type TradeDirection = 'LONG' | 'SHORT' | 'BUY' | 'SELL';
 export type TradeStatus = 'WIN' | 'LOSS' | 'BREAKEVEN' | 'UNRESOLVED' | 'OPEN';
 export type ExitReason =
