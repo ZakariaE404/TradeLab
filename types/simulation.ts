@@ -72,6 +72,10 @@ export interface SignalEvaluationContext {
     ema200?: number | null;
     atr14?: number | null;
   };
+  h1Candles?: Candle[];
+  h1Ema50Map?: Map<number, number>;
+  h1Ema200Map?: Map<number, number>;
+  h1Adx14Map?: Map<number, number>;
   confirmedSwings: ConfirmedSwingPoint[];
   symbol: ForexSymbol;
 }

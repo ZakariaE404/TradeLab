@@ -492,6 +492,124 @@ export function TradeHistoryPanel({
                 </div>
               </div>
 
+              {/* TradeLab Phase 2/3 Simulation Engine Diagnostics */}
+              {result.simulationResult?.diagnostics && (
+                <div className="p-3.5 rounded bg-[#0d121f] border border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between text-slate-200 font-semibold text-[11px]">
+                    <div className="flex items-center gap-1.5">
+                      <AlertCircle className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>TradeLab Simulation Engine Diagnostics</span>
+                    </div>
+                    <span
+                      className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
+                        result.simulationResult.diagnostics.warmUpConfidence === 'STABILIZED'
+                          ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
+                          : 'bg-amber-950 text-amber-400 border border-amber-800'
+                      }`}
+                    >
+                      WARMUP: {result.simulationResult.diagnostics.warmUpConfidence}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] font-mono">
+                    <div className="p-2 rounded bg-[#090d16] border border-slate-800/80">
+                      <span className="text-slate-400 block">Evaluated Bars</span>
+                      <span className="font-bold text-slate-200 text-xs">
+                        {result.simulationResult.diagnostics.totalBarsEvaluated}
+                      </span>
+                    </div>
+                    <div className="p-2 rounded bg-[#090d16] border border-slate-800/80">
+                      <span className="text-slate-400 block">Signals Generated</span>
+                      <span className="font-bold text-sky-400 text-xs">
+                        {result.simulationResult.diagnostics.totalSignalsGenerated}
+                      </span>
+                    </div>
+                    <div className="p-2 rounded bg-[#090d16] border border-slate-800/80">
+                      <span className="text-slate-400 block">Signals Rejected</span>
+                      <span className="font-bold text-rose-400 text-xs">
+                        {result.simulationResult.diagnostics.rejectedSignalsCount}
+                      </span>
+                    </div>
+                    <div className="p-2 rounded bg-[#090d16] border border-slate-800/80">
+                      <span className="text-slate-400 block">Trades Executed</span>
+                      <span className="font-bold text-emerald-400 text-xs">
+                        {result.simulationResult.diagnostics.totalTradesExecuted}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Multi-Experiment Results Comparison Matrix */}
+              {result.experiments && result.experiments.length > 0 && (
+                <div className="p-3.5 rounded bg-[#0d121f] border border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between text-slate-200 font-semibold text-[11px]">
+                    <div className="flex items-center gap-1.5">
+                      <BarChart3 className="w-3.5 h-3.5 text-sky-400" />
+                      <span>Independent Strategy Experiments Matrix</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      {result.experiments.length} Isolated Experiment(s)
+                    </span>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left font-mono text-[11px]">
+                      <thead>
+                        <tr className="border-b border-slate-800 text-slate-400 text-[10px] uppercase">
+                          <th className="py-1 px-2">Experiment</th>
+                          <th className="py-1 px-2">Regime</th>
+                          <th className="py-1 px-2">Pattern</th>
+                          <th className="py-1 px-2">Dir</th>
+                          <th className="py-1 px-2">Trades</th>
+                          <th className="py-1 px-2">Win Rate</th>
+                          <th className="py-1 px-2">Net R</th>
+                          <th className="py-1 px-2 text-right">Profit ($)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/40">
+                        {result.experiments.map((exp) => (
+                          <tr key={exp.id} className="hover:bg-slate-800/20">
+                            <td className="py-1 px-2 font-medium text-slate-300">{exp.label}</td>
+                            <td className="py-1 px-2 text-sky-400">{exp.regime}</td>
+                            <td className="py-1 px-2 text-amber-400">{exp.pattern}</td>
+                            <td className="py-1 px-2 text-slate-300">{exp.direction}</td>
+                            <td className="py-1 px-2 text-slate-400">
+                              {exp.result.performance.totalTrades}
+                            </td>
+                            <td className="py-1 px-2 font-bold text-slate-200">
+                              {exp.result.performance.winRate}%
+                            </td>
+                            <td
+                              className={`py-1 px-2 font-bold ${
+                                exp.result.performance.netR > 0
+                                  ? 'text-emerald-400'
+                                  : exp.result.performance.netR < 0
+                                  ? 'text-rose-400'
+                                  : 'text-slate-400'
+                              }`}
+                            >
+                              {exp.result.performance.netR > 0 ? '+' : ''}
+                              {exp.result.performance.netR.toFixed(2)} R
+                            </td>
+                            <td
+                              className={`py-1 px-2 text-right font-bold ${
+                                exp.result.performance.totalNetPnl >= 0
+                                  ? 'text-emerald-400'
+                                  : 'text-rose-400'
+                              }`}
+                            >
+                              {exp.result.performance.totalNetPnl >= 0 ? '+' : ''}$
+                              {exp.result.performance.totalNetPnl.toFixed(2)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
               {/* Monthly Performance Breakdown */}
               {result.monthlyPerformance && result.monthlyPerformance.length > 0 && (
                 <div className="p-3.5 rounded bg-[#0d121f] border border-slate-800 space-y-2">

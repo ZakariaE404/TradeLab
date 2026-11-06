@@ -5,6 +5,7 @@ import { StrategyParameters, StrategyType } from '@/types/trading';
 import { StrategyAParameters } from '@/types/strategyA';
 import { STRATEGY_PRESETS, DEFAULT_STRATEGY_PARAMS } from '@/services/backtestEngine';
 import { DEFAULT_STRATEGY_A_PARAMS } from '@/services/strategyA';
+import { DEFAULT_STRATEGY_CONFIG, StrategyConfiguration } from '@/services/strategy/types';
 import {
   X,
   Sliders,
@@ -18,6 +19,8 @@ import {
   Compass,
   Layers,
   Filter,
+  Activity,
+  Target,
 } from 'lucide-react';
 
 interface StrategySettingsDrawerProps {
@@ -38,6 +41,10 @@ export function StrategySettingsDrawer({
   if (!isOpen) return null;
 
   const stratA = params.strategyA || DEFAULT_STRATEGY_A_PARAMS;
+  const tradeLabConfig: StrategyConfiguration = {
+    ...DEFAULT_STRATEGY_CONFIG,
+    ...(params.tradeLabConfig || {}),
+  };
 
   const handleUpdate = <K extends keyof StrategyParameters>(
     key: K,
@@ -46,6 +53,21 @@ export function StrategySettingsDrawer({
     onChangeParams({
       ...params,
       [key]: value,
+    });
+  };
+
+  const handleUpdateTradeLabConfig = <K extends keyof StrategyConfiguration>(
+    key: K,
+    value: StrategyConfiguration[K]
+  ) => {
+    const updated = {
+      ...tradeLabConfig,
+      [key]: value,
+    };
+    onChangeParams({
+      ...params,
+      tradeLabConfig: updated,
+      riskRewardRatio: key === 'riskRewardRatio' ? (value as number) : params.riskRewardRatio,
     });
   };
 
@@ -131,13 +153,363 @@ export function StrategySettingsDrawer({
             onChange={(e) => handleUpdate('strategyType', e.target.value as StrategyType)}
             className="w-full bg-[#111726] border border-slate-800 rounded p-2 text-slate-200 font-mono text-xs focus:outline-none focus:border-emerald-500"
           >
-            <option value="strategy_a">Strategy A: H1 Trend + M15 Rejection (2:1 RR)</option>
+            <option value="tradelab_strategy">★ TradeLab Multi-Regime Engine (Phase 3)</option>
+            <option value="strategy_a">Strategy A: H1 Trend + M15 Rejection (Legacy)</option>
             <option value="ema_pullback">EMA Trend Pullback (Trend-Following)</option>
             <option value="breakout_retest">Donchian Breakout Channel</option>
             <option value="rsi_mean_reversion">RSI Extreme Reversion + Bollinger</option>
             <option value="macd_momentum">Fast/Slow Momentum Crossover</option>
           </select>
         </div>
+
+        {/* Section 2A: TradeLab Phase 3 Multi-Regime Strategy Parameters */}
+        {params.strategyType === 'tradelab_strategy' && (
+          <div className="pt-3 border-t border-slate-800/80 space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] uppercase tracking-wider text-emerald-400 font-semibold flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>TradeLab Rule Parameters</span>
+              </label>
+              <span className="text-[10px] font-mono text-slate-400">Phase 3 Engine</span>
+            </div>
+
+            {/* Matrix Permutation Controls: Regime, Pattern, Direction */}
+            <div className="p-2.5 rounded bg-[#111726] border border-slate-800 space-y-2.5">
+              <div className="text-slate-200 font-semibold text-[11px] flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-sky-400" />
+                <span>Regime & Pattern Matrix</span>
+              </div>
+
+              {/* Regime Selector */}
+              <div>
+                <span className="text-[10px] text-slate-400 block mb-1">Market Regime</span>
+                <div className="grid grid-cols-3 gap-1">
+                  {(['TRENDING', 'RANGING', 'BOTH'] as const).map((reg) => (
+                    <button
+                      key={reg}
+                      type="button"
+                      onClick={() => handleUpdateTradeLabConfig('regime', reg)}
+                      className={`py-1 text-[10px] font-bold rounded border transition-colors ${
+                        tradeLabConfig.regime === reg
+                          ? 'bg-sky-500 text-slate-950 border-sky-400 shadow-sm'
+                          : 'bg-[#0a0f1d] text-slate-300 border-slate-800 hover:border-slate-700'
+                      }`}
+                    >
+                      {reg}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Pattern Selector */}
+              <div>
+                <span className="text-[10px] text-slate-400 block mb-1">Entry Pattern</span>
+                <div className="grid grid-cols-3 gap-1">
+                  {(['REJECTION', 'ENGULFING', 'BOTH'] as const).map((pat) => (
+                    <button
+                      key={pat}
+                      type="button"
+                      onClick={() => handleUpdateTradeLabConfig('pattern', pat)}
+                      className={`py-1 text-[10px] font-bold rounded border transition-colors ${
+                        tradeLabConfig.pattern === pat
+                          ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-sm'
+                          : 'bg-[#0a0f1d] text-slate-300 border-slate-800 hover:border-slate-700'
+                      }`}
+                    >
+                      {pat}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Direction Selector */}
+              <div>
+                <span className="text-[10px] text-slate-400 block mb-1">Trade Direction</span>
+                <div className="grid grid-cols-3 gap-1">
+                  {(['BUY', 'SELL', 'BOTH'] as const).map((dir) => (
+                    <button
+                      key={dir}
+                      type="button"
+                      onClick={() => handleUpdateTradeLabConfig('direction', dir)}
+                      className={`py-1 text-[10px] font-bold rounded border transition-colors ${
+                        tradeLabConfig.direction === dir
+                          ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-sm'
+                          : 'bg-[#0a0f1d] text-slate-300 border-slate-800 hover:border-slate-700'
+                      }`}
+                    >
+                      {dir}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* H1 Trend & ADX Regime Filter Box */}
+            <div className="p-2.5 rounded bg-[#111726] border border-slate-800 space-y-2">
+              <div className="flex items-center gap-1.5 text-slate-200 font-semibold text-[11px]">
+                <Compass className="w-3.5 h-3.5 text-indigo-400" />
+                <span>H1 Trend & ADX Classification</span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-slate-400">EMA Slope Lookback</span>
+                <span className="font-mono text-slate-200 font-bold">{tradeLabConfig.emaSlopeLookback} bars</span>
+              </div>
+              <input
+                type="range"
+                min={1}
+                max={10}
+                value={tradeLabConfig.emaSlopeLookback}
+                onChange={(e) =>
+                  handleUpdateTradeLabConfig('emaSlopeLookback', parseInt(e.target.value) || 3)
+                }
+                className="w-full accent-indigo-500 cursor-pointer"
+              />
+
+              <div className="grid grid-cols-2 gap-2 text-[10px] pt-1">
+                <div>
+                  <span className="text-slate-400">Trending ADX Threshold</span>
+                  <input
+                    type="number"
+                    min={15}
+                    max={40}
+                    step={1}
+                    value={tradeLabConfig.adxTrendingThreshold}
+                    onChange={(e) =>
+                      handleUpdateTradeLabConfig('adxTrendingThreshold', parseFloat(e.target.value) || 25)
+                    }
+                    className="w-full bg-[#0a0f1d] border border-slate-800 rounded p-1 font-mono text-slate-100 text-center"
+                  />
+                </div>
+                <div>
+                  <span className="text-slate-400">Ranging ADX Threshold</span>
+                  <input
+                    type="number"
+                    min={10}
+                    max={30}
+                    step={1}
+                    value={tradeLabConfig.adxRangingThreshold}
+                    onChange={(e) =>
+                      handleUpdateTradeLabConfig('adxRangingThreshold', parseFloat(e.target.value) || 20)
+                    }
+                    className="w-full bg-[#0a0f1d] border border-slate-800 rounded p-1 font-mono text-slate-100 text-center"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Support/Resistance & Pattern Detection Box */}
+            <div className="p-2.5 rounded bg-[#111726] border border-slate-800 space-y-2">
+              <div className="flex items-center gap-1.5 text-slate-200 font-semibold text-[11px]">
+                <Target className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Support/Resistance & Pattern Validation</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-[10px]">
+                <div>
+                  <span className="text-slate-400">Swing Left/Right Lag</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={6}
+                    value={tradeLabConfig.swingRightBars}
+                    onChange={(e) => {
+                      const v = parseInt(e.target.value) || 3;
+                      handleUpdateTradeLabConfig('swingRightBars', v);
+                      handleUpdateTradeLabConfig('swingLeftBars', v);
+                    }}
+                    className="w-full bg-[#0a0f1d] border border-slate-800 rounded p-1 font-mono text-slate-100 text-center"
+                  />
+                </div>
+                <div>
+                  <span className="text-slate-400">Zone Tolerance (pips)</span>
+                  <input
+                    type="number"
+                    min={0.5}
+                    max={10}
+                    step={0.5}
+                    value={tradeLabConfig.zoneTolerancePips}
+                    onChange={(e) =>
+                      handleUpdateTradeLabConfig('zoneTolerancePips', parseFloat(e.target.value) || 2.0)
+                    }
+                    className="w-full bg-[#0a0f1d] border border-slate-800 rounded p-1 font-mono text-slate-100 text-center"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between text-slate-300">
+                  <span className="text-[10px]">Min Rejection Wick / Body</span>
+                  <span className="font-mono font-bold text-emerald-400">
+                    {(tradeLabConfig.minRejectionWickRatio ?? 2.0).toFixed(1)}x
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="1.0"
+                  max="4.0"
+                  step="0.2"
+                  value={tradeLabConfig.minRejectionWickRatio}
+                  onChange={(e) =>
+                    handleUpdateTradeLabConfig('minRejectionWickRatio', parseFloat(e.target.value) || 2.0)
+                  }
+                  className="w-full accent-emerald-500 cursor-pointer"
+                />
+              </div>
+
+              <div className="flex items-center justify-between pt-1 border-t border-slate-800/60">
+                <span className="text-[10px] text-slate-300">Require M15 EMA 50/200 Trend Filter</span>
+                <input
+                  type="checkbox"
+                  checked={tradeLabConfig.requireM15EmaFilter}
+                  onChange={(e) =>
+                    handleUpdateTradeLabConfig('requireM15EmaFilter', e.target.checked)
+                  }
+                  className="w-3.5 h-3.5 accent-emerald-500 cursor-pointer"
+                />
+              </div>
+            </div>
+
+            {/* Disciplined SL & TP Configuration */}
+            <div className="p-2.5 rounded bg-[#111726] border border-slate-800 space-y-2">
+              <div className="flex items-center gap-1.5 text-slate-200 font-semibold text-[11px]">
+                <ShieldCheck className="w-3.5 h-3.5 text-rose-400" />
+                <span>Stop Loss & Take Profit Engine</span>
+              </div>
+
+              {/* SL Method Selection */}
+              <div>
+                <span className="text-[10px] text-slate-400 block mb-1">Stop Loss Method</span>
+                <div className="grid grid-cols-2 gap-1">
+                  {(['SWING', 'ATR'] as const).map((method) => (
+                    <button
+                      key={method}
+                      type="button"
+                      onClick={() => handleUpdateTradeLabConfig('stopLossMethod', method)}
+                      className={`py-1 text-[10px] font-bold rounded border transition-colors ${
+                        tradeLabConfig.stopLossMethod === method
+                          ? 'bg-rose-500 text-white border-rose-400 shadow-sm'
+                          : 'bg-[#0a0f1d] text-slate-300 border-slate-800 hover:border-slate-700'
+                      }`}
+                    >
+                      {method} Stop Loss
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {tradeLabConfig.stopLossMethod === 'ATR' && (
+                <div>
+                  <span className="text-[10px] text-slate-400 block mb-1">ATR Multiplier</span>
+                  <div className="grid grid-cols-3 gap-1">
+                    {[1.0, 1.5, 2.0].map((mul) => (
+                      <button
+                        key={mul}
+                        type="button"
+                        onClick={() => handleUpdateTradeLabConfig('atrMultiplier', mul)}
+                        className={`py-1 text-[10px] font-bold rounded border transition-colors ${
+                          tradeLabConfig.atrMultiplier === mul
+                            ? 'bg-amber-500 text-slate-950 border-amber-400'
+                            : 'bg-[#0a0f1d] text-slate-300 border-slate-800'
+                        }`}
+                      >
+                        {mul}x ATR
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {tradeLabConfig.stopLossMethod === 'SWING' && (
+                <div className="grid grid-cols-2 gap-2 text-[10px]">
+                  <div>
+                    <span className="text-slate-400">SL Buffer (Pips)</span>
+                    <input
+                      type="number"
+                      min={0.5}
+                      max={10}
+                      step={0.5}
+                      value={tradeLabConfig.stopLossBufferPips}
+                      onChange={(e) =>
+                        handleUpdateTradeLabConfig('stopLossBufferPips', parseFloat(e.target.value) || 2.0)
+                      }
+                      className="w-full bg-[#0a0f1d] border border-slate-800 rounded p-1 font-mono text-slate-100 text-center"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-slate-400">Min SL (Pips)</span>
+                    <input
+                      type="number"
+                      min={2}
+                      max={25}
+                      step={1}
+                      value={tradeLabConfig.minStopLossPips}
+                      onChange={(e) =>
+                        handleUpdateTradeLabConfig('minStopLossPips', parseFloat(e.target.value) || 5.0)
+                      }
+                      className="w-full bg-[#0a0f1d] border border-slate-800 rounded p-1 font-mono text-slate-100 text-center"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Take Profit Method */}
+              <div className="pt-1 border-t border-slate-800/60">
+                <span className="text-[10px] text-slate-400 block mb-1">Take Profit Method</span>
+                <div className="grid grid-cols-2 gap-1">
+                  {(['RR', 'SUPPORT_RESISTANCE'] as const).map((method) => (
+                    <button
+                      key={method}
+                      type="button"
+                      onClick={() => handleUpdateTradeLabConfig('takeProfitMethod', method)}
+                      className={`py-1 text-[10px] font-bold rounded border transition-colors ${
+                        tradeLabConfig.takeProfitMethod === method
+                          ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-sm'
+                          : 'bg-[#0a0f1d] text-slate-300 border-slate-800 hover:border-slate-700'
+                      }`}
+                    >
+                      {method === 'RR' ? 'Risk:Reward (RR)' : 'Opposing S/R Zone'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {tradeLabConfig.takeProfitMethod === 'RR' && (
+                <div>
+                  <span className="text-[10px] text-slate-400 block mb-1">Risk:Reward Ratio</span>
+                  <div className="grid grid-cols-4 gap-1">
+                    {[1.0, 1.5, 2.0, 3.0].map((rr) => (
+                      <button
+                        key={rr}
+                        type="button"
+                        onClick={() => handleUpdateTradeLabConfig('riskRewardRatio', rr)}
+                        className={`py-1 text-[10px] font-bold rounded border transition-colors ${
+                          tradeLabConfig.riskRewardRatio === rr
+                            ? 'bg-emerald-500 text-slate-950 border-emerald-400'
+                            : 'bg-[#0a0f1d] text-slate-300 border-slate-800'
+                        }`}
+                      >
+                        1:{rr}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between pt-1 border-t border-slate-800/60">
+                <span className="text-[10px] text-slate-300">Prevent Duplicate Open Trades</span>
+                <input
+                  type="checkbox"
+                  checked={!tradeLabConfig.allowMultiplePositions}
+                  onChange={(e) =>
+                    handleUpdateTradeLabConfig('allowMultiplePositions', !e.target.checked)
+                  }
+                  className="w-3.5 h-3.5 accent-emerald-500 cursor-pointer"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Section 2B: Strategy A Specific Parameters */}
         {params.strategyType === 'strategy_a' && (

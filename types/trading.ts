@@ -88,6 +88,8 @@ export interface HistoricalDataset {
   h1Ema50Map: Map<number, number>;
   h1Ema200Map: Map<number, number>;
   h1Atr14Map: Map<number, number>;
+  h1Adx14Map?: Map<number, number>;
+  m15Adx14Map?: Map<number, number>;
   evaluationStartIndex: number;
   m15WarmupBarsCount: number;
   h1WarmupBarsCount: number;
@@ -140,6 +142,7 @@ export interface Trade {
 }
 
 export type StrategyType =
+  | 'tradelab_strategy'
   | 'strategy_a'
   | 'ema_pullback'
   | 'breakout_retest'
@@ -171,6 +174,8 @@ export interface StrategyParameters {
   slippagePips?: number; // e.g. 0.5 pips execution slippage
   // Strategy A specific configuration (optional)
   strategyA?: import('./strategyA').StrategyAParameters;
+  // TradeLab Phase 3 Strategy Configuration (optional)
+  tradeLabConfig?: Partial<import('../services/strategy/types').StrategyConfiguration>;
 }
 
 export interface MonthlyPerformance {
@@ -216,6 +221,10 @@ export interface BacktestResult {
     commissionPerLot: number;
     slippagePips: number;
   };
+  simulationResult?: import('./simulation').SimulationResult;
+  diagnosticsSnapshots?: import('../services/strategy/types').CandleDiagnosticSnapshot[];
+  experiments?: import('../services/strategy/experimentRunner').StrategyExperimentResult[];
+  activeExperimentId?: string;
 }
 
 export interface EquityPoint {

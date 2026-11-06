@@ -353,3 +353,95 @@ export function calculateBollingerBands(
 
   return result;
 }
+
+/**
+ * Calculates Wilder's sequential Average Directional Index (ADX).
+ * - Period typically 14.
+ * - Zero-lookahead, causal sequential calculation.
+ * - Bars prior to index (2 * period - 1) receive null.
+ */
+export function calculateSequentialADX(candles: Candle[], period: number = 14): (number | null)[] {
+  if (!candles || candles.length === 0 || period <= 0) return [];
+  const result: (number | null)[] = new Array(candles.length).fill(null);
+  const minRequiredBars = 2 * period;
+  if (candles.length < minRequiredBars) return result;
+
+  const tr: number[] = new Array(candles.length).fill(0);
+  const dmPlus: number[] = new Array(candles.length).fill(0);
+  const dmMinus: number[] = new Array(candles.length).fill(0);
+
+  tr[0] = candles[0].high - candles[0].low;
+
+  for (let i = 1; i < candles.length; i++) {
+    const c = candles[i];
+    const prev = candles[i - 1];
+
+    tr[i] = Math.max(c.high - c.low, Math.abs(c.high - prev.close), Math.abs(c.low - prev.close));
+
+    const upMove = c.high - prev.high;
+    const downMove = prev.low - c.low;
+
+    dmPlus[i] = upMove > downMove && upMove > 0 ? upMove : 0;
+    dmMinus[i] = downMove > upMove && downMove > 0 ? downMove : 0;
+  }
+
+  // Initial sums for first period
+  let smoothedTr = 0;
+  let smoothedDmPlus = 0;
+  let smoothedDmMinus = 0;
+
+  for (let i = 1; i <= period; i++) {
+    smoothedTr += tr[i];
+    smoothedDmPlus += dmPlus[i];
+    smoothedDmMinus += dmMinus[i];
+  }
+
+  const dx: number[] = new Array(candles.length).fill(0);
+
+  let plusDi = smoothedTr > 0 ? (100 * smoothedDmPlus) / smoothedTr : 0;
+  let minusDi = smoothedTr > 0 ? (100 * smoothedDmMinus) / smoothedTr : 0;
+  let diSum = plusDi + minusDi;
+  dx[period] = diSum > 0 ? (100 * Math.abs(plusDi - minusDi)) / diSum : 0;
+
+  for (let i = period + 1; i < candles.length; i++) {
+    smoothedTr = smoothedTr - smoothedTr / period + tr[i];
+    smoothedDmPlus = smoothedDmPlus - smoothedDmPlus / period + dmPlus[i];
+    smoothedDmMinus = smoothedDmMinus - smoothedDmMinus / period + dmMinus[i];
+
+    plusDi = smoothedTr > 0 ? (100 * smoothedDmPlus) / smoothedTr : 0;
+    minusDi = smoothedTr > 0 ? (100 * smoothedDmMinus) / smoothedTr : 0;
+    diSum = plusDi + minusDi;
+    dx[i] = diSum > 0 ? (100 * Math.abs(plusDi - minusDi)) / diSum : 0;
+  }
+
+  // Calculate ADX (SMA of first `period` DX values, then Wilder smoothing)
+  let sumDx = 0;
+  for (let i = period; i < 2 * period; i++) {
+    sumDx += dx[i];
+  }
+  let prevAdx = sumDx / period;
+  result[2 * period - 1] = Number(prevAdx.toFixed(2));
+
+  for (let i = 2 * period; i < candles.length; i++) {
+    const currentAdx = (prevAdx * (period - 1) + dx[i]) / period;
+    result[i] = Number(currentAdx.toFixed(2));
+    prevAdx = currentAdx;
+  }
+
+  return result;
+}
+
+/**
+ * Returns a fast Map of timestamp -> ADX value for O(1) lookup
+ */
+export function calculateSequentialADXMap(candles: Candle[], period: number = 14): Map<number, number> {
+  const map = new Map<number, number>();
+  const seq = calculateSequentialADX(candles, period);
+  for (let i = 0; i < candles.length; i++) {
+    const val = seq[i];
+    if (val !== null) {
+      map.set(candles[i].time, val);
+    }
+  }
+  return map;
+}

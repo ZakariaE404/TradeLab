@@ -178,6 +178,10 @@ export function runHistoricalSimulation(
         completedH1Index: h1Idx,
         m15Indicators,
         h1Indicators,
+        h1Candles: dataset.h1Candles,
+        h1Ema50Map: dataset.h1Ema50Map,
+        h1Ema200Map: dataset.h1Ema200Map,
+        h1Adx14Map: dataset.h1Adx14Map,
         confirmedSwings: swings.filter((s) => s.confirmedAtIndex <= i),
         symbol,
       };
@@ -225,6 +229,10 @@ export function runHistoricalSimulation(
         completedH1Index: h1Idx,
         m15Indicators,
         h1Indicators,
+        h1Candles: dataset.h1Candles,
+        h1Ema50Map: dataset.h1Ema50Map,
+        h1Ema200Map: dataset.h1Ema200Map,
+        h1Adx14Map: dataset.h1Adx14Map,
         confirmedSwings: swings.filter((s) => s.confirmedAtIndex <= i),
         symbol,
       };

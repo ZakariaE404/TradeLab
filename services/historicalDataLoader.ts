@@ -2,11 +2,13 @@ import { Candle, DataSourceMode, ForexSymbol, HistoricalDataConfig, HistoricalDa
 import {
   calculateSequentialEMAMap,
   calculateSequentialATRMap,
+  calculateSequentialADXMap,
   enrichCandlesWithIndicators,
 } from './indicators';
 import { fetchTwelveDataCandles, detectCandleGaps, MissingDataGap } from './realMarketData';
 import { generateForexCandles } from './marketData';
 import { getLatestClosedH1Index } from './multiTimeframeSync';
+import { aggregateM15ToH1 } from './strategyA';
 
 export const HISTORICAL_WARMUP_REQUIREMENTS = {
   TARGET_H1_WARMUP_BARS: 1000,
@@ -162,11 +164,13 @@ export async function loadHistoricalDataset(
   const h1Ema50Map = calculateSequentialEMAMap(h1Candles, 50);
   const h1Ema200Map = calculateSequentialEMAMap(h1Candles, 200);
   const h1Atr14Map = calculateSequentialATRMap(h1Candles, 14);
+  const h1Adx14Map = calculateSequentialADXMap(h1Candles, 14);
   const h1Enriched = enrichCandlesWithIndicators(h1Candles, { fastEmaPeriod: 50, slowEmaPeriod: 200, atrPeriod: 14 });
 
   const m15Ema50Map = calculateSequentialEMAMap(m15Candles, 50);
   const m15Ema200Map = calculateSequentialEMAMap(m15Candles, 200);
   const m15Atr14Map = calculateSequentialATRMap(m15Candles, 14);
+  const m15Adx14Map = calculateSequentialADXMap(m15Candles, 14);
   const m15Enriched = enrichCandlesWithIndicators(m15Candles, { fastEmaPeriod: 50, slowEmaPeriod: 200, atrPeriod: 14 });
 
   // 5. Detect missing data gaps
@@ -196,6 +200,8 @@ export async function loadHistoricalDataset(
     h1Ema50Map,
     h1Ema200Map,
     h1Atr14Map,
+    h1Adx14Map,
+    m15Adx14Map,
     evaluationStartIndex,
     m15WarmupBarsCount: evaluationStartIndex,
     h1WarmupBarsCount: Math.min(200, h1Candles.length),
@@ -207,5 +213,76 @@ export async function loadHistoricalDataset(
   return {
     success: true,
     dataset,
+  };
+}
+
+/**
+ * Creates a complete HistoricalDataset synchronously from already available M15 and H1 candles.
+ * Aggregates M15 to H1 if H1 is not provided, and pre-computes sequential EMA 50, EMA 200, ATR 14, and ADX 14.
+ */
+export function createHistoricalDatasetFromCandles(
+  rawM15: Candle[],
+  rawH1?: Candle[] | null,
+  symbol: ForexSymbol = 'XAUUSDm',
+  mode: DataSourceMode = 'DEMO'
+): HistoricalDataset {
+  const m15Candles = sanitizeAndSortCandles(rawM15);
+  let h1Candles = rawH1 && rawH1.length > 0 ? sanitizeAndSortCandles(rawH1) : [];
+
+  if (h1Candles.length === 0 && m15Candles.length > 0) {
+    h1Candles = aggregateM15ToH1(m15Candles);
+  }
+
+  // Pre-calculate sequential indicators on complete series (causal, zero lookahead)
+  const h1Ema50Map = calculateSequentialEMAMap(h1Candles, 50);
+  const h1Ema200Map = calculateSequentialEMAMap(h1Candles, 200);
+  const h1Atr14Map = calculateSequentialATRMap(h1Candles, 14);
+  const h1Adx14Map = calculateSequentialADXMap(h1Candles, 14);
+  const h1Enriched = enrichCandlesWithIndicators(h1Candles, { fastEmaPeriod: 50, slowEmaPeriod: 200, atrPeriod: 14 });
+
+  const m15Ema50Map = calculateSequentialEMAMap(m15Candles, 50);
+  const m15Ema200Map = calculateSequentialEMAMap(m15Candles, 200);
+  const m15Atr14Map = calculateSequentialATRMap(m15Candles, 14);
+  const m15Adx14Map = calculateSequentialADXMap(m15Candles, 14);
+  const m15Enriched = enrichCandlesWithIndicators(m15Candles, { fastEmaPeriod: 50, slowEmaPeriod: 200, atrPeriod: 14 });
+
+  const m15Gaps = detectCandleGaps(m15Candles, 900);
+  const h1Gaps = detectCandleGaps(h1Candles, 3600);
+
+  let evaluationStartIndex = Math.min(200, Math.max(0, m15Candles.length - 1));
+  if (m15Candles.length >= 200 && h1Candles.length >= 50) {
+    for (let i = 200; i < m15Candles.length; i++) {
+      const h1Idx = getLatestClosedH1Index(m15Candles[i].time, h1Candles, 900, 'close');
+      if (h1Idx >= 49) {
+        evaluationStartIndex = i;
+        break;
+      }
+    }
+  } else {
+    // For smaller fixtures, set start index reasonably
+    evaluationStartIndex = Math.min(30, Math.floor(m15Candles.length / 2));
+  }
+
+  return {
+    symbol,
+    mode,
+    m15Candles,
+    h1Candles,
+    m15Enriched,
+    h1Enriched,
+    m15Ema50Map,
+    m15Ema200Map,
+    m15Atr14Map,
+    h1Ema50Map,
+    h1Ema200Map,
+    h1Atr14Map,
+    h1Adx14Map,
+    m15Adx14Map,
+    evaluationStartIndex,
+    m15WarmupBarsCount: evaluationStartIndex,
+    h1WarmupBarsCount: Math.min(200, h1Candles.length),
+    m15Gaps,
+    h1Gaps,
+    isRealData: mode === 'REAL',
   };
 }

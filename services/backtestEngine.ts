@@ -2,6 +2,7 @@ import {
   BacktestResult,
   Candle,
   EquityPoint,
+  ExitReason,
   ForexSymbol,
   StrategyParameters,
   Timeframe,
@@ -14,6 +15,13 @@ import {
   runStrategyABacktest,
   STRATEGY_A_ASSUMPTIONS,
 } from './strategyA';
+import { createHistoricalDatasetFromCandles } from './historicalDataLoader';
+import { TradeLabStrategyEngine } from './strategy/strategyRules';
+import { DEFAULT_STRATEGY_CONFIG, StrategyConfiguration, CandleDiagnosticSnapshot } from './strategy/types';
+import { runHistoricalSimulation } from './simulationEngine';
+import { runStrategyExperiments, StrategyExperimentResult } from './strategy/experimentRunner';
+import { getInstrumentCostModel } from './costEngine';
+import { SimulationConfig, SimulationResult } from '@/types/simulation';
 
 export const DEFAULT_STRATEGY_PARAMS: StrategyParameters = {
   strategyType: 'strategy_a',
@@ -35,6 +43,7 @@ export const DEFAULT_STRATEGY_PARAMS: StrategyParameters = {
   commissionPerLot: 7.0,
   slippagePips: 0.5,
   strategyA: DEFAULT_STRATEGY_A_PARAMS,
+  tradeLabConfig: DEFAULT_STRATEGY_CONFIG,
 };
 
 export const STRATEGY_PRESETS: {
@@ -43,6 +52,17 @@ export const STRATEGY_PRESETS: {
   description: string;
   params: Partial<StrategyParameters>;
 }[] = [
+  {
+    id: 'tradelab_standard',
+    name: 'TradeLab Multi-Regime Engine (Phase 3)',
+    description:
+      'Phase 3 Multi-Regime engine: Causal H1 EMA 50/200 & slope, ADX 14 regime classification, confirmed swing S/R, Rejection & Engulfing patterns.',
+    params: {
+      strategyType: 'tradelab_strategy',
+      riskRewardRatio: 2.0,
+      tradeLabConfig: DEFAULT_STRATEGY_CONFIG,
+    },
+  },
   {
     id: 'strategy_a_standard',
     name: 'Strategy A: H1 Trend + M15 Rejection (2:1 RR)',
@@ -113,6 +133,149 @@ export const STRATEGY_PRESETS: {
 ];
 
 /**
+ * Executes TradeLab Phase 3 Strategy Backtest using modular simulation engine
+ */
+export function runTradeLabStrategyBacktest(
+  candles: Candle[],
+  providedH1Candles: Candle[] | null | undefined,
+  params: StrategyParameters,
+  symbol: ForexSymbol,
+  timeframe: Timeframe
+): BacktestResult {
+  const strategyConfig: StrategyConfiguration = {
+    ...DEFAULT_STRATEGY_CONFIG,
+    ...(params.tradeLabConfig || {}),
+    riskRewardRatio:
+      params.riskRewardRatio ||
+      params.tradeLabConfig?.riskRewardRatio ||
+      DEFAULT_STRATEGY_CONFIG.riskRewardRatio,
+  };
+
+  const simConfig: SimulationConfig = {
+    initialBalance: params.accountBalance,
+    sizing: { method: 'FIXED_RISK_PERCENT', value: params.riskPercent },
+    costs: {
+      spreadPips: params.includeSpread ? params.spreadPips : 0,
+      slippagePips: params.slippagePips ?? 0.5,
+      commissionPerLot: params.commissionPerLot ?? 7.0,
+    },
+    endOfTestPolicy: 'LEAVE_OPEN',
+    minStopLossPips: strategyConfig.minStopLossPips,
+    allowMinimumWarmup: true,
+  };
+
+  const dataset = createHistoricalDatasetFromCandles(
+    candles,
+    providedH1Candles,
+    symbol,
+    providedH1Candles && providedH1Candles.length > 0 ? 'REAL' : 'DEMO'
+  );
+
+  const instrument = getInstrumentCostModel(symbol);
+
+  // If BOTH is selected for any dimension, run independent experiments suite
+  let simResult: SimulationResult;
+  let experiments: StrategyExperimentResult[] | undefined;
+  let diagnosticsSnapshots: CandleDiagnosticSnapshot[] = [];
+
+  const isExperiment =
+    strategyConfig.regime === 'BOTH' ||
+    strategyConfig.pattern === 'BOTH' ||
+    strategyConfig.direction === 'BOTH';
+
+  if (isExperiment) {
+    const suite = runStrategyExperiments({
+      dataset,
+      strategyConfig,
+      simulationConfig: simConfig,
+    });
+    simResult = suite.primaryResult;
+    experiments = suite.experiments;
+  } else {
+    const engine = new TradeLabStrategyEngine(strategyConfig);
+    simResult = runHistoricalSimulation({
+      dataset,
+      signalGenerator: engine,
+      config: simConfig,
+    });
+    diagnosticsSnapshots = Array.from(engine.diagnosticsMap.values());
+  }
+
+  // Map SimulationTradeRecord[] to Trade[]
+  const mappedTrades: Trade[] = simResult.trades.map((st, idx) => {
+    const isBuy = st.direction === 'BUY';
+    const pnlPips =
+      st.exitPrice !== null && st.exitPrice > 0
+        ? (isBuy ? st.exitPrice - st.entryPrice : st.entryPrice - st.exitPrice) / instrument.pipSize
+        : 0;
+
+    const exitReason: ExitReason =
+      st.exitReason === 'TP' ? 'TP' : st.exitReason === 'SL' ? 'SL' : 'UNRESOLVED';
+
+    return {
+      id: st.id,
+      index: idx + 1,
+      symbol,
+      timeframe,
+      direction: st.direction,
+      signalTime: st.relevantIndicatorValuesAtEntry?.signalTime ?? st.entryTime,
+      signalIndex: st.entryIndex > 0 ? st.entryIndex - 1 : st.entryIndex,
+      entryTime: st.entryTime,
+      entryPrice: st.entryPrice,
+      entryIndex: st.entryIndex,
+      exitTime: st.exitTime || 0,
+      exitPrice: st.exitPrice || 0,
+      exitIndex: st.exitIndex || 0,
+      stopLoss: st.stopLoss,
+      takeProfit: st.takeProfit,
+      initialRiskPips: st.initialRiskPips,
+      status: st.status === 'OPEN' ? 'UNRESOLVED' : st.status,
+      exitReason,
+      pnlPips: Number(pnlPips.toFixed(1)),
+      pnlCurrency: Number(st.netPnl.toFixed(2)),
+      pnlR: Number(st.resultInR.toFixed(2)),
+      holdingBars: st.holdingBars,
+      riskAmount: st.riskAmountCurrency,
+      signalReason: st.signalType,
+      h1Bias: (st.relevantIndicatorValuesAtEntry?.h1Trend as unknown as string) || st.marketRegime,
+      m15Confirmation: `${st.signalType} (${st.stopLossMethod} SL / ${st.takeProfitMethod} TP)`,
+      riskRewardRatio: strategyConfig.riskRewardRatio,
+      simultaneousTouchResolvedToSL: st.simultaneousTouchResolvedToSL,
+    };
+  });
+
+  const costModel = {
+    spreadPips: simConfig.costs.spreadPips,
+    commissionPerLot: simConfig.costs.commissionPerLot,
+    slippagePips: simConfig.costs.slippagePips,
+  };
+
+  const compiled = compileBacktestResults(mappedTrades, params.accountBalance, costModel);
+
+  const assumptions = [
+    'TradeLab Phase 3: Multi-Regime Strategy Engine active (Zero Future-Data Leakage).',
+    `Regime: ${strategyConfig.regime} | Pattern: ${strategyConfig.pattern} | Direction: ${strategyConfig.direction}.`,
+    `H1 Trend Filter: Causal EMA 50 / 200 with ${strategyConfig.slopeLookbackBars || strategyConfig.emaSlopeLookback || 3}-bar slope lookback.`,
+    `Market Regime: ADX 14 thresholds (Trending > ${strategyConfig.adxTrendingThreshold}, Ranging < ${strategyConfig.adxRangingThreshold}).`,
+    `S/R Engine: Confirmed Swings (${strategyConfig.swingLeftBars} left, ${strategyConfig.swingRightBars} right confirmation lag).`,
+    `Execution Timing: Signal at confirmation candle CLOSE; fill at next candle OPEN.`,
+    `Stop Loss: ${strategyConfig.stopLossMethod} (Buffer: ${strategyConfig.stopLossBufferPips} pips, Min: ${strategyConfig.minStopLossPips} pips).`,
+    `Take Profit: ${strategyConfig.takeProfitMethod} (Target: 1:${strategyConfig.riskRewardRatio} RR).`,
+    'Conservative Execution: Same-bar SL & TP touch resolves strictly to STOP LOSS.',
+  ];
+
+  return {
+    ...compiled,
+    costModel,
+    assumptions,
+    simulationResult: simResult,
+    diagnosticsSnapshots,
+    experiments,
+    activeExperimentId: experiments && experiments.length > 0 ? experiments[0].id : undefined,
+  };
+}
+
+/**
  * Executes candle-by-candle strategy simulation and backtest
  */
 export function runBacktest(
@@ -124,6 +287,11 @@ export function runBacktest(
 ): BacktestResult {
   if (!candles || candles.length < 50) {
     return createEmptyResult(params.accountBalance);
+  }
+
+  // Route to TradeLab Multi-Regime Engine (Phase 3)
+  if (params.strategyType === 'tradelab_strategy') {
+    return runTradeLabStrategyBacktest(candles, providedH1Candles, params, symbol, timeframe);
   }
 
   // Route to Strategy A: H1 Trend + M15 Rejection Backtesting Engine

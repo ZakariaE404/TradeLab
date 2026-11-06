@@ -448,23 +448,36 @@ export function TradingChart({
         badgeLabel = `★ ${badgeLabel}`;
       }
 
-      // Signal / Entry Marker at historical signal timestamp
+      // 1. Signal Confirmation Marker at confirmed candle CLOSE
+      if (trade.signalTime && trade.signalTime > 0 && trade.signalTime !== trade.entryTime) {
+        seriesMarkers.push({
+          id: `sig-${trade.id}`,
+          time: trade.signalTime as Time,
+          position: isBuy ? 'belowBar' : 'aboveBar',
+          color: isBuy ? '#38bdf8' : '#fb923c',
+          shape: isBuy ? 'arrowUp' : 'arrowDown',
+          text: isSelected ? `★ SIG #${trade.index} ${isBuy ? 'BUY' : 'SELL'}` : `SIG #${trade.index} ${isBuy ? 'BUY' : 'SELL'}`,
+          size: 1,
+        });
+      }
+
+      // 2. Execution Entry Marker at actual entry candle OPEN
       seriesMarkers.push({
         id: `entry-${trade.id}`,
-        time: signalTimestamp,
+        time: trade.entryTime as Time,
         position: isBuy ? 'belowBar' : 'aboveBar',
         color: markerColor,
-        shape: isBuy ? 'arrowUp' : 'arrowDown',
+        shape: trade.signalTime === trade.entryTime ? (isBuy ? 'arrowUp' : 'arrowDown') : 'circle',
         text: badgeLabel,
         size: isSelected ? 2 : 1,
       });
 
-      // Exit Marker only if trade has truly resolved/closed
+      // 3. Exit Marker only if trade has truly resolved/closed
       if (
         !isUnresolved &&
         trade.exitTime &&
         trade.exitTime > 0 &&
-        trade.exitTime !== signalTimestamp
+        trade.exitTime !== trade.entryTime
       ) {
         let exitColor = '#94a3b8';
         let exitShape: 'circle' | 'square' = 'circle';
