@@ -27,10 +27,10 @@ export function splitDateRangeIntoChunks(
   toStr: string,
   timeframe: DukascopyTimeframe
 ): ChunkRange[] {
-  const fromDate = new Date(fromStr);
-  const toDate = new Date(toStr);
+  const fromTime = new Date(fromStr).getTime();
+  const toTime = new Date(toStr).getTime();
 
-  if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime()) || fromDate >= toDate) {
+  if (isNaN(fromTime) || isNaN(toTime) || fromTime >= toTime) {
     return [{ from: fromStr, to: toStr }];
   }
 
@@ -42,28 +42,34 @@ export function splitDateRangeIntoChunks(
   else if (timeframe === 'h1' || timeframe === 'h4') daysPerChunk = 90;
   else if (timeframe === 'd1') daysPerChunk = 365;
 
-  const totalDiffDays = Math.ceil((toDate.getTime() - fromDate.getTime()) / (1000 * 3600 * 24));
-  if (totalDiffDays <= daysPerChunk) {
+  const msPerChunk = daysPerChunk * 24 * 3600 * 1000;
+  const totalDiffMs = toTime - fromTime;
+
+  if (totalDiffMs <= msPerChunk) {
     return [{ from: fromStr, to: toStr }];
   }
 
   const chunks: ChunkRange[] = [];
-  let currentStart = new Date(fromDate);
+  let currentStartMs = fromTime;
 
-  while (currentStart < toDate) {
-    const currentEnd = new Date(currentStart);
-    currentEnd.setDate(currentEnd.getDate() + daysPerChunk);
+  while (currentStartMs < toTime) {
+    const nextEndMs = Math.min(currentStartMs + msPerChunk, toTime);
+    const chunkFrom = new Date(currentStartMs).toISOString().split('T')[0];
+    const chunkTo = new Date(nextEndMs).toISOString().split('T')[0];
 
-    const actualEnd = currentEnd > toDate ? new Date(toDate) : currentEnd;
+    // Avoid duplicate zero-length chunk if boundary dates coincide
+    if (chunkFrom !== chunkTo || chunks.length === 0) {
+      chunks.push({
+        from: chunkFrom,
+        to: chunkTo,
+      });
+    }
 
-    chunks.push({
-      from: currentStart.toISOString().split('T')[0],
-      to: actualEnd.toISOString().split('T')[0],
-    });
-
-    // Move to next chunk start
-    currentStart = new Date(actualEnd);
-    currentStart.setDate(currentStart.getDate() + 1);
+    if (nextEndMs >= toTime) {
+      break;
+    }
+    // Start next chunk at previous chunk's end date (Dukascopy 'to' is exclusive; normalizer handles seam deduplication)
+    currentStartMs = nextEndMs;
   }
 
   return chunks;

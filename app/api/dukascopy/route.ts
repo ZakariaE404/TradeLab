@@ -16,8 +16,26 @@ import { DukascopyPriceType, DukascopyTimeframe } from '@/types/historicalData';
  * Downloads historical rates using dukascopy-node, normalizes and validates them.
  */
 
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // Up to 60s timeout where supported
+
+function serializeDukascopyError(err: any) {
+  const name = err?.name || 'Error';
+  const message = err?.message || 'Failed to download historical rates from Dukascopy.';
+  const code = err?.code || (err?.status ? `HTTP_${err.status}` : 'DUKASCOPY_FETCH_FAILED');
+  const status = typeof err?.status === 'number' && err.status >= 400 && err.status < 600 ? err.status : 502;
+  const validationErrors = err?.validationErrors || null;
+
+  return {
+    success: false,
+    code,
+    error: message,
+    name,
+    validationErrors,
+    status,
+  };
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -36,14 +54,8 @@ export async function GET(request: NextRequest) {
       priceType,
     });
   } catch (error: any) {
-    return NextResponse.json(
-      {
-        success: false,
-        code: 'INTERNAL_SERVER_ERROR',
-        error: error.message || 'An unexpected error occurred while processing Dukascopy historical data.',
-      },
-      { status: 500 }
-    );
+    const errorPayload = serializeDukascopyError(error);
+    return NextResponse.json(errorPayload, { status: errorPayload.status });
   }
 }
 
@@ -64,14 +76,8 @@ export async function POST(request: NextRequest) {
       priceType,
     });
   } catch (error: any) {
-    return NextResponse.json(
-      {
-        success: false,
-        code: 'INTERNAL_SERVER_ERROR',
-        error: error.message || 'An unexpected error occurred while processing Dukascopy historical data.',
-      },
-      { status: 500 }
-    );
+    const errorPayload = serializeDukascopyError(error);
+    return NextResponse.json(errorPayload, { status: errorPayload.status });
   }
 }
 
@@ -128,6 +134,12 @@ async function handleDukascopyFetch(params: {
       priceType: priceType.toLowerCase() as 'bid' | 'ask',
       volumes: true,
       format: 'json',
+      retryCount: 2,
+      pauseBetweenRetriesMs: 1000,
+      retryOnEmpty: true,
+      failAfterRetryCount: true,
+      batchSize: 10,
+      pauseBetweenBatchesMs: 100,
     });
 
     if (!rawRates || !Array.isArray(rawRates) || rawRates.length === 0) {
@@ -178,13 +190,7 @@ async function handleDukascopyFetch(params: {
       report: normalized.report,
     });
   } catch (err: any) {
-    return NextResponse.json(
-      {
-        success: false,
-        code: 'DUKASCOPY_FETCH_FAILED',
-        error: err.message || 'Failed to download historical rates from Dukascopy.',
-      },
-      { status: 502 }
-    );
+    const errorPayload = serializeDukascopyError(err);
+    return NextResponse.json(errorPayload, { status: errorPayload.status });
   }
 }

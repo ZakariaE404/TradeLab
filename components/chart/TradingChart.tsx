@@ -376,6 +376,10 @@ export function TradingChart({
 
     candleSeriesRef.current.setData(chartCandles);
     volumeSeriesRef.current.setData(chartVolumes);
+
+    if (chartCandles.length > 0) {
+      chartRef.current?.timeScale().fitContent();
+    }
   }, [candles]);
 
   // 4. Update EMA 50 data & visibility

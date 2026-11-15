@@ -3,7 +3,8 @@ import { DukascopyPriceType, DukascopyTimeframe } from '@/types/historicalData';
 import { DUKASCOPY_TIMEFRAMES } from './dukascopyCatalog';
 
 export interface RawDukascopyCandle {
-  timestamp: number | string; // ms epoch or ISO date string
+  timestamp?: number | string; // ms epoch or ISO date string
+  time?: number | string; // seconds or ms epoch (if pre-normalized or Candle format)
   open: number;
   high: number;
   low: number;
@@ -63,15 +64,21 @@ export function normalizeDukascopyCandles(
   for (const raw of rawCandles) {
     if (!raw) continue;
 
-    // 1. Parse timestamp to seconds UTC
+    // 1. Parse timestamp to seconds UTC (handles raw timestamp or pre-normalized time field)
     let timeSec = 0;
-    if (typeof raw.timestamp === 'number') {
-      // Dukascopy returns millisecond epoch
-      timeSec = raw.timestamp > 1e11 ? Math.floor(raw.timestamp / 1000) : Math.floor(raw.timestamp);
-    } else if (typeof raw.timestamp === 'string') {
-      const ms = Date.parse(raw.timestamp);
-      if (!isNaN(ms)) {
-        timeSec = Math.floor(ms / 1000);
+    const rawTime = (raw as any).time !== undefined ? (raw as any).time : (raw as any).timestamp;
+
+    if (typeof rawTime === 'number') {
+      timeSec = rawTime > 1e11 ? Math.floor(rawTime / 1000) : Math.floor(rawTime);
+    } else if (typeof rawTime === 'string') {
+      const numericVal = Number(rawTime);
+      if (!isNaN(numericVal) && numericVal > 0) {
+        timeSec = numericVal > 1e11 ? Math.floor(numericVal / 1000) : Math.floor(numericVal);
+      } else {
+        const ms = Date.parse(rawTime);
+        if (!isNaN(ms)) {
+          timeSec = Math.floor(ms / 1000);
+        }
       }
     }
 

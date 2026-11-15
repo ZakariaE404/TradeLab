@@ -147,9 +147,14 @@ export async function saveHistoricalDataset(dataset: SavedHistoricalDataset): Pr
     const db = await getIDBDatabase();
     if (!db) return;
 
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    const store = tx.objectStore(STORE_NAME);
-    store.put(dataset);
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.put(dataset);
+      req.onerror = () => reject(req.error);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
   } catch (err) {
     console.warn('[DatasetStorage] Error storing dataset in IndexedDB:', err);
   }
@@ -171,9 +176,14 @@ export async function deleteHistoricalDataset(id: string): Promise<void> {
     const db = await getIDBDatabase();
     if (!db) return;
 
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    const store = tx.objectStore(STORE_NAME);
-    store.delete(id);
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.delete(id);
+      req.onerror = () => reject(req.error);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
   } catch (err) {
     console.warn('[DatasetStorage] Error deleting dataset from IndexedDB:', err);
   }
