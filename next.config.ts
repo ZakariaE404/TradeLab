@@ -20,6 +20,7 @@ const nextConfig: NextConfig = {
     ],
   },
   output: process.env.VERCEL ? undefined : 'standalone',
+  serverExternalPackages: ['dukascopy-node'],
   transpilePackages: ['motion'],
   webpack: (config, {dev}) => {
     // HMR is disabled in AI Studio via DISABLE_HMR env var.

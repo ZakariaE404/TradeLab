@@ -29,6 +29,7 @@ import {
   RefreshCw,
   AlertTriangle,
   Key,
+  Download,
 } from 'lucide-react';
 
 interface TopNavProps {
