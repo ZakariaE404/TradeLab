@@ -5,6 +5,7 @@ import {
   DukascopyTimeframe,
   HistoricalDownloadRequest,
   SavedHistoricalDataset,
+  TimeRangeInterval,
 } from '@/types/historicalData';
 import {
   DUKASCOPY_INSTRUMENTS,
@@ -12,21 +13,57 @@ import {
   validateDownloadParams,
 } from './dukascopyCatalog';
 import { normalizeDukascopyCandles } from './dukascopyNormalizer';
-import { findDuplicateDataset, saveHistoricalDataset } from './datasetStorage';
+import { saveHistoricalDataset, findDuplicateDataset } from './datasetStorage';
+import {
+  calculateMissingM1Intervals,
+  getCanonicalM1Candles,
+  getSymbolCoverage,
+  normalizeSymbolKey,
+  saveCanonicalM1Candles,
+} from './m1Database';
+import { aggregateM1ToTimeframe, normalizeTimeframeId } from './timeframeAggregator';
 
 export interface ChunkRange {
-  from: string; // ISO date YYYY-MM-DD
-  to: string; // ISO date YYYY-MM-DD
+  from: string; // ISO date 'YYYY-MM-DD' or timestamp
+  to: string;   // ISO date 'YYYY-MM-DD' or timestamp
+  startSec: number;
+  endSec: number;
 }
 
 /**
- * Splits date range into manageable chunks to prevent Vercel / serverless timeouts.
+ * Splits an interval into manageable chunks (default 7 days for M1 data)
+ * to comply with Vercel serverless request limits.
+ */
+export function splitIntervalIntoChunks(
+  interval: TimeRangeInterval,
+  maxDaysPerChunk: number = 7
+): ChunkRange[] {
+  const maxSecPerChunk = maxDaysPerChunk * 86400;
+  const chunks: ChunkRange[] = [];
+  let cur = interval.start;
+
+  while (cur < interval.end) {
+    const nextEnd = Math.min(cur + maxSecPerChunk, interval.end);
+    chunks.push({
+      from: new Date(cur * 1000).toISOString(),
+      to: new Date(nextEnd * 1000).toISOString(),
+      startSec: cur,
+      endSec: nextEnd,
+    });
+    cur = nextEnd;
+  }
+
+  return chunks;
+}
+
+/**
+ * Legacy compatibility wrapper for splitting date ranges
  */
 export function splitDateRangeIntoChunks(
   fromStr: string,
   toStr: string,
-  timeframe: DukascopyTimeframe
-): ChunkRange[] {
+  timeframe: DukascopyTimeframe = 'm1'
+): { from: string; to: string }[] {
   const fromTime = new Date(fromStr).getTime();
   const toTime = new Date(toStr).getTime();
 
@@ -34,45 +71,18 @@ export function splitDateRangeIntoChunks(
     return [{ from: fromStr, to: toStr }];
   }
 
-  // Determine days per chunk according to timeframe density
-  let daysPerChunk = 30;
-  if (timeframe === 'm1') daysPerChunk = 7;
-  else if (timeframe === 'm5') daysPerChunk = 14;
-  else if (timeframe === 'm15' || timeframe === 'm30') daysPerChunk = 30;
-  else if (timeframe === 'h1' || timeframe === 'h4') daysPerChunk = 90;
-  else if (timeframe === 'd1') daysPerChunk = 365;
+  const interval: TimeRangeInterval = {
+    start: Math.floor(fromTime / 1000),
+    end: Math.ceil(toTime / 1000),
+  };
 
-  const msPerChunk = daysPerChunk * 24 * 3600 * 1000;
-  const totalDiffMs = toTime - fromTime;
+  const daysPerChunk = timeframe === 'm1' ? 7 : 30;
+  const chunks = splitIntervalIntoChunks(interval, daysPerChunk);
 
-  if (totalDiffMs <= msPerChunk) {
-    return [{ from: fromStr, to: toStr }];
-  }
-
-  const chunks: ChunkRange[] = [];
-  let currentStartMs = fromTime;
-
-  while (currentStartMs < toTime) {
-    const nextEndMs = Math.min(currentStartMs + msPerChunk, toTime);
-    const chunkFrom = new Date(currentStartMs).toISOString().split('T')[0];
-    const chunkTo = new Date(nextEndMs).toISOString().split('T')[0];
-
-    // Avoid duplicate zero-length chunk if boundary dates coincide
-    if (chunkFrom !== chunkTo || chunks.length === 0) {
-      chunks.push({
-        from: chunkFrom,
-        to: chunkTo,
-      });
-    }
-
-    if (nextEndMs >= toTime) {
-      break;
-    }
-    // Start next chunk at previous chunk's end date (Dukascopy 'to' is exclusive; normalizer handles seam deduplication)
-    currentStartMs = nextEndMs;
-  }
-
-  return chunks;
+  return chunks.map((c) => ({
+    from: c.from.split('T')[0],
+    to: c.to.split('T')[0],
+  }));
 }
 
 export interface DownloadOptions {
@@ -82,8 +92,12 @@ export interface DownloadOptions {
 }
 
 /**
- * Executes historical data download from Dukascopy API route.
- * Handles chunking, progress updates, cancellation, retries, and dataset saving.
+ * Reliable M1-Based Historical Data Download Manager:
+ * - M1 is the ONLY canonical timeframe downloaded from Dukascopy.
+ * - Detects already covered intervals in IndexedDB; downloads ONLY missing intervals.
+ * - Saves M1 candles directly to canonical database.
+ * - Generates all higher timeframes deterministically via timeframeAggregator.
+ * - Resumes gracefully from where it left off on interruption.
  */
 export async function downloadHistoricalDataset(
   request: HistoricalDownloadRequest,
@@ -92,10 +106,10 @@ export async function downloadHistoricalDataset(
   const { onProgress, signal, forceOverwrite } = options;
   const { instrument, timeframe, from, to, priceType } = request;
 
-  // 1. Validation
+  // 1. Validate parameters
   const validation = validateDownloadParams({
     instrument,
-    timeframe,
+    timeframe: 'm1', // Canonical format
     from,
     to,
     priceType,
@@ -105,65 +119,121 @@ export async function downloadHistoricalDataset(
     return { success: false, error: validation.error };
   }
 
-  // 2. Protection against duplicate downloads
-  if (!forceOverwrite) {
-    const existing = await findDuplicateDataset({
-      instrument,
-      timeframe,
-      startDate: from,
-      endDate: to,
-      priceType,
-    });
+  const symKey = normalizeSymbolKey(instrument);
+  const fromDate = new Date(from);
+  const toDate = new Date(to);
 
-    if (existing) {
-      return {
-        success: false,
-        isDuplicate: true,
-        dataset: existing,
-        error: `A dataset for ${instrument.toUpperCase()} (${timeframe.toUpperCase()}) from ${from} to ${to} [${priceType}] is already saved.`,
-      };
-    }
+  if (!from.includes('T') && !from.includes(':')) {
+    fromDate.setUTCHours(0, 0, 0, 0);
+  }
+  if (!to.includes('T') && !to.includes(':')) {
+    toDate.setUTCHours(23, 59, 59, 999);
   }
 
-  // 3. Chunk generation
-  const chunks = splitDateRangeIntoChunks(from, to, timeframe);
-  const totalChunks = chunks.length;
-  let allRawCandles: any[] = [];
+  const startSec = Math.floor(fromDate.getTime() / 1000);
+  const endSec = Math.ceil(toDate.getTime() / 1000);
+
+  // 2. Check existing database coverage & detect missing intervals
+  onProgress?.({
+    isDownloading: true,
+    instrument,
+    timeframe: 'm1',
+    progressPercent: 5,
+    totalChunks: 0,
+    completedChunks: 0,
+    totalCandlesFetched: 0,
+    currentStage: 'Inspecting local canonical M1 database...',
+  });
+
+  const existingCoverage = await getSymbolCoverage(symKey);
+  const missingIntervals = forceOverwrite
+    ? [{ start: startSec, end: endSec }]
+    : await calculateMissingM1Intervals(symKey, startSec, endSec);
+
+  // 3. If all data already exists, skip network requests entirely!
+  if (missingIntervals.length === 0) {
+    onProgress?.({
+      isDownloading: true,
+      instrument,
+      timeframe: 'm1',
+      progressPercent: 90,
+      totalChunks: 0,
+      completedChunks: 0,
+      totalCandlesFetched: existingCoverage?.totalCandlesCount || 0,
+      currentStage: 'All requested data already exists locally. Generating timeframes...',
+    });
+
+    const storedM1 = await getCanonicalM1Candles(symKey, startSec, endSec);
+    const dataset = await buildDatasetFromM1({
+      instrument,
+      timeframe,
+      from,
+      to,
+      startSec,
+      endSec,
+      priceType,
+      m1Candles: storedM1,
+    });
+
+    onProgress?.({
+      isDownloading: false,
+      instrument,
+      timeframe: 'm1',
+      progressPercent: 100,
+      totalChunks: 0,
+      completedChunks: 0,
+      totalCandlesFetched: storedM1.length,
+      currentStage: 'Complete! Loaded from canonical local database.',
+    });
+
+    return { success: true, dataset };
+  }
+
+  // 4. Split missing intervals into chunks (7 days per chunk for M1)
+  const allChunks: ChunkRange[] = [];
+  for (const interval of missingIntervals) {
+    const intervalChunks = splitIntervalIntoChunks(interval, 7);
+    allChunks.push(...intervalChunks);
+  }
+
+  const totalChunks = allChunks.length;
+  let totalM1Saved = 0;
 
   onProgress?.({
     isDownloading: true,
     instrument,
-    timeframe,
-    progressPercent: 5,
+    timeframe: 'm1',
+    progressPercent: 10,
     totalChunks,
     completedChunks: 0,
     totalCandlesFetched: 0,
-    currentStage: `Preparing download in ${totalChunks} chunk${totalChunks > 1 ? 's' : ''}...`,
+    currentStage: `Downloading ${totalChunks} missing M1 chunk${totalChunks > 1 ? 's' : ''}...`,
+    missingIntervalsCount: missingIntervals.length,
   });
 
-  // 4. Download chunks sequentially with retry support
+  // 5. Download missing chunks sequentially with retry support
   for (let i = 0; i < totalChunks; i++) {
     if (signal?.aborted) {
       return { success: false, error: 'Download cancelled by user.' };
     }
 
-    const chunk = chunks[i];
-    const chunkPct = Math.round(5 + ((i) / totalChunks) * 80);
+    const chunk = allChunks[i];
+    const chunkPct = Math.round(10 + (i / totalChunks) * 75);
 
     onProgress?.({
       isDownloading: true,
       instrument,
-      timeframe,
+      timeframe: 'm1',
       progressPercent: chunkPct,
       totalChunks,
       completedChunks: i,
-      totalCandlesFetched: allRawCandles.length,
-      currentStage: `Downloading chunk ${i + 1}/${totalChunks} (${chunk.from} to ${chunk.to})...`,
+      totalCandlesFetched: totalM1Saved,
+      currentStage: `Downloading M1 chunk ${i + 1}/${totalChunks} (${chunk.from.split('T')[0]} to ${chunk.to.split('T')[0]})...`,
     });
 
     let success = false;
     let attempts = 0;
-    let chunkData: any[] = [];
+    let chunkCandles: Candle[] = [];
     let lastError = '';
 
     while (!success && attempts < 3) {
@@ -171,7 +241,7 @@ export async function downloadHistoricalDataset(
       try {
         const queryParams = new URLSearchParams({
           instrument,
-          timeframe,
+          timeframe: 'm1', // Always canonical M1
           from: chunk.from,
           to: chunk.to,
           priceType,
@@ -192,7 +262,7 @@ export async function downloadHistoricalDataset(
           throw new Error(data.error || 'Server reported failure');
         }
 
-        chunkData = Array.isArray(data.candles) ? data.candles : [];
+        chunkCandles = Array.isArray(data.candles) ? data.candles : [];
         success = true;
       } catch (err: any) {
         if (signal?.aborted) {
@@ -200,7 +270,6 @@ export async function downloadHistoricalDataset(
         }
         lastError = err.message || 'Network request failed';
         if (attempts < 3) {
-          // Exponential backoff
           await new Promise((r) => setTimeout(r, attempts * 1000));
         }
       }
@@ -213,38 +282,88 @@ export async function downloadHistoricalDataset(
       };
     }
 
-    allRawCandles = allRawCandles.concat(chunkData);
+    // Save downloaded M1 candles directly into canonical IndexedDB
+    if (chunkCandles.length > 0) {
+      const savedCount = await saveCanonicalM1Candles(instrument, chunkCandles, 'Dukascopy');
+      totalM1Saved += savedCount;
+    }
   }
 
-  // 5. Final Normalization and Validation
+  // 6. Retrieve full M1 range from canonical database
   onProgress?.({
     isDownloading: true,
     instrument,
-    timeframe,
+    timeframe: 'm1',
     progressPercent: 90,
     totalChunks,
     completedChunks: totalChunks,
-    totalCandlesFetched: allRawCandles.length,
-    currentStage: 'Normalizing and validating historical candles...',
+    totalCandlesFetched: totalM1Saved,
+    currentStage: 'Validating canonical M1 data and generating timeframes...',
   });
 
-  const normalized = normalizeDukascopyCandles(allRawCandles, timeframe);
+  const fullM1Candles = await getCanonicalM1Candles(symKey, startSec, endSec);
 
-  if (normalized.candles.length === 0) {
+  if (fullM1Candles.length === 0) {
     return {
       success: false,
-      error: `No valid candles returned from Dukascopy for ${instrument.toUpperCase()} on ${timeframe.toUpperCase()} between ${from} and ${to}. Check if market was open.`,
+      error: `No candles returned from Dukascopy for ${instrument.toUpperCase()} between ${from} and ${to}. Market was likely closed.`,
     };
   }
 
-  // 6. Build SavedHistoricalDataset
+  // 7. Aggregate M1 to the requested display timeframe
+  const dataset = await buildDatasetFromM1({
+    instrument,
+    timeframe,
+    from,
+    to,
+    startSec,
+    endSec,
+    priceType,
+    m1Candles: fullM1Candles,
+  });
+
+  onProgress?.({
+    isDownloading: false,
+    instrument,
+    timeframe: 'm1',
+    progressPercent: 100,
+    totalChunks,
+    completedChunks: totalChunks,
+    totalCandlesFetched: fullM1Candles.length,
+    currentStage: 'Completed successfully! Saved to canonical database.',
+  });
+
+  return {
+    success: true,
+    dataset,
+  };
+}
+
+/**
+ * Builds and saves a SavedHistoricalDataset entity from canonical M1 candles
+ */
+async function buildDatasetFromM1(params: {
+  instrument: string;
+  timeframe: DukascopyTimeframe;
+  from: string;
+  to: string;
+  startSec: number;
+  endSec: number;
+  priceType: DukascopyPriceType;
+  m1Candles: Candle[];
+}): Promise<SavedHistoricalDataset> {
+  const { instrument, timeframe, from, to, startSec, endSec, priceType, m1Candles } = params;
+
   const instMeta = DUKASCOPY_INSTRUMENTS[instrument.toLowerCase()] || {
     symbol: instrument.toUpperCase(),
     name: instrument.toUpperCase(),
   };
 
-  const datasetId = `ds_${instrument.toLowerCase()}_${timeframe}_${from.replace(/-/g, '')}_${to.replace(/-/g, '')}_${priceType.toLowerCase()}_${Date.now()}`;
+  const normTf = normalizeTimeframeId(timeframe);
+  const aggregated = aggregateM1ToTimeframe(m1Candles, normTf);
+
   const displayTf = mapDukascopyTfToTradeLabTf(timeframe);
+  const datasetId = `ds_${instrument.toLowerCase()}_${timeframe}_${from.replace(/[^0-9]/g, '')}_${to.replace(/[^0-9]/g, '')}_${priceType.toLowerCase()}_${Date.now()}`;
 
   const dataset: SavedHistoricalDataset = {
     id: datasetId,
@@ -255,43 +374,16 @@ export async function downloadHistoricalDataset(
     displayTimeframe: displayTf,
     startDate: from,
     endDate: to,
-    startTime: normalized.report.startTime || Math.floor(Date.parse(from) / 1000),
-    endTime: normalized.report.endTime || Math.floor(Date.parse(to) / 1000),
+    startTime: m1Candles[0]?.time || startSec,
+    endTime: m1Candles[m1Candles.length - 1]?.time || endSec,
     priceType,
-    candleCount: normalized.candles.length,
+    candleCount: aggregated.length,
     downloadDate: Date.now(),
     dataSource: 'Dukascopy',
     status: 'READY',
-    candles: normalized.candles,
+    candles: aggregated,
   };
-
-  // 7. Persist Dataset
-  onProgress?.({
-    isDownloading: true,
-    instrument,
-    timeframe,
-    progressPercent: 96,
-    totalChunks,
-    completedChunks: totalChunks,
-    totalCandlesFetched: normalized.candles.length,
-    currentStage: 'Saving dataset to local storage...',
-  });
 
   await saveHistoricalDataset(dataset);
-
-  onProgress?.({
-    isDownloading: false,
-    instrument,
-    timeframe,
-    progressPercent: 100,
-    totalChunks,
-    completedChunks: totalChunks,
-    totalCandlesFetched: normalized.candles.length,
-    currentStage: 'Completed successfully!',
-  });
-
-  return {
-    success: true,
-    dataset,
-  };
+  return dataset;
 }

@@ -43,7 +43,7 @@ export interface SymbolMeta {
   typicalSpreadPips: number;
 }
 
-export type Timeframe = '1m' | '5m' | '15m' | '30m' | '1h' | '4h' | '1D';
+export type Timeframe = '1m' | '5m' | '15m' | '30m' | '1h' | '4h' | '1D' | '1W';
 
 export interface TimeframeMeta {
   id: Timeframe;
@@ -146,10 +146,13 @@ export interface Trade {
 export type StrategyType =
   | 'tradelab_strategy'
   | 'strategy_a'
+  | 'strategy_001'
+  | 'strategy_002'
   | 'ema_pullback'
   | 'breakout_retest'
   | 'rsi_mean_reversion'
-  | 'macd_momentum';
+  | 'macd_momentum'
+  | (string & {});
 
 export interface StrategyParameters {
   strategyType: StrategyType;

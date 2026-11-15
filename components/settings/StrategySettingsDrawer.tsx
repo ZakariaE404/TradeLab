@@ -6,6 +6,7 @@ import { StrategyAParameters } from '@/types/strategyA';
 import { STRATEGY_PRESETS, DEFAULT_STRATEGY_PARAMS } from '@/services/backtestEngine';
 import { DEFAULT_STRATEGY_A_PARAMS } from '@/services/strategyA';
 import { DEFAULT_STRATEGY_CONFIG, StrategyConfiguration } from '@/services/strategy/types';
+import { StrategyRegistry } from '@/services/strategy';
 import {
   X,
   Sliders,
@@ -153,13 +154,38 @@ export function StrategySettingsDrawer({
             onChange={(e) => handleUpdate('strategyType', e.target.value as StrategyType)}
             className="w-full bg-[#111726] border border-slate-800 rounded p-2 text-slate-200 font-mono text-xs focus:outline-none focus:border-emerald-500"
           >
-            <option value="tradelab_strategy">★ TradeLab Multi-Regime Engine (Phase 3)</option>
+            <option value="strategy_001">★ Strategy 001: H1 Trend + M15 Rejection (Multi-Timeframe)</option>
+            <option value="strategy_002">Strategy 002: Multi-Timeframe EMA Trend Pullback</option>
+            <option value="tradelab_strategy">TradeLab Multi-Regime Engine (Phase 3)</option>
             <option value="strategy_a">Strategy A: H1 Trend + M15 Rejection (Legacy)</option>
-            <option value="ema_pullback">EMA Trend Pullback (Trend-Following)</option>
+            <option value="ema_pullback">EMA Trend Pullback (Single Timeframe)</option>
             <option value="breakout_retest">Donchian Breakout Channel</option>
             <option value="rsi_mean_reversion">RSI Extreme Reversion + Bollinger</option>
             <option value="macd_momentum">Fast/Slow Momentum Crossover</option>
           </select>
+
+          {/* Strategy Metadata & Multi-Timeframe Badge */}
+          {(() => {
+            const activeMeta = StrategyRegistry.getStrategy(params.strategyType);
+            if (!activeMeta) return null;
+            return (
+              <div className="mt-2 p-2.5 rounded bg-[#111726] border border-slate-800 space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-slate-200">{activeMeta.name}</span>
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                    {activeMeta.timeframeDescription || activeMeta.requiredTimeframes.join(' + ')}
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-400 leading-relaxed">
+                  {activeMeta.description}
+                </p>
+                <div className="text-[9px] text-slate-500 font-mono pt-0.5 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-sky-400 shrink-0" />
+                  <span>Evaluates on {activeMeta.primaryTimeframe.toUpperCase()} candle closes independently of chart view.</span>
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Section 2A: TradeLab Phase 3 Multi-Regime Strategy Parameters */}
@@ -511,8 +537,8 @@ export function StrategySettingsDrawer({
           </div>
         )}
 
-        {/* Section 2B: Strategy A Specific Parameters */}
-        {params.strategyType === 'strategy_a' && (
+        {/* Section 2B: Strategy 001 / Strategy A Specific Parameters */}
+        {(params.strategyType === 'strategy_a' || params.strategyType === 'strategy_001') && (
           <div className="pt-3 border-t border-slate-800/80 space-y-3">
             <div className="flex items-center justify-between">
               <label className="text-[11px] uppercase tracking-wider text-emerald-400 font-semibold">

@@ -431,6 +431,14 @@ export function TradingChart({
     }
 
     const seriesMarkers: SeriesMarker<Time>[] = [];
+    const tfSeconds = TIMEFRAMES[timeframe]?.seconds || 900;
+
+    const findSeriesTime = (t: number): Time | null => {
+      if (candleMap.has(t)) return t as Time;
+      const bucket = Math.floor(t / tfSeconds) * tfSeconds;
+      if (candleMap.has(bucket)) return bucket as Time;
+      return null;
+    };
 
     for (const trade of trades) {
       const isBuy = trade.direction === 'BUY' || trade.direction === 'LONG';
@@ -439,10 +447,11 @@ export function TradingChart({
       const isLoss = trade.status === 'LOSS';
       const isUnresolved = trade.status === 'UNRESOLVED' || trade.status === 'OPEN';
 
-      // Exact historical signal timestamp
-      const signalTimestamp = (trade.signalTime && trade.signalTime > 0
-        ? trade.signalTime
-        : trade.entryTime) as Time;
+      const entryTime = findSeriesTime(trade.entryTime);
+      if (!entryTime) continue; // Skip marker if candle is outside loaded chart window
+
+      const sigTime = trade.signalTime && trade.signalTime > 0 ? findSeriesTime(trade.signalTime) : null;
+      const exitTime = trade.exitTime && trade.exitTime > 0 ? findSeriesTime(trade.exitTime) : null;
 
       // Color and label according to trade outcome
       let markerColor = '#94a3b8'; // Slate default / BE
@@ -466,10 +475,10 @@ export function TradingChart({
       }
 
       // 1. Signal Confirmation Marker at confirmed candle CLOSE
-      if (trade.signalTime && trade.signalTime > 0 && trade.signalTime !== trade.entryTime) {
+      if (sigTime && sigTime !== entryTime) {
         seriesMarkers.push({
           id: `sig-${trade.id}`,
-          time: trade.signalTime as Time,
+          time: sigTime,
           position: isBuy ? 'belowBar' : 'aboveBar',
           color: isBuy ? '#38bdf8' : '#fb923c',
           shape: isBuy ? 'arrowUp' : 'arrowDown',
@@ -481,10 +490,10 @@ export function TradingChart({
       // 2. Execution Entry Marker at actual entry candle OPEN
       seriesMarkers.push({
         id: `entry-${trade.id}`,
-        time: trade.entryTime as Time,
+        time: entryTime,
         position: isBuy ? 'belowBar' : 'aboveBar',
         color: markerColor,
-        shape: trade.signalTime === trade.entryTime ? (isBuy ? 'arrowUp' : 'arrowDown') : 'circle',
+        shape: sigTime === entryTime ? (isBuy ? 'arrowUp' : 'arrowDown') : 'circle',
         text: badgeLabel,
         size: isSelected ? 2 : 1,
       });
@@ -492,9 +501,8 @@ export function TradingChart({
       // 3. Exit Marker only if trade has truly resolved/closed
       if (
         !isUnresolved &&
-        trade.exitTime &&
-        trade.exitTime > 0 &&
-        trade.exitTime !== trade.entryTime
+        exitTime &&
+        exitTime !== entryTime
       ) {
         let exitColor = '#94a3b8';
         let exitShape: 'circle' | 'square' = 'circle';
@@ -512,7 +520,7 @@ export function TradingChart({
 
         seriesMarkers.push({
           id: `exit-${trade.id}`,
-          time: trade.exitTime as Time,
+          time: exitTime,
           position: isBuy ? 'aboveBar' : 'belowBar',
           color: exitColor,
           shape: exitShape,
@@ -524,7 +532,7 @@ export function TradingChart({
 
     seriesMarkers.sort((a, b) => Number(a.time) - Number(b.time));
     markersPluginRef.current.setMarkers(seriesMarkers);
-  }, [trades, indicatorConfig.showMarkers, selectedTrade]);
+  }, [trades, indicatorConfig.showMarkers, selectedTrade, candleMap, timeframe]);
 
   // 8. Handle Selected Trade highlighting & horizontal price lines
   useEffect(() => {

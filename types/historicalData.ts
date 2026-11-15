@@ -50,6 +50,54 @@ export interface SavedHistoricalDataset {
   candles?: Candle[];
 }
 
+export interface CanonicalM1Candle {
+  id: string; // `${symbol}_${time}`
+  symbol: string; // lowercase, e.g. 'xauusd'
+  time: number; // Unix timestamp in seconds (start of the 1-minute bar, UTC aligned)
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  dataSource: string; // 'Dukascopy' | 'CSV'
+  isComplete?: boolean;
+}
+
+export interface TimeRangeInterval {
+  start: number; // Unix timestamp in seconds (inclusive)
+  end: number;   // Unix timestamp in seconds (exclusive)
+}
+
+export interface SymbolCoverageRecord {
+  symbol: string;
+  intervals: TimeRangeInterval[];
+  totalCandlesCount: number;
+  firstCandleTime: number | null;
+  lastCandleTime: number | null;
+  lastUpdated: number;
+}
+
+export type AggregatedCandleStatus = 'COMPLETE' | 'INCOMPLETE' | 'SESSION_BOUNDARY';
+
+export interface AggregatedCandle extends Candle {
+  constituentCount: number;
+  expectedConstituents: number;
+  isComplete: boolean;
+  hasGaps: boolean;
+  status: AggregatedCandleStatus;
+}
+
+export interface DerivedCacheRecord {
+  id: string; // `${symbol}_${timeframe}_${rangeStart}_${rangeEnd}`
+  symbol: string;
+  timeframe: string;
+  rangeStart: number;
+  rangeEnd: number;
+  candles: Candle[];
+  version: number;
+  createdAt: number;
+}
+
 export interface DownloadProgressState {
   isDownloading: boolean;
   datasetId?: string;
@@ -61,4 +109,8 @@ export interface DownloadProgressState {
   totalCandlesFetched: number;
   currentStage: string;
   error?: string | null;
+  // M1 Canonical & Coverage Stats
+  cachedIntervalsCount?: number;
+  missingIntervalsCount?: number;
+  totalM1CandlesStored?: number;
 }

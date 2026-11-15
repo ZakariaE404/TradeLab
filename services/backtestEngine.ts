@@ -22,6 +22,11 @@ import { runHistoricalSimulation } from './simulationEngine';
 import { runStrategyExperiments, StrategyExperimentResult } from './strategy/experimentRunner';
 import { getInstrumentCostModel } from './costEngine';
 import { SimulationConfig, SimulationResult } from '@/types/simulation';
+import {
+  StrategyRegistry,
+  runModularBacktest,
+  prepareTimeframeCandlesForStrategy,
+} from './strategy';
 
 export const DEFAULT_STRATEGY_PARAMS: StrategyParameters = {
   strategyType: 'strategy_a',
@@ -64,8 +69,29 @@ export const STRATEGY_PRESETS: {
     },
   },
   {
+    id: 'strategy_001_standard',
+    name: 'Strategy 001: H1 Trend + M15 Rejection (2:1 RR)',
+    description:
+      'H1 EMA 50/200 & structure filter with M15 support/resistance zone rejection and confirmed swing SL.',
+    params: {
+      strategyType: 'strategy_001',
+      riskRewardRatio: 2.0,
+      strategyA: DEFAULT_STRATEGY_A_PARAMS,
+    },
+  },
+  {
+    id: 'strategy_002_pullback',
+    name: 'Strategy 002: Multi-Timeframe EMA Trend Pullback',
+    description:
+      'H1 EMA 20/50 directional trend filter with M15 EMA 20 pullback retest and ATR volatility stop.',
+    params: {
+      strategyType: 'strategy_002',
+      riskRewardRatio: 2.0,
+    },
+  },
+  {
     id: 'strategy_a_standard',
-    name: 'Strategy A: H1 Trend + M15 Rejection (2:1 RR)',
+    name: 'Strategy A: H1 Trend + M15 Rejection (Legacy)',
     description:
       'H1 EMA 50/200 & structure filter with M15 support/resistance zone rejection and confirmed swing SL.',
     params: {
@@ -294,6 +320,25 @@ export function runBacktest(
 ): BacktestResult {
   if (!candles || candles.length < 50) {
     return createEmptyResult(params.accountBalance);
+  }
+
+  // Route to modular StrategyRegistry implementations (e.g. strategy_001, strategy_002)
+  const modularStrategy = StrategyRegistry.getStrategy(params.strategyType);
+  if (modularStrategy && params.strategyType !== 'strategy_a') {
+    const candlesByTimeframe = prepareTimeframeCandlesForStrategy(
+      modularStrategy,
+      candles,
+      providedH1Candles
+    );
+
+    return runModularBacktest({
+      strategy: modularStrategy,
+      candlesByTimeframe,
+      parameters: params,
+      symbol,
+      activeChartTimeframe: timeframe,
+      dataSourceDescription,
+    });
   }
 
   // Route to TradeLab Multi-Regime Engine (Phase 3)

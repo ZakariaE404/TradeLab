@@ -111,6 +111,7 @@ export const TIMEFRAMES: Record<Timeframe, TimeframeMeta> = {
   '1m': { id: '1m', label: 'M1', seconds: 60, barCount: 600 },
   '4h': { id: '4h', label: 'H4', seconds: 14400, barCount: 350 },
   '1D': { id: '1D', label: 'D1', seconds: 86400, barCount: 300 },
+  '1W': { id: '1W', label: 'W1', seconds: 604800, barCount: 150 },
 };
 
 export interface CandleValidationResult {

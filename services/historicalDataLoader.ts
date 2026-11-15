@@ -9,6 +9,7 @@ import { fetchTwelveDataCandles, detectCandleGaps, MissingDataGap } from './real
 import { generateForexCandles } from './marketData';
 import { getLatestClosedH1Index } from './multiTimeframeSync';
 import { aggregateM15ToH1 } from './strategyA';
+import { aggregateM1ToTimeframe } from './timeframeAggregator';
 
 export const HISTORICAL_WARMUP_REQUIREMENTS = {
   TARGET_H1_WARMUP_BARS: 1000,
@@ -221,16 +222,28 @@ export async function loadHistoricalDataset(
  * Aggregates M15 to H1 if H1 is not provided, and pre-computes sequential EMA 50, EMA 200, ATR 14, and ADX 14.
  */
 export function createHistoricalDatasetFromCandles(
-  rawM15: Candle[],
+  rawCandles: Candle[],
   rawH1?: Candle[] | null,
   symbol: ForexSymbol = 'XAUUSDm',
   mode: DataSourceMode = 'DEMO'
 ): HistoricalDataset {
-  const m15Candles = sanitizeAndSortCandles(rawM15);
+  const sanitized = sanitizeAndSortCandles(rawCandles);
+  let m15Candles: Candle[] = [];
   let h1Candles = rawH1 && rawH1.length > 0 ? sanitizeAndSortCandles(rawH1) : [];
 
-  if (h1Candles.length === 0 && m15Candles.length > 0) {
-    h1Candles = aggregateM15ToH1(m15Candles);
+  // Detect whether input candles are M1 candles (~60s interval)
+  const isM1 = sanitized.length >= 2 && (sanitized[1].time - sanitized[0].time <= 120);
+
+  if (isM1) {
+    m15Candles = aggregateM1ToTimeframe(sanitized, '15m');
+    if (h1Candles.length === 0) {
+      h1Candles = aggregateM1ToTimeframe(sanitized, '1h');
+    }
+  } else {
+    m15Candles = sanitized;
+    if (h1Candles.length === 0 && m15Candles.length > 0) {
+      h1Candles = aggregateM15ToH1(m15Candles);
+    }
   }
 
   // Pre-calculate sequential indicators on complete series (causal, zero lookahead)

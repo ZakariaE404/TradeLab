@@ -47,6 +47,8 @@ import { ApiKeyModal } from '@/components/common/ApiKeyModal';
 import { HistoricalDataModal } from '@/components/historical/HistoricalDataModal';
 import { SavedHistoricalDataset } from '@/types/historicalData';
 import { getSavedDatasetsList } from '@/services/datasetStorage';
+import { getOrComputeDerivedTimeframe } from '@/services/timeframeAggregator';
+import { StrategyRegistry } from '@/services/strategy';
 import { AlertTriangle, RefreshCw, Key, Download, Database } from 'lucide-react';
 
 const TradingChart = dynamic(
@@ -193,7 +195,28 @@ export default function TradeLabPage() {
         return;
       }
 
-      if (dataSourceMode === 'HISTORICAL' || dataSourceMode === 'CUSTOM') {
+      if (dataSourceMode === 'HISTORICAL') {
+        if (activeHistoricalDataset) {
+          const derived = await getOrComputeDerivedTimeframe(
+            activeHistoricalDataset.instrument,
+            timeframe,
+            activeHistoricalDataset.startTime,
+            activeHistoricalDataset.endTime
+          );
+          if (isCancelled) return;
+          if (derived && derived.length > 0) {
+            setActiveCandles(derived);
+            return;
+          }
+          if (activeHistoricalDataset.candles && activeHistoricalDataset.candles.length > 0) {
+            setActiveCandles(activeHistoricalDataset.candles);
+            return;
+          }
+        }
+        return;
+      }
+
+      if (dataSourceMode === 'CUSTOM') {
         if (activeHistoricalDataset && activeHistoricalDataset.candles && activeHistoricalDataset.candles.length > 0) {
           setActiveCandles(activeHistoricalDataset.candles);
         }
@@ -367,14 +390,50 @@ export default function TradeLabPage() {
     const currentEvalId = ++evaluationIdRef.current;
     setCalculationStatus('computing');
 
-    const candlesHash = getCandlesIdentityHash(activeCandles);
-    const cacheKey = getBacktestCacheKey(candlesHash, symbol, timeframe, strategyParams);
-
     // Run async cache lookup then fallback to computation
     (async () => {
-      const cached = await getCachedBacktest(cacheKey);
+      // 1. Resolve strategy definition to determine required evaluation timeframe
+      const strategyDef = StrategyRegistry.getStrategy(strategyParams.strategyType);
+      const evalTf = strategyDef ? strategyDef.primaryTimeframe : timeframe;
+
+      let strategyCandles = activeCandles;
+      let strategyH1Candles = realH1Candles;
+
+      // When the chart timeframe differs from the strategy's primary timeframe (e.g. Chart is H1, Strategy needs M15):
+      if (evalTf !== timeframe) {
+        if (dataSourceMode === 'HISTORICAL' && activeHistoricalDataset) {
+          const derived = await getOrComputeDerivedTimeframe(
+            activeHistoricalDataset.instrument,
+            evalTf,
+            activeHistoricalDataset.startTime,
+            activeHistoricalDataset.endTime
+          );
+          if (derived && derived.length > 0) {
+            strategyCandles = derived;
+          }
+          const derivedH1 = await getOrComputeDerivedTimeframe(
+            activeHistoricalDataset.instrument,
+            '1h',
+            activeHistoricalDataset.startTime,
+            activeHistoricalDataset.endTime
+          );
+          if (derivedH1 && derivedH1.length > 0) {
+            strategyH1Candles = derivedH1;
+          }
+        } else if (dataSourceMode === 'DEMO') {
+          strategyCandles = generateForexCandles(symbol, evalTf, marketSeed, undefined, marketRegime);
+          strategyH1Candles = generateForexCandles(symbol, '1h', marketSeed, undefined, marketRegime);
+        }
+      }
 
       if (evaluationIdRef.current !== currentEvalId) return; // Discard superseded evaluation
+
+      const candlesHash = getCandlesIdentityHash(strategyCandles);
+      const cacheKey = getBacktestCacheKey(candlesHash, symbol, evalTf, strategyParams);
+
+      const cached = await getCachedBacktest(cacheKey);
+
+      if (evaluationIdRef.current !== currentEvalId) return;
 
       if (cached) {
         setBacktestResult(cached.result);
@@ -385,7 +444,14 @@ export default function TradeLabPage() {
         requestAnimationFrame(async () => {
           if (evaluationIdRef.current !== currentEvalId) return;
 
-          const result = runBacktest(activeCandles, strategyParams, symbol, timeframe, realH1Candles, dataSourceDescription);
+          const result = runBacktest(
+            strategyCandles,
+            strategyParams,
+            symbol,
+            evalTf,
+            strategyH1Candles,
+            dataSourceDescription
+          );
           const savedTimestamp = await setCachedBacktest(cacheKey, result);
 
           if (evaluationIdRef.current !== currentEvalId) return;
@@ -396,7 +462,18 @@ export default function TradeLabPage() {
         });
       }
     })();
-  }, [activeCandles, strategyParams, symbol, timeframe, realH1Candles, dataSourceDescription]);
+  }, [
+    activeCandles,
+    strategyParams,
+    symbol,
+    timeframe,
+    realH1Candles,
+    dataSourceDescription,
+    dataSourceMode,
+    activeHistoricalDataset,
+    marketSeed,
+    marketRegime,
+  ]);
 
   // Derive selected trade from current result
   const selectedTrade = useMemo(() => {

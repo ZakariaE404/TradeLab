@@ -1,45 +1,12 @@
 import { Candle } from '@/types/trading';
 import { SavedHistoricalDataset } from '@/types/historicalData';
+import { getM1Database, STORES } from './m1Database';
 
 const DATASETS_INDEX_KEY = 'tradelab_saved_datasets_v1';
-const DB_NAME = 'TradeLab_Historical_v1';
-const STORE_NAME = 'historical_datasets';
-
-let dbPromise: Promise<IDBDatabase | null> | null = null;
+const STORE_NAME = STORES.DATASETS;
 
 function getIDBDatabase(): Promise<IDBDatabase | null> {
-  if (typeof window === 'undefined' || !window.indexedDB) {
-    return Promise.resolve(null);
-  }
-
-  if (dbPromise) return dbPromise;
-
-  dbPromise = new Promise((resolve) => {
-    try {
-      const request = window.indexedDB.open(DB_NAME, 1);
-
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result;
-        if (!db.objectStoreNames.contains(STORE_NAME)) {
-          db.createObjectStore(STORE_NAME, { keyPath: 'id' });
-        }
-      };
-
-      request.onsuccess = () => {
-        resolve(request.result);
-      };
-
-      request.onerror = () => {
-        console.warn('[DatasetStorage] IndexedDB open error, falling back to in-memory/localStorage');
-        resolve(null);
-      };
-    } catch (err) {
-      console.warn('[DatasetStorage] IndexedDB initialization failed:', err);
-      resolve(null);
-    }
-  });
-
-  return dbPromise;
+  return getM1Database();
 }
 
 // In-memory cache fallback
