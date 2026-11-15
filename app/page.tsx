@@ -44,7 +44,10 @@ import { TradeHistoryPanel } from '@/components/trades/TradeHistoryPanel';
 import { StrategySettingsDrawer } from '@/components/settings/StrategySettingsDrawer';
 import { ImportDataModal } from '@/components/common/ImportDataModal';
 import { ApiKeyModal } from '@/components/common/ApiKeyModal';
-import { AlertTriangle, RefreshCw, Key } from 'lucide-react';
+import { HistoricalDataModal } from '@/components/historical/HistoricalDataModal';
+import { SavedHistoricalDataset } from '@/types/historicalData';
+import { getSavedDatasetsList } from '@/services/datasetStorage';
+import { AlertTriangle, RefreshCw, Key, Download, Database } from 'lucide-react';
 
 const TradingChart = dynamic(
   () => import('@/components/chart/TradingChart').then((mod) => mod.TradingChart),
@@ -92,10 +95,14 @@ export default function TradeLabPage() {
   const [isHistoryCollapsed, setIsHistoryCollapsed] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
+  const [isHistoricalModalOpen, setIsHistoricalModalOpen] = useState(false);
+  const [historicalModalDefaultTab, setHistoricalModalDefaultTab] = useState<'download' | 'datasets'>('download');
   const [selectedTradeId, setSelectedTradeId] = useState<string | null>(null);
 
-  // 5. Data Source Mode & Real Market Data State
+  // 5. Data Source Mode, Real Market Data & Historical Dataset State
   const [dataSourceMode, setDataSourceMode] = useState<DataSourceMode>('DEMO');
+  const [activeHistoricalDataset, setActiveHistoricalDataset] = useState<SavedHistoricalDataset | null>(null);
+  const [savedDatasetsCount, setSavedDatasetsCount] = useState<number>(0);
   const [outputsize, setOutputsize] = useState<number>(500);
   const [realH1Candles, setRealH1Candles] = useState<Candle[] | null>(null);
   const [realDataState, setRealDataState] = useState<RealDataState>({
@@ -139,7 +146,28 @@ export default function TradeLabPage() {
     });
     setStrategyParams(storedParams);
     setIndicatorConfig(storedIndicators);
+
+    getSavedDatasetsList().then((list) => {
+      setSavedDatasetsCount(list.length);
+    });
   }, []);
+
+  const handleSelectHistoricalDataset = (dataset: SavedHistoricalDataset) => {
+    setActiveHistoricalDataset(dataset);
+    setDataSourceMode(dataset.dataSource === 'Dukascopy' ? 'HISTORICAL' : 'CUSTOM');
+    setCustomCandles(null);
+    setSelectedTradeId(null);
+    if (dataset.candles && dataset.candles.length > 0) {
+      setActiveCandles(dataset.candles);
+    }
+    if (dataset.symbol) {
+      setSymbol(dataset.symbol as ForexSymbol);
+    }
+    if (dataset.displayTimeframe) {
+      setTimeframe(dataset.displayTimeframe as Timeframe);
+    }
+    getSavedDatasetsList().then((list) => setSavedDatasetsCount(list.length));
+  };
 
   // Save changes to localStorage
   const handleUpdateParams = (newParams: StrategyParameters) => {
@@ -162,6 +190,13 @@ export default function TradeLabPage() {
     async function loadCandles() {
       if (customCandles) {
         setActiveCandles(customCandles.candles);
+        return;
+      }
+
+      if (dataSourceMode === 'HISTORICAL' || dataSourceMode === 'CUSTOM') {
+        if (activeHistoricalDataset && activeHistoricalDataset.candles && activeHistoricalDataset.candles.length > 0) {
+          setActiveCandles(activeHistoricalDataset.candles);
+        }
         return;
       }
 
@@ -250,7 +285,7 @@ export default function TradeLabPage() {
     return () => {
       isCancelled = true;
     };
-  }, [dataSourceMode, symbol, timeframe, outputsize, marketSeed, marketRegime, customCandles]);
+  }, [dataSourceMode, symbol, timeframe, outputsize, marketSeed, marketRegime, customCandles, activeHistoricalDataset]);
 
   // 8. Manual Refresh Handler for Real Market Data
   const handleRefreshRealData = useCallback(async () => {
@@ -310,6 +345,22 @@ export default function TradeLabPage() {
   // 9. Backtest Execution with IndexedDB Caching Layer
   const evaluationIdRef = useRef(0);
 
+  const dataSourceDescription = useMemo(() => {
+    if (dataSourceMode === 'HISTORICAL' && activeHistoricalDataset) {
+      return `Dukascopy Historical Data (${activeHistoricalDataset.symbol} ${activeHistoricalDataset.timeframe.toUpperCase()}, ${activeHistoricalDataset.startDate} → ${activeHistoricalDataset.endDate}, ${activeHistoricalDataset.priceType})`;
+    }
+    if (dataSourceMode === 'CUSTOM' && activeHistoricalDataset) {
+      return `${activeHistoricalDataset.dataSource} Dataset (${activeHistoricalDataset.name})`;
+    }
+    if (dataSourceMode === 'REAL') {
+      return `Twelve Data Real Market Feed (${symbol} ${timeframe})`;
+    }
+    if (customCandles) {
+      return `Custom Imported CSV (${customCandles.fileName})`;
+    }
+    return 'Simulated Synthetic Market Data (Demo Mode)';
+  }, [dataSourceMode, activeHistoricalDataset, symbol, timeframe, customCandles]);
+
   useEffect(() => {
     if (!activeCandles || activeCandles.length === 0) return;
 
@@ -334,7 +385,7 @@ export default function TradeLabPage() {
         requestAnimationFrame(async () => {
           if (evaluationIdRef.current !== currentEvalId) return;
 
-          const result = runBacktest(activeCandles, strategyParams, symbol, timeframe, realH1Candles);
+          const result = runBacktest(activeCandles, strategyParams, symbol, timeframe, realH1Candles, dataSourceDescription);
           const savedTimestamp = await setCachedBacktest(cacheKey, result);
 
           if (evaluationIdRef.current !== currentEvalId) return;
@@ -345,7 +396,7 @@ export default function TradeLabPage() {
         });
       }
     })();
-  }, [activeCandles, strategyParams, symbol, timeframe, realH1Candles]);
+  }, [activeCandles, strategyParams, symbol, timeframe, realH1Candles, dataSourceDescription]);
 
   // Derive selected trade from current result
   const selectedTrade = useMemo(() => {
@@ -357,7 +408,8 @@ export default function TradeLabPage() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (isApiKeyModalOpen) setIsApiKeyModalOpen(false);
+        if (isHistoricalModalOpen) setIsHistoricalModalOpen(false);
+        else if (isApiKeyModalOpen) setIsApiKeyModalOpen(false);
         else if (isImportModalOpen) setIsImportModalOpen(false);
         else if (isSettingsOpen) setIsSettingsOpen(false);
         else if (selectedTradeId) setSelectedTradeId(null);
@@ -408,6 +460,21 @@ export default function TradeLabPage() {
       return;
     }
 
+    if (dataSourceMode === 'HISTORICAL' || dataSourceMode === 'CUSTOM') {
+      if (activeHistoricalDataset && activeHistoricalDataset.candles) {
+        setActiveCandles(activeHistoricalDataset.candles);
+        const candlesHash = getCandlesIdentityHash(activeHistoricalDataset.candles);
+        const cacheKey = getBacktestCacheKey(candlesHash, symbol, timeframe, strategyParams);
+        const result = runBacktest(activeHistoricalDataset.candles, strategyParams, symbol, timeframe, null, dataSourceDescription);
+        const savedTimestamp = await setCachedBacktest(cacheKey, result);
+        setBacktestResult(result);
+        setLastCalculatedAt(savedTimestamp);
+        setCalculationStatus('calculated');
+        setSelectedTradeId(null);
+      }
+      return;
+    }
+
     // Re-generate fresh candles and compute
     const freshSeed = Math.floor(Math.random() * 100000) + 1;
     setMarketSeed(freshSeed);
@@ -455,13 +522,100 @@ export default function TradeLabPage() {
           setDataSourceMode(mode);
           setCustomCandles(null);
           setSelectedTradeId(null);
+          if (mode === 'HISTORICAL' && !activeHistoricalDataset) {
+            setHistoricalModalDefaultTab('download');
+            setIsHistoricalModalOpen(true);
+          } else if (mode === 'CUSTOM' && !activeHistoricalDataset) {
+            setHistoricalModalDefaultTab('datasets');
+            setIsHistoricalModalOpen(true);
+          }
         }}
         realDataState={realDataState}
         onRefreshRealData={handleRefreshRealData}
         outputsize={outputsize}
         onChangeOutputsize={(size) => setOutputsize(size)}
         onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
+        onOpenHistoricalModal={(defaultTab = 'download') => {
+          setHistoricalModalDefaultTab(defaultTab);
+          setIsHistoricalModalOpen(true);
+        }}
+        savedDatasetsCount={savedDatasetsCount}
       />
+
+      {/* Historical Data: No Dataset Selected Alert Banner */}
+      {(dataSourceMode === 'HISTORICAL' || dataSourceMode === 'CUSTOM') && !activeHistoricalDataset && (
+        <div className="bg-sky-950/90 border-b border-sky-500/40 px-4 py-2 flex items-center justify-between text-xs text-sky-200 shrink-0 z-10 animate-fadeIn font-mono">
+          <div className="flex items-center gap-2">
+            <Download className="w-4 h-4 text-sky-400 shrink-0" />
+            <div>
+              <span className="font-semibold text-white">
+                {dataSourceMode === 'HISTORICAL' ? 'Dukascopy Historical Mode:' : 'Custom Dataset Mode:'}
+              </span>{' '}
+              <span>No dataset currently selected. Download real historical market data or load a saved dataset.</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => {
+                setHistoricalModalDefaultTab(dataSourceMode === 'CUSTOM' ? 'datasets' : 'download');
+                setIsHistoricalModalOpen(true);
+              }}
+              className="px-3 py-1 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold rounded text-[11px] transition cursor-pointer flex items-center gap-1 shadow-sm"
+            >
+              <Download className="w-3 h-3" />
+              <span>{dataSourceMode === 'CUSTOM' ? 'Select Dataset' : 'Download from Dukascopy'}</span>
+            </button>
+            <button
+              onClick={() => setDataSourceMode('DEMO')}
+              className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[11px] font-medium transition cursor-pointer"
+            >
+              Switch to Demo
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Historical Data: Active Dataset Metadata Strip */}
+      {activeHistoricalDataset && (dataSourceMode === 'HISTORICAL' || dataSourceMode === 'CUSTOM') && (
+        <div className="bg-slate-900/95 border-b border-slate-800 px-4 py-1.5 flex items-center justify-between text-xs text-slate-300 shrink-0 z-10 font-mono animate-fadeIn">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 font-bold border border-sky-500/30 text-[10px]">
+              {activeHistoricalDataset.dataSource.toUpperCase()}
+            </span>
+            <span className="font-bold text-white">{activeHistoricalDataset.name}</span>
+            <span className="text-slate-600">|</span>
+            <span className="text-emerald-400 font-semibold">{activeCandles.length.toLocaleString()} Bars</span>
+            <span className="text-slate-600">|</span>
+            <span className="text-slate-400">Price: {activeHistoricalDataset.priceType}</span>
+            <span className="text-slate-600">|</span>
+            <span className="text-slate-400">
+              {activeHistoricalDataset.startDate} → {activeHistoricalDataset.endDate}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => {
+                setHistoricalModalDefaultTab('download');
+                setIsHistoricalModalOpen(true);
+              }}
+              className="px-2.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-sky-300 text-[11px] transition cursor-pointer flex items-center gap-1 border border-slate-700"
+            >
+              <Download className="w-3 h-3" />
+              <span className="hidden sm:inline">Download Another</span>
+            </button>
+            <button
+              onClick={() => {
+                setHistoricalModalDefaultTab('datasets');
+                setIsHistoricalModalOpen(true);
+              }}
+              className="px-2.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-purple-300 text-[11px] transition cursor-pointer flex items-center gap-1 border border-slate-700"
+            >
+              <Database className="w-3 h-3" />
+              <span>Datasets ({savedDatasetsCount})</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Real Data Error Alert Banner */}
       {dataSourceMode === 'REAL' && realDataState.error && (
@@ -523,6 +677,20 @@ export default function TradeLabPage() {
           indicatorConfig={indicatorConfig}
           onToggleIndicator={handleToggleIndicator}
           onClearSelectedTrade={() => setSelectedTradeId(null)}
+          dataSourceMode={dataSourceMode}
+          historicalMeta={
+            activeHistoricalDataset && (dataSourceMode === 'HISTORICAL' || dataSourceMode === 'CUSTOM')
+              ? {
+                  instrument: activeHistoricalDataset.instrument,
+                  symbol: activeHistoricalDataset.symbol,
+                  timeframe: activeHistoricalDataset.timeframe,
+                  startDate: activeHistoricalDataset.startDate,
+                  endDate: activeHistoricalDataset.endDate,
+                  priceType: activeHistoricalDataset.priceType,
+                  candleCount: activeCandles.length,
+                }
+              : null
+          }
         />
       </main>
 
@@ -556,6 +724,14 @@ export default function TradeLabPage() {
         isOpen={isApiKeyModalOpen}
         onClose={() => setIsApiKeyModalOpen(false)}
         onSave={() => handleRefreshRealData()}
+      />
+
+      {/* 8. Dukascopy Historical Data Import & Management Modal */}
+      <HistoricalDataModal
+        isOpen={isHistoricalModalOpen}
+        onClose={() => setIsHistoricalModalOpen(false)}
+        onSelectDataset={handleSelectHistoricalDataset}
+        activeDatasetId={activeHistoricalDataset?.id}
       />
     </div>
   );

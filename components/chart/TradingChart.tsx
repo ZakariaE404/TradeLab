@@ -19,6 +19,7 @@ import {
 } from 'lightweight-charts';
 import {
   Candle,
+  DataSourceMode,
   ForexSymbol,
   IndicatorConfig,
   Timeframe,
@@ -55,6 +56,16 @@ interface TradingChartProps {
   indicatorConfig: IndicatorConfig;
   onToggleIndicator: (key: keyof IndicatorConfig) => void;
   onClearSelectedTrade?: () => void;
+  dataSourceMode?: DataSourceMode;
+  historicalMeta?: {
+    instrument: string;
+    symbol: string;
+    timeframe: string;
+    startDate: string;
+    endDate: string;
+    priceType: string;
+    candleCount: number;
+  } | null;
 }
 
 export function TradingChart({
@@ -68,6 +79,8 @@ export function TradingChart({
   indicatorConfig,
   onToggleIndicator,
   onClearSelectedTrade,
+  dataSourceMode = 'DEMO',
+  historicalMeta,
 }: TradingChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -691,16 +704,48 @@ export function TradingChart({
       <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-[#0d121f] border-b border-slate-800/80 text-xs shrink-0 z-10">
         {/* Left: Selected Symbol, Timeframe, and Live/Hover OHLC + EMA Values */}
         <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-1.5">
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30 uppercase tracking-wider font-mono">
-              DEMO
-            </span>
-            <span className="text-white font-mono font-bold tracking-wide text-sm">
-              {symbol}
-            </span>
-            <span className="px-2 py-0.5 rounded text-[11px] bg-slate-800 text-emerald-400 font-mono font-semibold border border-slate-700">
-              {currentTfLabel}
-            </span>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {dataSourceMode === 'HISTORICAL' && historicalMeta ? (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-sky-950/80 border border-sky-500/50 text-sky-200 font-mono text-[11px] font-bold shadow-sm">
+                <span className="text-sky-400">HISTORICAL DATA</span>
+                <span className="text-slate-600">|</span>
+                <span className="text-white">{historicalMeta.instrument.toUpperCase()}</span>
+                <span className="text-slate-600">|</span>
+                <span className="text-emerald-400">{historicalMeta.timeframe.toUpperCase()}</span>
+                <span className="text-slate-600">|</span>
+                <span className="text-slate-300 font-normal">
+                  {historicalMeta.startDate} → {historicalMeta.endDate}
+                </span>
+                <span className="text-slate-600">|</span>
+                <span className="px-1 py-0.2 rounded bg-sky-500/20 text-sky-300 text-[10px] font-bold border border-sky-500/30">
+                  {historicalMeta.priceType}
+                </span>
+              </div>
+            ) : (
+              <>
+                <span
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider font-mono ${
+                    dataSourceMode === 'REAL'
+                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                      : dataSourceMode === 'CUSTOM'
+                      ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
+                      : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                  }`}
+                >
+                  {dataSourceMode === 'REAL'
+                    ? 'REAL (Twelve Data)'
+                    : dataSourceMode === 'CUSTOM'
+                    ? 'CUSTOM DATASET'
+                    : 'DEMO'}
+                </span>
+                <span className="text-white font-mono font-bold tracking-wide text-sm">
+                  {symbol}
+                </span>
+                <span className="px-2 py-0.5 rounded text-[11px] bg-slate-800 text-emerald-400 font-mono font-semibold border border-slate-700">
+                  {currentTfLabel}
+                </span>
+              </>
+            )}
           </div>
 
           {/* Quick M15 / H1 Timeframe Switcher if provided */}

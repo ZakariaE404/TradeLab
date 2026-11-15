@@ -57,6 +57,8 @@ interface TopNavProps {
   onChangeOutputsize?: (size: number) => void;
   outputsize?: number;
   onOpenApiKeyModal?: () => void;
+  onOpenHistoricalModal?: (defaultTab?: 'download' | 'datasets') => void;
+  savedDatasetsCount?: number;
 }
 
 export function TopNav({
@@ -84,6 +86,8 @@ export function TopNav({
   onChangeOutputsize,
   outputsize = 500,
   onOpenApiKeyModal,
+  onOpenHistoricalModal,
+  savedDatasetsCount,
 }: TopNavProps) {
   const symbolMeta = FOREX_SYMBOLS[symbol] || FOREX_SYMBOLS['XAUUSDm'];
   const allSymbols = Object.keys(FOREX_SYMBOLS) as ForexSymbol[];
@@ -113,7 +117,7 @@ export function TopNav({
           </div>
         </div>
 
-        {/* Mode Selector Pill: DEMO vs REAL */}
+        {/* Mode Selector Pill: DEMO vs REAL vs HISTORICAL vs CUSTOM */}
         <div className="flex items-center bg-[#111726] p-0.5 rounded border border-slate-800 shrink-0">
           <button
             onClick={() => onSelectDataSourceMode('DEMO')}
@@ -135,6 +139,39 @@ export function TopNav({
           >
             <Radio className="w-3 h-3" />
             <span>REAL (Twelve Data)</span>
+          </button>
+          <button
+            onClick={() => {
+              onSelectDataSourceMode('HISTORICAL');
+              onOpenHistoricalModal?.('download');
+            }}
+            className={`px-2.5 py-1 rounded text-xs font-mono font-bold transition-all flex items-center gap-1 cursor-pointer ${
+              dataSourceMode === 'HISTORICAL'
+                ? 'bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20 font-bold'
+                : 'text-sky-400 hover:text-sky-300 hover:bg-sky-500/10'
+            }`}
+          >
+            <Download className="w-3 h-3" />
+            <span>HISTORICAL (Dukascopy)</span>
+          </button>
+          <button
+            onClick={() => {
+              onSelectDataSourceMode('CUSTOM');
+              onOpenHistoricalModal?.('datasets');
+            }}
+            className={`px-2.5 py-1 rounded text-xs font-mono font-bold transition-all flex items-center gap-1 cursor-pointer ${
+              dataSourceMode === 'CUSTOM'
+                ? 'bg-purple-500 text-slate-950 shadow-md shadow-purple-500/20 font-bold'
+                : 'text-purple-400 hover:text-purple-300 hover:bg-purple-500/10'
+            }`}
+          >
+            <Database className="w-3 h-3" />
+            <span>CUSTOM DATASET</span>
+            {savedDatasetsCount !== undefined && savedDatasetsCount > 0 && (
+              <span className={`px-1 py-0.2 rounded text-[10px] font-bold ${dataSourceMode === 'CUSTOM' ? 'bg-slate-950 text-purple-300' : 'bg-purple-500/20 text-purple-300'}`}>
+                {savedDatasetsCount}
+              </span>
+            )}
           </button>
         </div>
 
@@ -186,6 +223,10 @@ export function TopNav({
                     : realDataState?.error
                     ? 'bg-rose-500'
                     : 'bg-amber-400'
+                  : dataSourceMode === 'HISTORICAL'
+                  ? 'bg-sky-400'
+                  : dataSourceMode === 'CUSTOM'
+                  ? 'bg-purple-400'
                   : isCustomData
                   ? 'bg-amber-400'
                   : 'bg-emerald-400 animate-pulse'
@@ -194,6 +235,10 @@ export function TopNav({
             <span className="font-mono text-[11px] text-slate-300 font-semibold">
               {dataSourceMode === 'REAL'
                 ? 'TWELVE DATA'
+                : dataSourceMode === 'HISTORICAL'
+                ? 'DUKASCOPY'
+                : dataSourceMode === 'CUSTOM'
+                ? 'CUSTOM DATASET'
                 : isCustomData
                 ? 'CUSTOM CSV'
                 : 'SYNTHETIC DEMO'}
@@ -343,6 +388,18 @@ export function TopNav({
           >
             <Upload className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Import CSV</span>
+          </button>
+        )}
+
+        {/* Historical Data Importer & Datasets Modal Button */}
+        {onOpenHistoricalModal && (
+          <button
+            onClick={() => onOpenHistoricalModal()}
+            title="Import Historical Data from Dukascopy or manage saved datasets"
+            className="p-1.5 px-2.5 rounded bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-sky-300 hover:text-white text-xs font-mono font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Historical Data</span>
           </button>
         )}
 

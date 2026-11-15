@@ -91,10 +91,21 @@ export const FOREX_SYMBOLS: Record<ForexSymbol, SymbolMeta> = {
     pipSize: 0.1,
     typicalSpreadPips: 2.8,
   },
+  'NASDAQ': {
+    symbol: 'NASDAQ',
+    name: 'US Tech 100 Index (NASDAQ)',
+    category: 'Forex Commodity',
+    basePrice: 20450.0,
+    digits: 2,
+    pipMultiplier: 1,
+    pipSize: 1.0,
+    typicalSpreadPips: 1.5,
+  },
 };
 
 export const TIMEFRAMES: Record<Timeframe, TimeframeMeta> = {
   '15m': { id: '15m', label: 'M15', seconds: 900, barCount: 500 },
+  '30m': { id: '30m', label: 'M30', seconds: 1800, barCount: 400 },
   '1h': { id: '1h', label: 'H1', seconds: 3600, barCount: 450 },
   '5m': { id: '5m', label: 'M5', seconds: 300, barCount: 550 },
   '1m': { id: '1m', label: 'M1', seconds: 60, barCount: 600 },

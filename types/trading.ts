@@ -7,9 +7,11 @@ export type ForexSymbol =
   | 'USD/CAD'
   | 'USD/CHF'
   | 'NZD/USD'
-  | 'XAU/USD';
+  | 'XAU/USD'
+  | 'NASDAQ'
+  | string;
 
-export type DataSourceMode = 'DEMO' | 'REAL';
+export type DataSourceMode = 'DEMO' | 'REAL' | 'HISTORICAL' | 'CUSTOM';
 
 export interface RealDataState {
   provider: 'Twelve Data';
@@ -41,7 +43,7 @@ export interface SymbolMeta {
   typicalSpreadPips: number;
 }
 
-export type Timeframe = '1m' | '5m' | '15m' | '1h' | '4h' | '1D';
+export type Timeframe = '1m' | '5m' | '15m' | '30m' | '1h' | '4h' | '1D';
 
 export interface TimeframeMeta {
   id: Timeframe;

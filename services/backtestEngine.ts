@@ -140,7 +140,8 @@ export function runTradeLabStrategyBacktest(
   providedH1Candles: Candle[] | null | undefined,
   params: StrategyParameters,
   symbol: ForexSymbol,
-  timeframe: Timeframe
+  timeframe: Timeframe,
+  dataSourceDescription?: string
 ): BacktestResult {
   const strategyConfig: StrategyConfiguration = {
     ...DEFAULT_STRATEGY_CONFIG,
@@ -252,7 +253,12 @@ export function runTradeLabStrategyBacktest(
 
   const compiled = compileBacktestResults(mappedTrades, params.accountBalance, costModel);
 
+  const dataSourceNote = dataSourceDescription
+    ? `Data Source: ${dataSourceDescription}. Note: Dukascopy prices may differ from broker feeds (e.g. Vantage/TradingView).`
+    : 'Data Source: Simulated Market Data.';
+
   const assumptions = [
+    dataSourceNote,
     'TradeLab Phase 3: Multi-Regime Strategy Engine active (Zero Future-Data Leakage).',
     `Regime: ${strategyConfig.regime} | Pattern: ${strategyConfig.pattern} | Direction: ${strategyConfig.direction}.`,
     `H1 Trend Filter: Causal EMA 50 / 200 with ${strategyConfig.slopeLookbackBars || strategyConfig.emaSlopeLookback || 3}-bar slope lookback.`,
@@ -283,7 +289,8 @@ export function runBacktest(
   params: StrategyParameters,
   symbol: ForexSymbol,
   timeframe: Timeframe,
-  providedH1Candles?: Candle[] | null
+  providedH1Candles?: Candle[] | null,
+  dataSourceDescription?: string
 ): BacktestResult {
   if (!candles || candles.length < 50) {
     return createEmptyResult(params.accountBalance);
@@ -291,7 +298,7 @@ export function runBacktest(
 
   // Route to TradeLab Multi-Regime Engine (Phase 3)
   if (params.strategyType === 'tradelab_strategy') {
-    return runTradeLabStrategyBacktest(candles, providedH1Candles, params, symbol, timeframe);
+    return runTradeLabStrategyBacktest(candles, providedH1Candles, params, symbol, timeframe, dataSourceDescription);
   }
 
   // Route to Strategy A: H1 Trend + M15 Rejection Backtesting Engine
@@ -343,10 +350,14 @@ export function runBacktest(
     };
 
     const compiled = compileBacktestResults(mappedTrades, params.accountBalance, costModel);
+    const dataSourceNote = dataSourceDescription
+      ? `Data Source: ${dataSourceDescription}. Note: Dukascopy prices may differ from broker feeds (e.g. Vantage/TradingView).`
+      : 'Data Source: Simulated Market Data.';
+
     return {
       ...compiled,
       costModel,
-      assumptions: STRATEGY_A_ASSUMPTIONS,
+      assumptions: [dataSourceNote, ...STRATEGY_A_ASSUMPTIONS],
     };
   }
 
@@ -634,7 +645,20 @@ export function runBacktest(
     slippagePips: params.slippagePips ?? 0.5,
   };
 
-  return compileBacktestResults(trades, params.accountBalance, costModel);
+  const compiled = compileBacktestResults(trades, params.accountBalance, costModel);
+  const dataSourceNote = dataSourceDescription
+    ? `Data Source: ${dataSourceDescription}. Note: Dukascopy prices may differ from broker feeds (e.g. Vantage/TradingView).`
+    : 'Data Source: Simulated Market Data.';
+
+  return {
+    ...compiled,
+    costModel,
+    assumptions: [
+      dataSourceNote,
+      `Strategy: ${params.strategyType} on ${symbol} (${timeframe}).`,
+      `Risk: ${params.riskPercent}% per trade, 1:${params.riskRewardRatio} RR target.`,
+    ],
+  };
 }
 
 /**

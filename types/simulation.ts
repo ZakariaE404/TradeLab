@@ -125,9 +125,11 @@ export interface SimulationTradeRecord {
   direction: SignalDirection;
   entryTime: number;
   entryPrice: number;
+  entryMidPrice?: number;
   entryIndex: number;
   exitTime: number | null;
   exitPrice: number | null;
+  exitMidPrice?: number;
   exitIndex: number | null;
   stopLoss: number;
   takeProfit: number;

@@ -85,9 +85,8 @@ export class TradeLabStrategyEngine implements SignalGenerator {
 
     // 3. ADX & Market Regime
     const h1Adx =
-      (completedH1Candle && context.h1Adx14Map?.get(completedH1Candle.time)) ??
-      context.h1Indicators.atr14 ??
-      28.0;
+      (completedH1Candle && context.h1Adx14Map ? context.h1Adx14Map.get(completedH1Candle.time) : null) ??
+      null;
     const marketRegime = classifyMarketRegime({
       trendAnalysis,
       h1Adx14: h1Adx,
