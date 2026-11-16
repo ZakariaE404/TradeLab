@@ -16,14 +16,50 @@ export interface SynchronizedBar {
 }
 
 /**
- * Finds the latest completed H1 candle index for an M15 candle timestamp.
- * - An H1 candle opening at T completes at T + 3600.
- * - An M15 candle opening at t closes at t + 900.
- * - Under standard close evaluation, the latest completed H1 must have closed at or before t + 900.
- * - Under open evaluation, the latest completed H1 must have closed at or before t.
- * - Never returns an in-progress/forming H1 candle.
- * - Uses binary search O(log N) over sorted H1 candles.
- * - Handles weekend gaps and missing candles safely.
+ * Finds the latest completed higher-timeframe candle index for a lower-timeframe candle timestamp.
+ * - Generic multi-timeframe synchronization: works for any timeframe pair (M15-H1, M15-H4, M5-H1, etc.).
+ * - A higher-timeframe candle opening at T completes at T + higherIntervalSeconds.
+ * - Under standard close evaluation, the latest completed HTF candle must have closed at or before lowerCandleTime + lowerIntervalSeconds.
+ * - Under open evaluation, the latest completed HTF candle must have closed at or before lowerCandleTime.
+ * - Strict Zero Lookahead: Never returns an in-progress or forming candle.
+ * - Uses binary search O(log N) over sorted higher-timeframe candles.
+ * - Handles weekend gaps, market closures, and missing candles safely.
+ */
+export function getLatestClosedHigherTimeframeIndex(
+  lowerCandleTime: number,
+  higherCandles: Candle[],
+  lowerIntervalSeconds: number,
+  higherIntervalSeconds: number,
+  evaluationPoint: 'open' | 'close' = 'close'
+): number {
+  if (!higherCandles || higherCandles.length === 0) return -1;
+
+  const targetLimitTime =
+    evaluationPoint === 'open'
+      ? lowerCandleTime
+      : lowerCandleTime + lowerIntervalSeconds;
+
+  let low = 0;
+  let high = higherCandles.length - 1;
+  let bestIdx = -1;
+
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2);
+    const higherCloseTime = higherCandles[mid].time + higherIntervalSeconds;
+
+    if (higherCloseTime <= targetLimitTime) {
+      bestIdx = mid;
+      low = mid + 1; // Look for a more recent completed candle
+    } else {
+      high = mid - 1;
+    }
+  }
+
+  return bestIdx;
+}
+
+/**
+ * Finds the latest completed H1 candle index for an M15 candle timestamp (3600s H1 duration).
  */
 export function getLatestClosedH1Index(
   m15CandleTime: number,
@@ -31,30 +67,13 @@ export function getLatestClosedH1Index(
   candleIntervalSeconds: number = 900,
   evaluationPoint: 'open' | 'close' = 'close'
 ): number {
-  if (!h1Candles || h1Candles.length === 0) return -1;
-
-  const targetLimitTime =
-    evaluationPoint === 'open'
-      ? m15CandleTime
-      : m15CandleTime + candleIntervalSeconds;
-
-  let low = 0;
-  let high = h1Candles.length - 1;
-  let bestIdx = -1;
-
-  while (low <= high) {
-    const mid = Math.floor((low + high) / 2);
-    const h1CloseTime = h1Candles[mid].time + 3600;
-
-    if (h1CloseTime <= targetLimitTime) {
-      bestIdx = mid;
-      low = mid + 1; // Look for a more recent completed H1 candle
-    } else {
-      high = mid - 1;
-    }
-  }
-
-  return bestIdx;
+  return getLatestClosedHigherTimeframeIndex(
+    m15CandleTime,
+    h1Candles,
+    candleIntervalSeconds,
+    3600,
+    evaluationPoint
+  );
 }
 
 /**
@@ -73,6 +92,31 @@ export function getLatestCompletedH1Candle(
 }
 
 /**
+ * Validates that a higher-timeframe candle was strictly completed before or at the evaluation time limit.
+ * Throws an explicit Error if lookahead bias is detected.
+ */
+export function assertNoLookaheadGeneric(
+  lowerCandleTime: number,
+  higherCandle: Candle | null,
+  lowerIntervalSeconds: number,
+  higherIntervalSeconds: number,
+  evaluationPoint: 'open' | 'close' = 'close'
+): void {
+  if (!higherCandle) return;
+  const targetLimitTime =
+    evaluationPoint === 'open'
+      ? lowerCandleTime
+      : lowerCandleTime + lowerIntervalSeconds;
+  const higherCloseTime = higherCandle.time + higherIntervalSeconds;
+
+  if (higherCloseTime > targetLimitTime) {
+    throw new Error(
+      `[MultiTimeframeSync] Future-data lookahead violation detected! Higher-timeframe candle opening at ${higherCandle.time} closes at ${higherCloseTime}, which is after lower-timeframe evaluation limit ${targetLimitTime}.`
+    );
+  }
+}
+
+/**
  * Validates that an H1 candle was strictly completed before or at the M15 evaluation time.
  * Throws an error if lookahead bias is detected.
  */
@@ -82,18 +126,13 @@ export function assertNoLookahead(
   candleIntervalSeconds: number = 900,
   evaluationPoint: 'open' | 'close' = 'close'
 ): void {
-  if (!h1Candle) return;
-  const targetLimitTime =
-    evaluationPoint === 'open'
-      ? m15CandleTime
-      : m15CandleTime + candleIntervalSeconds;
-  const h1CloseTime = h1Candle.time + 3600;
-
-  if (h1CloseTime > targetLimitTime) {
-    throw new Error(
-      `[MultiTimeframeSync] Future-data lookahead violation detected! H1 candle opening at ${h1Candle.time} closes at ${h1CloseTime}, which is after M15 limit ${targetLimitTime}.`
-    );
-  }
+  assertNoLookaheadGeneric(
+    m15CandleTime,
+    h1Candle,
+    candleIntervalSeconds,
+    3600,
+    evaluationPoint
+  );
 }
 
 /**

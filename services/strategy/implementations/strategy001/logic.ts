@@ -40,7 +40,11 @@ export function evaluateStrategy001Bar(
     closedH1Index,
     h1Ema50Map,
     h1Ema200Map,
-    params
+    {
+      ...params,
+      accountCapital: params.accountCapital ?? 10000,
+      riskPercent: params.riskPercent ?? 1,
+    }
   );
 
   if (h1Trend.bias !== 'BUY' && h1Trend.bias !== 'SELL') {
@@ -138,11 +142,11 @@ export function evaluateStrategy001Bar(
     riskPips,
     rewardPips,
     riskRewardRatio: params.riskRewardRatio,
-    signalReason: `H1 Trend (${h1Trend.bias}) + M15 Rejection (${(rejection.wickRatio * 100).toFixed(0)}% wick at ${zoneCheck.zoneDescription})`,
+    signalReason: `H1 Trend (${h1Trend.bias}) + M15 Rejection (${(rejection.wickRatio * 100).toFixed(0)}% wick at zone ${zoneCheck.zoneLevel.toFixed(symbolMeta.digits)})`,
     h1Bias: `${h1Trend.bias} (H1 EMA 50: ${h1Ema50.toFixed(symbolMeta.digits)}, EMA 200: ${h1Ema200.toFixed(symbolMeta.digits)})`,
     m15Confirmation: `${rejection.type} (${(rejection.wickRatio * 100).toFixed(0)}% wick)`,
     metadata: {
-      zoneDescription: zoneCheck.zoneDescription,
+      zoneLevel: zoneCheck.zoneLevel,
       wickRatio: rejection.wickRatio,
       closedH1Time: closedH1.time,
     },

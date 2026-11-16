@@ -164,6 +164,8 @@ describe('Modular Multi-Timeframe Strategy Architecture Tests', () => {
       primaryTimeframe: '15m',
       requiredTimeframes: ['15m', '1h'],
       timeframeDescription: 'M15 Entry + H1 Trend',
+      status: 'active',
+      statusMessage: 'Dynamically registered active test strategy',
       parameterSchema: [],
       defaultParameters: { threshold: 1.0 },
 
@@ -230,7 +232,10 @@ describe('Modular Multi-Timeframe Strategy Architecture Tests', () => {
     assert.ok(res.equityCurve.length > 0);
   });
 
-  it('10. Strategy 002 executes cleanly via modular backtesting engine', () => {
+  it('10. Strategy 002 is marked as Disabled / Not Validated and blocked from running accidentally', () => {
+    assert.equal(Strategy002.status, 'disabled');
+    assert.ok(Strategy002.statusMessage?.includes('Disabled / Not Validated'));
+
     const res = runBacktest(
       m15Candles,
       { ...DEFAULT_STRATEGY_PARAMS, strategyType: 'strategy_002' },
@@ -239,9 +244,10 @@ describe('Modular Multi-Timeframe Strategy Architecture Tests', () => {
       h1Candles
     );
 
-    assert.ok(res, 'Strategy 002 backtest must execute cleanly');
-    assert.ok(typeof res.netR === 'number');
-    assert.ok(typeof res.winRate === 'number');
-    assert.ok(Array.isArray(res.trades));
+    assert.equal(res.totalTrades, 0, 'Unvalidated strategy must produce 0 trades');
+    assert.ok(
+      res.assumptions && res.assumptions.some((a) => a.includes('Disabled / Not Validated')),
+      'Must contain explicit Disabled / Not Validated warning in assumptions'
+    );
   });
 });

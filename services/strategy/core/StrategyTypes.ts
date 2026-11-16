@@ -1,5 +1,12 @@
 import { Candle, ForexSymbol, Timeframe, TradeDirection } from '@/types/trading';
 
+export type StrategyValidationStatus = 'active' | 'validated' | 'disabled' | 'not_validated';
+
+export interface ExplicitTimeframeDataset {
+  timeframe: string; // e.g. 'M15', '15m', 'H1', '1h'
+  candles: Candle[];
+}
+
 export interface StrategySignal {
   direction: 'BUY' | 'SELL';
   signalTime: number;       // Epoch seconds of candle close generating signal
@@ -44,5 +51,7 @@ export interface StrategyMetadata {
   primaryTimeframe: Timeframe;
   requiredTimeframes: Timeframe[];
   timeframeDescription?: string; // e.g. "M15 Entry + H1 Trend"
+  status?: StrategyValidationStatus;
+  statusMessage?: string;
   tags?: string[];
 }

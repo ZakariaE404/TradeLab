@@ -41,7 +41,10 @@ export function StrategySettingsDrawer({
 }: StrategySettingsDrawerProps) {
   if (!isOpen) return null;
 
-  const stratA = params.strategyA || DEFAULT_STRATEGY_A_PARAMS;
+  const stratA: StrategyAParameters = {
+    ...DEFAULT_STRATEGY_A_PARAMS,
+    ...(params.strategyA || {}),
+  };
   const tradeLabConfig: StrategyConfiguration = {
     ...DEFAULT_STRATEGY_CONFIG,
     ...(params.tradeLabConfig || {}),
@@ -125,22 +128,45 @@ export function StrategySettingsDrawer({
             Strategy Presets
           </label>
           <div className="grid grid-cols-1 gap-1.5">
-            {STRATEGY_PRESETS.map((preset) => (
-              <button
-                key={preset.id}
-                onClick={() => handleApplyPreset(preset.id)}
-                className="text-left p-2 rounded bg-[#111726] hover:bg-[#161f33] border border-slate-800 hover:border-slate-700 transition-all group"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-slate-200 group-hover:text-emerald-400 transition-colors">
-                    {preset.name}
-                  </span>
-                </div>
-                <div className="text-[10px] text-slate-400 mt-0.5 line-clamp-1">
-                  {preset.description}
-                </div>
-              </button>
-            ))}
+            {STRATEGY_PRESETS.map((preset) => {
+              const isDisabled = preset.status === 'disabled';
+              return (
+                <button
+                  key={preset.id}
+                  disabled={isDisabled}
+                  onClick={() => !isDisabled && handleApplyPreset(preset.id)}
+                  className={`text-left p-2 rounded border transition-all ${
+                    isDisabled
+                      ? 'bg-[#0a0f1d] border-slate-800/50 opacity-45 cursor-not-allowed'
+                      : 'bg-[#111726] hover:bg-[#161f33] border-slate-800 hover:border-slate-700 cursor-pointer group'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span
+                      className={`font-semibold ${
+                        isDisabled
+                          ? 'text-slate-400'
+                          : 'text-slate-200 group-hover:text-emerald-400'
+                      } transition-colors`}
+                    >
+                      {preset.name}
+                    </span>
+                    {isDisabled ? (
+                      <span className="px-1.5 py-0.2 rounded text-[8px] font-mono font-bold bg-amber-500/10 text-amber-400/80 border border-amber-500/20">
+                        DISABLED
+                      </span>
+                    ) : (
+                      <span className="px-1.5 py-0.2 rounded text-[8px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                        ACTIVE
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[10px] text-slate-400 mt-0.5 line-clamp-1">
+                    {preset.description}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -151,17 +177,22 @@ export function StrategySettingsDrawer({
           </label>
           <select
             value={params.strategyType}
-            onChange={(e) => handleUpdate('strategyType', e.target.value as StrategyType)}
+            onChange={(e) => {
+              const target = e.target.value as StrategyType;
+              if (target === 'strategy_001' || target === 'strategy_a') {
+                handleUpdate('strategyType', target);
+              }
+            }}
             className="w-full bg-[#111726] border border-slate-800 rounded p-2 text-slate-200 font-mono text-xs focus:outline-none focus:border-emerald-500"
           >
-            <option value="strategy_001">★ Strategy 001: H1 Trend + M15 Rejection (Multi-Timeframe)</option>
-            <option value="strategy_002">Strategy 002: Multi-Timeframe EMA Trend Pullback</option>
-            <option value="tradelab_strategy">TradeLab Multi-Regime Engine (Phase 3)</option>
-            <option value="strategy_a">Strategy A: H1 Trend + M15 Rejection (Legacy)</option>
-            <option value="ema_pullback">EMA Trend Pullback (Single Timeframe)</option>
-            <option value="breakout_retest">Donchian Breakout Channel</option>
-            <option value="rsi_mean_reversion">RSI Extreme Reversion + Bollinger</option>
-            <option value="macd_momentum">Fast/Slow Momentum Crossover</option>
+            <option value="strategy_001">★ Strategy 001 — Active / Validated (M15 Entry + H1 Trend)</option>
+            <option value="strategy_a">Strategy A (Validated Alias to Strategy 001)</option>
+            <option value="strategy_002" disabled>Strategy 002 [Disabled — Not Validated]</option>
+            <option value="tradelab_strategy" disabled>TradeLab Multi-Regime Engine [Disabled — Not Validated]</option>
+            <option value="ema_pullback" disabled>EMA Trend Pullback [Disabled — Not Validated]</option>
+            <option value="breakout_retest" disabled>Donchian Breakout Channel [Disabled — Not Validated]</option>
+            <option value="rsi_mean_reversion" disabled>RSI Extreme Reversion [Disabled — Not Validated]</option>
+            <option value="macd_momentum" disabled>Fast/Slow Momentum Crossover [Disabled — Not Validated]</option>
           </select>
 
           {/* Strategy Metadata & Multi-Timeframe Badge */}
@@ -179,9 +210,9 @@ export function StrategySettingsDrawer({
                 <p className="text-[10px] text-slate-400 leading-relaxed">
                   {activeMeta.description}
                 </p>
-                <div className="text-[9px] text-slate-500 font-mono pt-0.5 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-sky-400 shrink-0" />
-                  <span>Evaluates on {activeMeta.primaryTimeframe.toUpperCase()} candle closes independently of chart view.</span>
+                <div className="text-[9px] text-emerald-400 font-mono pt-0.5 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                  <span>Sole Validated Strategy: Evaluates on M15 closes with H1 trend filter.</span>
                 </div>
               </div>
             );

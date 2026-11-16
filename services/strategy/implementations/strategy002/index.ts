@@ -65,13 +65,15 @@ export const STRATEGY_002_SCHEMA: ParameterDefinition[] = [
 
 export const Strategy002: StrategyDefinition<Strategy002Parameters> = {
   id: 'strategy_002',
-  name: 'Strategy 002: Multi-Timeframe EMA Trend Pullback',
+  name: 'Strategy 002: Multi-Timeframe EMA Trend Pullback [Disabled]',
   version: '1.0.0',
   description:
-    'H1 EMA 20/50 directional trend filter with M15 EMA 20 pullback touch and ATR volatility stop.',
+    'H1 EMA 20/50 directional trend filter with M15 EMA 20 pullback touch and ATR volatility stop. (Status: Disabled / Not Validated pending comprehensive testing).',
   primaryTimeframe: '15m',
   requiredTimeframes: ['15m', '1h'],
   timeframeDescription: 'M15 Entry + H1 Trend',
+  status: 'disabled',
+  statusMessage: 'Disabled / Not Validated — Strategy 001 is currently the only active validated strategy.',
   tags: ['multi-timeframe', 'ema-pullback', 'trend-following'],
   parameterSchema: STRATEGY_002_SCHEMA,
   defaultParameters: STRATEGY_002_DEFAULTS,

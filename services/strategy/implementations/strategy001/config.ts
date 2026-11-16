@@ -21,6 +21,8 @@ export interface Strategy001Parameters {
   minStopLossPips: number;
   maxHoldingBars: number;
   allowMultiplePositions: boolean;
+  accountCapital?: number;
+  riskPercent?: number;
 }
 
 export const STRATEGY_001_DEFAULTS: Strategy001Parameters = {

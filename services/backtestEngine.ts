@@ -29,7 +29,7 @@ import {
 } from './strategy';
 
 export const DEFAULT_STRATEGY_PARAMS: StrategyParameters = {
-  strategyType: 'strategy_a',
+  strategyType: 'strategy_001',
   fastEma: 20,
   slowEma: 50,
   trendEma: 200,
@@ -56,54 +56,59 @@ export const STRATEGY_PRESETS: {
   name: string;
   description: string;
   params: Partial<StrategyParameters>;
+  status?: 'active' | 'disabled';
 }[] = [
   {
-    id: 'tradelab_standard',
-    name: 'TradeLab Multi-Regime Engine (Phase 3)',
-    description:
-      'Phase 3 Multi-Regime engine: Causal H1 EMA 50/200 & slope, ADX 14 regime classification, confirmed swing S/R, Rejection & Engulfing patterns.',
-    params: {
-      strategyType: 'tradelab_strategy',
-      riskRewardRatio: 2.0,
-      tradeLabConfig: DEFAULT_STRATEGY_CONFIG,
-    },
-  },
-  {
     id: 'strategy_001_standard',
-    name: 'Strategy 001: H1 Trend + M15 Rejection (2:1 RR)',
+    name: 'Strategy 001: H1 Trend + M15 Rejection (Active / Validated)',
     description:
-      'H1 EMA 50/200 & structure filter with M15 support/resistance zone rejection and confirmed swing SL.',
+      'Validated multi-timeframe strategy: H1 EMA 50/200 & swing structure filter with M15 support/resistance zone rejection (M15 Entry + H1 Trend).',
     params: {
       strategyType: 'strategy_001',
       riskRewardRatio: 2.0,
       strategyA: DEFAULT_STRATEGY_A_PARAMS,
     },
+    status: 'active',
   },
   {
     id: 'strategy_002_pullback',
-    name: 'Strategy 002: Multi-Timeframe EMA Trend Pullback',
+    name: 'Strategy 002: Multi-Timeframe EMA Trend Pullback [Disabled]',
     description:
-      'H1 EMA 20/50 directional trend filter with M15 EMA 20 pullback retest and ATR volatility stop.',
+      'Disabled / Not Validated — Pending comprehensive testing and validation.',
     params: {
       strategyType: 'strategy_002',
       riskRewardRatio: 2.0,
     },
+    status: 'disabled',
+  },
+  {
+    id: 'tradelab_standard',
+    name: 'TradeLab Multi-Regime Engine [Disabled]',
+    description:
+      'Disabled / Not Validated — Pending comprehensive testing and validation.',
+    params: {
+      strategyType: 'tradelab_strategy',
+      riskRewardRatio: 2.0,
+      tradeLabConfig: DEFAULT_STRATEGY_CONFIG,
+    },
+    status: 'disabled',
   },
   {
     id: 'strategy_a_standard',
-    name: 'Strategy A: H1 Trend + M15 Rejection (Legacy)',
+    name: 'Strategy A (Legacy Alias to Strategy 001)',
     description:
-      'H1 EMA 50/200 & structure filter with M15 support/resistance zone rejection and confirmed swing SL.',
+      'Alias to Strategy 001: H1 EMA 50/200 & structure filter with M15 rejection wick entries.',
     params: {
-      strategyType: 'strategy_a',
+      strategyType: 'strategy_001',
       riskRewardRatio: 2.0,
       strategyA: DEFAULT_STRATEGY_A_PARAMS,
     },
+    status: 'active',
   },
   {
     id: 'ema_pullback_standard',
-    name: 'EMA Pullback 1:2 RR',
-    description: 'Trend filter with 20/50/200 EMAs and pullback entry with 1.5x ATR stop loss.',
+    name: 'EMA Pullback 1:2 RR [Disabled]',
+    description: 'Disabled / Not Validated — Pending validation requirements.',
     params: {
       strategyType: 'ema_pullback',
       fastEma: 20,
@@ -113,48 +118,7 @@ export const STRATEGY_PRESETS: {
       riskRewardRatio: 2.0,
       useTrailingStop: false,
     },
-  },
-  {
-    id: 'ema_pullback_runner',
-    name: 'EMA Trend Runner 1:3 RR (Trailing)',
-    description: 'Aim for higher R-multiples with 1:3 RR and trailing stop at +1R breakeven.',
-    params: {
-      strategyType: 'ema_pullback',
-      fastEma: 13,
-      slowEma: 34,
-      trendEma: 100,
-      atrStopMultiplier: 1.8,
-      riskRewardRatio: 3.0,
-      useTrailingStop: true,
-      trailingStopTriggerR: 1.2,
-    },
-  },
-  {
-    id: 'breakout_retest_standard',
-    name: 'Donchian Breakout & ATR Stop',
-    description: 'Enters on 20-bar channel high/low breakouts with dynamic volatility stop.',
-    params: {
-      strategyType: 'breakout_retest',
-      fastEma: 20,
-      slowEma: 50,
-      atrStopMultiplier: 2.0,
-      riskRewardRatio: 2.0,
-      useTrailingStop: false,
-    },
-  },
-  {
-    id: 'rsi_mean_reversion_standard',
-    name: 'RSI Reversal & Bollinger Bands',
-    description: 'Counter-trend mean-reversion at RSI oversold/overbought extremes.',
-    params: {
-      strategyType: 'rsi_mean_reversion',
-      rsiPeriod: 14,
-      rsiOversold: 28,
-      rsiOverbought: 72,
-      atrStopMultiplier: 1.2,
-      riskRewardRatio: 1.5,
-      useTrailingStop: false,
-    },
+    status: 'disabled',
   },
 ];
 
@@ -322,388 +286,36 @@ export function runBacktest(
     return createEmptyResult(params.accountBalance);
   }
 
-  // Route to modular StrategyRegistry implementations (e.g. strategy_001, strategy_002)
-  const modularStrategy = StrategyRegistry.getStrategy(params.strategyType);
-  if (modularStrategy && params.strategyType !== 'strategy_a') {
-    const candlesByTimeframe = prepareTimeframeCandlesForStrategy(
-      modularStrategy,
-      candles,
-      providedH1Candles
-    );
+  // Route to Strategy 001 (or 'strategy_a' canonical alias)
+  const strategyId = params.strategyType === 'strategy_a' ? 'strategy_001' : params.strategyType;
+  const modularStrategy = StrategyRegistry.getStrategy(strategyId);
 
-    return runModularBacktest({
-      strategy: modularStrategy,
-      candlesByTimeframe,
-      parameters: params,
-      symbol,
-      activeChartTimeframe: timeframe,
-      dataSourceDescription,
-    });
-  }
-
-  // Route to TradeLab Multi-Regime Engine (Phase 3)
-  if (params.strategyType === 'tradelab_strategy') {
-    return runTradeLabStrategyBacktest(candles, providedH1Candles, params, symbol, timeframe, dataSourceDescription);
-  }
-
-  // Route to Strategy A: H1 Trend + M15 Rejection Backtesting Engine
-  if (params.strategyType === 'strategy_a') {
-    const stratAParams = params.strategyA || DEFAULT_STRATEGY_A_PARAMS;
-    const mergedParams = {
-      ...stratAParams,
-      accountCapital: params.accountBalance,
-      riskPercent: params.riskPercent,
-      riskRewardRatio: params.riskRewardRatio || stratAParams.riskRewardRatio,
-    };
-    const stratAResult = runStrategyABacktest(candles, providedH1Candles || null, mergedParams, symbol);
-
-    const mappedTrades: Trade[] = stratAResult.trades.map((st) => ({
-      id: st.id,
-      index: st.index,
-      symbol: st.symbol,
-      timeframe,
-      direction: st.direction,
-      signalTime: st.signalTime,
-      signalIndex: st.signalIndex,
-      entryTime: st.entryTime,
-      entryPrice: st.entryPrice,
-      entryIndex: st.entryIndex,
-      exitTime: st.exitTime || 0,
-      exitPrice: st.exitPrice || 0,
-      exitIndex: st.exitIndex || 0,
-      stopLoss: st.stopLossPrice,
-      takeProfit: st.takeProfitPrice,
-      initialRiskPips: st.riskPips,
-      status: st.status,
-      exitReason: st.exitReason,
-      pnlPips: st.realizedPnlPips,
-      pnlCurrency: Number((st.realizedR * st.riskAmount).toFixed(2)),
-      pnlR: st.realizedR,
-      holdingBars: st.holdingBars,
-      riskAmount: st.riskAmount,
-      signalReason: st.signalReason,
-      h1Bias: st.h1Bias,
-      m15Confirmation: st.m15Confirmation,
-      riskRewardRatio: st.riskRewardRatio || params.riskRewardRatio,
-      simultaneousTouchResolvedToSL: st.simultaneousTouchResolvedToSL,
-    }));
-
-    const costModel = {
-      spreadPips: params.includeSpread ? params.spreadPips : 0,
-      commissionPerLot: params.commissionPerLot ?? 7.0,
-      slippagePips: params.slippagePips ?? 0.5,
-    };
-
-    const compiled = compileBacktestResults(mappedTrades, params.accountBalance, costModel);
-    const dataSourceNote = dataSourceDescription
-      ? `Data Source: ${dataSourceDescription}. Note: Dukascopy prices may differ from broker feeds (e.g. Vantage/TradingView).`
-      : 'Data Source: Simulated Market Data.';
-
+  // Strict Validation Guard: Prevent execution of disabled or unvalidated strategies
+  if (!modularStrategy || (modularStrategy.status !== 'active' && modularStrategy.status !== 'validated')) {
     return {
-      ...compiled,
-      costModel,
-      assumptions: [dataSourceNote, ...STRATEGY_A_ASSUMPTIONS],
+      ...createEmptyResult(params.accountBalance),
+      assumptions: [
+        `Execution Blocked: Strategy "${params.strategyType}" is Disabled / Not Validated.`,
+        'Only Strategy 001 (M15 Entry + H1 Trend) has passed all validation requirements and is authorized to execute.',
+        'All other strategies remain disabled pending formal validation.',
+      ],
     };
   }
 
-  const symbolMeta = FOREX_SYMBOLS[symbol] || FOREX_SYMBOLS['EUR/USD'];
-  const pipSize = symbolMeta.pipSize;
-  const digits = symbolMeta.digits;
-  const spreadDelta = params.includeSpread ? params.spreadPips * pipSize : 0;
+  const candlesByTimeframe = prepareTimeframeCandlesForStrategy(
+    modularStrategy,
+    candles,
+    providedH1Candles
+  );
 
-  // Pre-calculate indicators
-  const fastEmaPoints = calculateEMA(candles, params.fastEma);
-  const slowEmaPoints = calculateEMA(candles, params.slowEma);
-  const trendEmaPoints = calculateEMA(candles, params.trendEma);
-  const atrValues = calculateATR(candles, params.atrPeriod);
-  const rsiPoints = calculateRSI(candles, params.rsiPeriod);
-  const bbPoints = calculateBollingerBands(candles, 20, 2.0);
-
-  // Map indicators by timestamp for fast O(1) lookup
-  const fastEmaMap = new Map<number, number>();
-  for (const p of fastEmaPoints) fastEmaMap.set(p.time, p.value);
-
-  const slowEmaMap = new Map<number, number>();
-  for (const p of slowEmaPoints) slowEmaMap.set(p.time, p.value);
-
-  const trendEmaMap = new Map<number, number>();
-  for (const p of trendEmaPoints) trendEmaMap.set(p.time, p.value);
-
-  const rsiMap = new Map<number, number>();
-  for (const p of rsiPoints) rsiMap.set(p.time, p.value);
-
-  const bbMap = new Map<number, { upper: number; middle: number; lower: number }>();
-  for (const p of bbPoints) bbMap.set(p.time, { upper: p.upper, middle: p.middle, lower: p.lower });
-
-  const trades: Trade[] = [];
-  let currentBalance = params.accountBalance;
-  let activeTrade: Trade | null = null;
-  let tradeCounter = 1;
-
-  // Warmup period: ensure enough bars for slowest indicator
-  const warmup = Math.max(params.trendEma, params.slowEma, params.atrPeriod, 30);
-
-  for (let i = warmup; i < candles.length; i++) {
-    const candle = candles[i];
-    const prevCandle = candles[i - 1];
-
-    // 1. Process Active Trade if any
-    if (activeTrade) {
-      activeTrade.holdingBars++;
-      let isClosed = false;
-
-      const isLong = activeTrade.direction === 'LONG' || activeTrade.direction === 'BUY';
-
-      if (isLong) {
-        // Trailing stop evaluation
-        if (params.useTrailingStop) {
-          const currentProfit = candle.high - activeTrade.entryPrice;
-          const targetRDistance = activeTrade.initialRiskPips * pipSize * params.trailingStopTriggerR;
-          if (currentProfit >= targetRDistance) {
-            // Move SL to Breakeven (+0.1R cushion)
-            const beLevel = activeTrade.entryPrice + activeTrade.initialRiskPips * pipSize * 0.1;
-            if (activeTrade.stopLoss < beLevel) {
-              activeTrade.stopLoss = Number(beLevel.toFixed(digits));
-            }
-          }
-        }
-
-        // Check Stop Loss hit
-        if (candle.low <= activeTrade.stopLoss) {
-          activeTrade.exitPrice = activeTrade.stopLoss;
-          activeTrade.exitTime = candle.time;
-          activeTrade.exitIndex = i;
-          activeTrade.exitReason =
-            activeTrade.stopLoss >= activeTrade.entryPrice ? 'TRAILING_STOP' : 'SL';
-          isClosed = true;
-        }
-        // Check Take Profit hit
-        else if (candle.high >= activeTrade.takeProfit) {
-          activeTrade.exitPrice = activeTrade.takeProfit;
-          activeTrade.exitTime = candle.time;
-          activeTrade.exitIndex = i;
-          activeTrade.exitReason = 'TP';
-          isClosed = true;
-        }
-      } else {
-        // SHORT trade evaluation
-        if (params.useTrailingStop) {
-          const currentProfit = activeTrade.entryPrice - candle.low;
-          const targetRDistance = activeTrade.initialRiskPips * pipSize * params.trailingStopTriggerR;
-          if (currentProfit >= targetRDistance) {
-            // Move SL to Breakeven
-            const beLevel = activeTrade.entryPrice - activeTrade.initialRiskPips * pipSize * 0.1;
-            if (activeTrade.stopLoss > beLevel) {
-              activeTrade.stopLoss = Number(beLevel.toFixed(digits));
-            }
-          }
-        }
-
-        // Check Stop Loss hit
-        if (candle.high >= activeTrade.stopLoss) {
-          activeTrade.exitPrice = activeTrade.stopLoss;
-          activeTrade.exitTime = candle.time;
-          activeTrade.exitIndex = i;
-          activeTrade.exitReason =
-            activeTrade.stopLoss <= activeTrade.entryPrice ? 'TRAILING_STOP' : 'SL';
-          isClosed = true;
-        }
-        // Check Take Profit hit
-        else if (candle.low <= activeTrade.takeProfit) {
-          activeTrade.exitPrice = activeTrade.takeProfit;
-          activeTrade.exitTime = candle.time;
-          activeTrade.exitIndex = i;
-          activeTrade.exitReason = 'TP';
-          isClosed = true;
-        }
-      }
-
-      if (isClosed) {
-        // Calculate PnL and R
-        finalizeTrade(activeTrade, pipSize, digits, currentBalance, params.riskPercent);
-        currentBalance += activeTrade.pnlCurrency;
-        trades.push(activeTrade);
-        activeTrade = null;
-      }
-    }
-
-    // 2. Generate New Entry Signal (if not currently holding a trade)
-    if (!activeTrade && i < candles.length - 1) {
-      const fastEma = fastEmaMap.get(candle.time);
-      const slowEma = slowEmaMap.get(candle.time);
-      const trendEma = trendEmaMap.get(candle.time) || slowEma;
-      const prevFastEma = fastEmaMap.get(prevCandle.time);
-      const prevSlowEma = slowEmaMap.get(prevCandle.time);
-      const currentAtr = atrValues[i] || pipSize * 15;
-      const rsi = rsiMap.get(candle.time) || 50;
-      const prevRsi = rsiMap.get(prevCandle.time) || 50;
-      const bb = bbMap.get(candle.time);
-
-      let signal: 'LONG' | 'SHORT' | null = null;
-
-      // Strategy A: EMA Trend Pullback
-      if (params.strategyType === 'ema_pullback' && fastEma && slowEma && trendEma) {
-        const isBullishTrend = fastEma > slowEma && candle.close > trendEma;
-        const isBearishTrend = fastEma < slowEma && candle.close < trendEma;
-
-        // Long trigger: in bullish trend, low touches or pierces fast EMA, but closes back above
-        if (
-          isBullishTrend &&
-          candle.low <= fastEma &&
-          candle.close > fastEma &&
-          candle.close > candle.open
-        ) {
-          signal = 'LONG';
-        }
-        // Short trigger: in bearish trend, high touches or pierces fast EMA, but closes back below
-        else if (
-          isBearishTrend &&
-          candle.high >= fastEma &&
-          candle.close < fastEma &&
-          candle.close < candle.open
-        ) {
-          signal = 'SHORT';
-        }
-      }
-
-      // Strategy B: Breakout & Retest Channel
-      else if (params.strategyType === 'breakout_retest') {
-        const lookback = 20;
-        let highestHigh = -Infinity;
-        let lowestLow = Infinity;
-        for (let k = i - lookback; k < i; k++) {
-          if (candles[k].high > highestHigh) highestHigh = candles[k].high;
-          if (candles[k].low < lowestLow) lowestLow = candles[k].low;
-        }
-
-        if (candle.close > highestHigh && prevCandle.close <= highestHigh) {
-          signal = 'LONG';
-        } else if (candle.close < lowestLow && prevCandle.close >= lowestLow) {
-          signal = 'SHORT';
-        }
-      }
-
-      // Strategy C: RSI Mean Reversion
-      else if (params.strategyType === 'rsi_mean_reversion' && bb) {
-        // Buy when RSI crosses back above oversold threshold and touched lower BB
-        if (prevRsi <= params.rsiOversold && rsi > params.rsiOversold && candle.low <= bb.lower) {
-          signal = 'LONG';
-        }
-        // Sell when RSI crosses back below overbought threshold and touched upper BB
-        else if (
-          prevRsi >= params.rsiOverbought &&
-          rsi < params.rsiOverbought &&
-          candle.high >= bb.upper
-        ) {
-          signal = 'SHORT';
-        }
-      }
-
-      // Strategy D: MACD / Fast EMA Momentum Crossover
-      else if (params.strategyType === 'macd_momentum' && fastEma && slowEma && prevFastEma && prevSlowEma) {
-        const bullishCross = prevFastEma <= prevSlowEma && fastEma > slowEma;
-        const bearishCross = prevFastEma >= prevSlowEma && fastEma < slowEma;
-
-        if (bullishCross) signal = 'LONG';
-        else if (bearishCross) signal = 'SHORT';
-      }
-
-      // If signal triggered, create trade order at candle close (+ spread on buy)
-      if (signal) {
-        const stopDistance = Math.max(currentAtr * params.atrStopMultiplier, pipSize * 5);
-        const tpDistance = stopDistance * params.riskRewardRatio;
-
-        const entryPrice =
-          signal === 'LONG'
-            ? Number((candle.close + spreadDelta).toFixed(digits))
-            : Number((candle.close).toFixed(digits));
-
-        const stopLoss =
-          signal === 'LONG'
-            ? Number((entryPrice - stopDistance).toFixed(digits))
-            : Number((entryPrice + stopDistance + spreadDelta).toFixed(digits));
-
-        const takeProfit =
-          signal === 'LONG'
-            ? Number((entryPrice + tpDistance).toFixed(digits))
-            : Number((entryPrice - tpDistance).toFixed(digits));
-
-        const initialRiskPips = Math.abs(entryPrice - stopLoss) / pipSize;
-        const riskAmount = currentBalance * (params.riskPercent / 100);
-
-        const signalDirection = signal === 'LONG' ? 'BUY' : 'SELL';
-        activeTrade = {
-          id: `TRD-${tradeCounter++}`,
-          index: trades.length + 1,
-          symbol,
-          timeframe,
-          direction: signalDirection,
-          signalTime: candle.time,
-          signalIndex: i,
-          entryTime: candle.time,
-          entryPrice,
-          entryIndex: i,
-          exitTime: 0,
-          exitPrice: 0,
-          exitIndex: 0,
-          stopLoss,
-          takeProfit,
-          initialRiskPips: Number(initialRiskPips.toFixed(1)),
-          status: 'UNRESOLVED',
-          exitReason: 'UNRESOLVED',
-          pnlPips: 0,
-          pnlCurrency: 0,
-          pnlR: 0,
-          holdingBars: 0,
-          riskAmount: Number(riskAmount.toFixed(2)),
-          signalReason:
-            params.strategyType === 'ema_pullback'
-              ? `EMA Pullback: Retest of 20 EMA in ${signal === 'LONG' ? 'Bullish' : 'Bearish'} Trend`
-              : params.strategyType === 'breakout_retest'
-              ? `Channel Breakout: 20-bar ${signal === 'LONG' ? 'High' : 'Low'} exceeded`
-              : params.strategyType === 'rsi_mean_reversion'
-              ? `RSI Mean Reversion: Extreme rebound ${signal === 'LONG' ? 'Oversold' : 'Overbought'}`
-              : `Momentum Crossover: Fast/Slow EMA shift`,
-          h1Bias: signalDirection,
-          m15Confirmation: `ATR ${currentAtr.toFixed(digits)} volatility stop (${params.atrStopMultiplier}x ATR)`,
-          riskRewardRatio: params.riskRewardRatio,
-        };
-      }
-    }
-  }
-
-  // Handle still-open trade at the end of data
-  if (activeTrade) {
-    const lastCandle = candles[candles.length - 1];
-    activeTrade.exitTime = lastCandle.time;
-    activeTrade.exitPrice = lastCandle.close;
-    activeTrade.exitIndex = candles.length - 1;
-    activeTrade.exitReason = 'OPEN';
-    activeTrade.status = 'UNRESOLVED';
-    finalizeTrade(activeTrade, pipSize, digits, currentBalance, params.riskPercent);
-    trades.push(activeTrade);
-  }
-
-  const costModel = {
-    spreadPips: params.includeSpread ? params.spreadPips : 0,
-    commissionPerLot: params.commissionPerLot ?? 7.0,
-    slippagePips: params.slippagePips ?? 0.5,
-  };
-
-  const compiled = compileBacktestResults(trades, params.accountBalance, costModel);
-  const dataSourceNote = dataSourceDescription
-    ? `Data Source: ${dataSourceDescription}. Note: Dukascopy prices may differ from broker feeds (e.g. Vantage/TradingView).`
-    : 'Data Source: Simulated Market Data.';
-
-  return {
-    ...compiled,
-    costModel,
-    assumptions: [
-      dataSourceNote,
-      `Strategy: ${params.strategyType} on ${symbol} (${timeframe}).`,
-      `Risk: ${params.riskPercent}% per trade, 1:${params.riskRewardRatio} RR target.`,
-    ],
-  };
+  return runModularBacktest({
+    strategy: modularStrategy,
+    candlesByTimeframe,
+    parameters: params,
+    symbol,
+    activeChartTimeframe: timeframe,
+    dataSourceDescription,
+  });
 }
 
 /**

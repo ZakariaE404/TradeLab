@@ -136,6 +136,11 @@ export default function TradeLabPage() {
   // Load localStorage preferences on client mount
   useEffect(() => {
     const storedParams = getStoredStrategySettings(DEFAULT_STRATEGY_PARAMS);
+    // Force active validated Strategy 001
+    if (storedParams.strategyType !== 'strategy_001') {
+      storedParams.strategyType = 'strategy_001';
+      saveStoredStrategySettings(storedParams);
+    }
     const storedIndicators = getStoredIndicatorConfig({
       showEma50: true,
       showEma200: true,

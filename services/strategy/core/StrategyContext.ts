@@ -1,8 +1,18 @@
 import { Candle, ForexSymbol, Timeframe } from '@/types/trading';
-import { getLatestClosedH1Index, assertNoLookahead } from '@/services/multiTimeframeSync';
+import {
+  getLatestClosedHigherTimeframeIndex,
+  assertNoLookaheadGeneric,
+} from '@/services/multiTimeframeSync';
 import { TIMEFRAMES } from '@/services/marketData';
+import { normalizeTimeframeId, TIMEFRAME_SPECS } from '@/services/timeframeAggregator';
+import { ExplicitTimeframeDataset } from './StrategyTypes';
 
 export type TimeframeCandleMap = Partial<Record<Timeframe, Candle[]>>;
+
+export type DatasetInput =
+  | TimeframeCandleMap
+  | ExplicitTimeframeDataset[]
+  | Record<string, ExplicitTimeframeDataset | Candle[]>;
 
 export interface StrategyBarContext<P extends Record<string, any> = Record<string, any>> {
   symbol: ForexSymbol;
@@ -14,13 +24,29 @@ export interface StrategyBarContext<P extends Record<string, any> = Record<strin
   parameters: P;
 
   // Multi-Timeframe Accessors (Strict Zero-Lookahead)
-  getLatestClosedCandle(timeframe: Timeframe): Candle | null;
-  getClosedCandles(timeframe: Timeframe, count?: number): Candle[];
-  getLatestClosedIndex(timeframe: Timeframe): number;
+  getLatestClosedCandle(timeframe: Timeframe | string): Candle | null;
+  getClosedCandles(timeframe: Timeframe | string, count?: number): Candle[];
+  getLatestClosedIndex(timeframe: Timeframe | string): number;
   getPrimaryHistory(count?: number): Candle[];
 
   // Indicator lookup by timestamp (O(1))
-  getIndicatorValue<T = number>(indicatorName: string, timeframe?: Timeframe): T | null;
+  getIndicatorValue<T = number>(indicatorName: string, timeframe?: Timeframe | string): T | null;
+}
+
+/**
+ * Validates and normalizes any timeframe identifier, throwing an explicit error if unknown.
+ */
+export function validateAndNormalizeTimeframe(rawTf: string): Timeframe {
+  if (!rawTf || typeof rawTf !== 'string') {
+    throw new Error(`[MultiTimeframeMarketContext] Timeframe identifier must be a non-empty string. Received: ${JSON.stringify(rawTf)}`);
+  }
+  const lower = rawTf.toLowerCase().trim();
+  if (!TIMEFRAME_SPECS[lower] && lower !== '1d' && lower !== '1w') {
+    throw new Error(
+      `[MultiTimeframeMarketContext] Unknown or unsupported timeframe: "${rawTf}". Known timeframes are: 1m, 5m, 15m, 30m, 1h, 4h, 1D, 1W (or M1, M5, M15, M30, H1, H4, D1, W1).`
+    );
+  }
+  return normalizeTimeframeId(rawTf);
 }
 
 /**
@@ -43,21 +69,47 @@ export class MultiTimeframeMarketContext<P extends Record<string, any> = Record<
 
   constructor(
     symbol: ForexSymbol,
-    primaryTimeframe: Timeframe,
-    candlesByTimeframe: TimeframeCandleMap
+    primaryTimeframe: Timeframe | string,
+    candleDatasets: DatasetInput
   ) {
     this.symbol = symbol;
-    this.primaryTimeframe = primaryTimeframe;
+    this.primaryTimeframe = validateAndNormalizeTimeframe(primaryTimeframe);
     this.candlesByTimeframe = new Map();
 
-    for (const [tf, candles] of Object.entries(candlesByTimeframe)) {
-      if (candles && Array.isArray(candles)) {
-        this.candlesByTimeframe.set(tf as Timeframe, candles);
+    if (Array.isArray(candleDatasets)) {
+      // Array of ExplicitTimeframeDataset objects
+      for (const item of candleDatasets) {
+        if (!item || typeof item !== 'object' || !item.timeframe || !Array.isArray(item.candles)) {
+          throw new Error(
+            `[MultiTimeframeMarketContext] Invalid ExplicitTimeframeDataset element. Expected { timeframe: string, candles: Candle[] }.`
+          );
+        }
+        const normTf = validateAndNormalizeTimeframe(item.timeframe);
+        this.candlesByTimeframe.set(normTf, item.candles);
       }
+    } else if (candleDatasets && typeof candleDatasets === 'object') {
+      // Record/Map of timeframe -> candles or ExplicitTimeframeDataset
+      for (const [key, val] of Object.entries(candleDatasets)) {
+        if (!val) continue;
+        if (Array.isArray(val)) {
+          const normTf = validateAndNormalizeTimeframe(key);
+          this.candlesByTimeframe.set(normTf, val);
+        } else if (typeof val === 'object' && 'timeframe' in val && Array.isArray((val as any).candles)) {
+          const explicitItem = val as ExplicitTimeframeDataset;
+          const normTf = validateAndNormalizeTimeframe(explicitItem.timeframe);
+          this.candlesByTimeframe.set(normTf, explicitItem.candles);
+        } else {
+          throw new Error(
+            `[MultiTimeframeMarketContext] Invalid dataset entry for key "${key}". Expected Candle[] or ExplicitTimeframeDataset.`
+          );
+        }
+      }
+    } else {
+      throw new Error(`[MultiTimeframeMarketContext] Invalid candleDatasets input provided.`);
     }
 
-    this.primaryCandles = this.candlesByTimeframe.get(primaryTimeframe) || [];
-    this.primarySeconds = TIMEFRAMES[primaryTimeframe]?.seconds || 900;
+    this.primaryCandles = this.candlesByTimeframe.get(this.primaryTimeframe) || [];
+    this.primarySeconds = TIMEFRAMES[this.primaryTimeframe]?.seconds || 900;
     this.requiredTimeframes = Array.from(this.candlesByTimeframe.keys());
 
     this.precomputeSynchronizationMaps();
@@ -74,15 +126,16 @@ export class MultiTimeframeMarketContext<P extends Record<string, any> = Record<
       if (tf === this.primaryTimeframe) continue;
 
       const indices = new Int32Array(primaryLen);
-      const higherSeconds = TIMEFRAMES[tf]?.seconds || 3600;
+      const higherSeconds = TIMEFRAMES[tf]?.seconds || TIMEFRAME_SPECS[tf]?.seconds || 3600;
 
       for (let i = 0; i < primaryLen; i++) {
         const primaryBar = this.primaryCandles[i];
         // Standard close evaluation: evaluation occurs at the close of the primary bar
-        const closedIdx = getLatestClosedH1Index(
+        const closedIdx = getLatestClosedHigherTimeframeIndex(
           primaryBar.time,
           higherCandles,
           this.primarySeconds,
+          higherSeconds,
           'close'
         );
 
@@ -91,7 +144,13 @@ export class MultiTimeframeMarketContext<P extends Record<string, any> = Record<
         // Double check no-lookahead assertion
         if (closedIdx >= 0) {
           const closedHigherBar = higherCandles[closedIdx];
-          assertNoLookahead(primaryBar.time, closedHigherBar, this.primarySeconds, 'close');
+          assertNoLookaheadGeneric(
+            primaryBar.time,
+            closedHigherBar,
+            this.primarySeconds,
+            higherSeconds,
+            'close'
+          );
         }
       }
 
@@ -124,43 +183,46 @@ export class MultiTimeframeMarketContext<P extends Record<string, any> = Record<
       evaluationTime,
       parameters,
 
-      getLatestClosedCandle(timeframe: Timeframe): Candle | null {
-        if (timeframe === self.primaryTimeframe) {
+      getLatestClosedCandle(timeframe: Timeframe | string): Candle | null {
+        const normTf = validateAndNormalizeTimeframe(timeframe);
+        if (normTf === self.primaryTimeframe) {
           return currentCandle;
         }
 
-        const indices = self.syncIndices.get(timeframe);
+        const indices = self.syncIndices.get(normTf);
         if (!indices || index >= indices.length) return null;
 
         const higherIdx = indices[index];
         if (higherIdx < 0) return null;
 
-        const higherCandles = self.candlesByTimeframe.get(timeframe);
+        const higherCandles = self.candlesByTimeframe.get(normTf);
         return higherCandles ? higherCandles[higherIdx] : null;
       },
 
-      getClosedCandles(timeframe: Timeframe, count?: number): Candle[] {
-        if (timeframe === self.primaryTimeframe) {
+      getClosedCandles(timeframe: Timeframe | string, count?: number): Candle[] {
+        const normTf = validateAndNormalizeTimeframe(timeframe);
+        if (normTf === self.primaryTimeframe) {
           const start = count !== undefined ? Math.max(0, index + 1 - count) : 0;
           return self.primaryCandles.slice(start, index + 1);
         }
 
-        const indices = self.syncIndices.get(timeframe);
+        const indices = self.syncIndices.get(normTf);
         if (!indices || index >= indices.length) return [];
 
         const higherIdx = indices[index];
         if (higherIdx < 0) return [];
 
-        const higherCandles = self.candlesByTimeframe.get(timeframe);
+        const higherCandles = self.candlesByTimeframe.get(normTf);
         if (!higherCandles) return [];
 
         const start = count !== undefined ? Math.max(0, higherIdx + 1 - count) : 0;
         return higherCandles.slice(start, higherIdx + 1);
       },
 
-      getLatestClosedIndex(timeframe: Timeframe): number {
-        if (timeframe === self.primaryTimeframe) return index;
-        const indices = self.syncIndices.get(timeframe);
+      getLatestClosedIndex(timeframe: Timeframe | string): number {
+        const normTf = validateAndNormalizeTimeframe(timeframe);
+        if (normTf === self.primaryTimeframe) return index;
+        const indices = self.syncIndices.get(normTf);
         if (!indices || index >= indices.length) return -1;
         return indices[index];
       },
@@ -170,16 +232,17 @@ export class MultiTimeframeMarketContext<P extends Record<string, any> = Record<
         return self.primaryCandles.slice(start, index + 1);
       },
 
-      getIndicatorValue<T = number>(indicatorName: string, timeframe: Timeframe = self.primaryTimeframe): T | null {
-        const key = `${indicatorName}_${timeframe}`;
+      getIndicatorValue<T = number>(indicatorName: string, timeframe: Timeframe | string = self.primaryTimeframe): T | null {
+        const normTf = validateAndNormalizeTimeframe(timeframe);
+        const key = `${indicatorName}_${normTf}`;
         const map = self.indicatorMaps.get(key);
         if (!map) return null;
 
-        if (timeframe === self.primaryTimeframe) {
+        if (normTf === self.primaryTimeframe) {
           return (map.get(currentCandle.time) ?? null) as T | null;
         }
 
-        const closedHigherCandle = this.getLatestClosedCandle(timeframe);
+        const closedHigherCandle = this.getLatestClosedCandle(normTf);
         if (!closedHigherCandle) return null;
 
         return (map.get(closedHigherCandle.time) ?? null) as T | null;

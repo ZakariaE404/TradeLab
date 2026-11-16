@@ -1,13 +1,15 @@
 import {
   BacktestResult,
   Candle,
+  EquityPoint,
   ForexSymbol,
   StrategyParameters,
   Timeframe,
   Trade,
 } from '@/types/trading';
 import { StrategyDefinition } from './StrategyDefinition';
-import { MultiTimeframeMarketContext, TimeframeCandleMap } from './StrategyContext';
+import { MultiTimeframeMarketContext, TimeframeCandleMap, validateAndNormalizeTimeframe } from './StrategyContext';
+import { ExplicitTimeframeDataset } from './StrategyTypes';
 import { FOREX_SYMBOLS, TIMEFRAMES } from '@/services/marketData';
 import { aggregateM1ToTimeframe } from '@/services/timeframeAggregator';
 import { aggregateM15ToH1 } from '@/services/strategyA';
@@ -23,41 +25,60 @@ export interface ModularBacktestOptions {
 
 /**
  * Prepares all required candle series for a strategy's declared timeframes.
- * If canonical M1 is provided, aggregates on-the-fly.
- * If M15 is provided without H1, aggregates M15 to H1.
+ * Supports explicit timeframe datasets ({ timeframe: 'M15', candles: [...] })
+ * and prevents accidental timeframe misassignment.
  */
 export function prepareTimeframeCandlesForStrategy(
   strategy: StrategyDefinition,
-  inputCandles: Candle[],
+  inputCandles: Candle[] | ExplicitTimeframeDataset[] | Record<string, Candle[] | ExplicitTimeframeDataset>,
   providedH1?: Candle[] | null
 ): TimeframeCandleMap {
   const result: TimeframeCandleMap = {};
-  if (!inputCandles || inputCandles.length === 0) return result;
+  if (!inputCandles) return result;
 
-  const isM1 = inputCandles.length >= 2 && Math.abs(inputCandles[1].time - inputCandles[0].time) <= 120;
-  const isM15 = inputCandles.length >= 2 && Math.abs(inputCandles[1].time - inputCandles[0].time) === 900;
-
-  for (const tf of strategy.requiredTimeframes) {
-    if (isM1) {
-      result[tf] = aggregateM1ToTimeframe(inputCandles, tf);
-    } else if (tf === '15m') {
-      result['15m'] = inputCandles;
-    } else if (tf === '1h') {
-      if (providedH1 && providedH1.length > 0) {
-        result['1h'] = providedH1;
-      } else if (isM15) {
-        result['1h'] = aggregateM15ToH1(inputCandles);
-      } else {
-        result['1h'] = inputCandles;
-      }
-    } else {
-      result[tf] = inputCandles;
+  // Case 1: Array of explicit datasets [{ timeframe: 'M15', candles: [...] }, { timeframe: 'H1', candles: [...] }]
+  if (
+    Array.isArray(inputCandles) &&
+    inputCandles.length > 0 &&
+    typeof inputCandles[0] === 'object' &&
+    'timeframe' in inputCandles[0] &&
+    'candles' in inputCandles[0]
+  ) {
+    for (const item of inputCandles as ExplicitTimeframeDataset[]) {
+      const normTf = validateAndNormalizeTimeframe(item.timeframe);
+      result[normTf] = item.candles;
     }
+  }
+  // Case 2: Object dictionary { '15m': [...], '1h': [...] } or { 'M15': { timeframe: 'M15', candles: [...] } }
+  else if (!Array.isArray(inputCandles) && typeof inputCandles === 'object') {
+    for (const [key, val] of Object.entries(inputCandles)) {
+      if (!val) continue;
+      const normKey = validateAndNormalizeTimeframe(key);
+      if (Array.isArray(val)) {
+        result[normKey] = val;
+      } else if (typeof val === 'object' && 'candles' in val) {
+        result[normKey] = (val as ExplicitTimeframeDataset).candles;
+      }
+    }
+  }
+  // Case 3: Raw Candle[] array passed directly -> strictly assigned to strategy's primary evaluation timeframe
+  else if (Array.isArray(inputCandles) && inputCandles.length > 0) {
+    result[strategy.primaryTimeframe] = inputCandles as Candle[];
+  }
+
+  // If H1 is provided explicitly, assign it
+  if (providedH1 && providedH1.length > 0) {
+    result['1h'] = providedH1;
+  }
+
+  // If 1h is still missing but 15m is present, aggregate 15m to 1h
+  if (!result['1h'] && result['15m'] && result['15m'].length > 0) {
+    result['1h'] = aggregateM15ToH1(result['15m']);
   }
 
   // Ensure primary timeframe is always present
-  if (!result[strategy.primaryTimeframe]) {
-    result[strategy.primaryTimeframe] = inputCandles;
+  if (!result[strategy.primaryTimeframe] && result['15m']) {
+    result[strategy.primaryTimeframe] = result['15m'];
   }
 
   return result;
@@ -76,6 +97,13 @@ export function runModularBacktest(options: ModularBacktestOptions): BacktestRes
     dataSourceDescription,
   } = options;
 
+  // Strict Strategy Status Check: Never allow disabled/unvalidated strategies to execute
+  if (strategy.status === 'disabled' || strategy.status === 'not_validated') {
+    throw new Error(
+      `[StrategyExecutor] Strategy "${strategy.name}" (${strategy.id}) is ${strategy.status.toUpperCase()} and cannot be executed. ${strategy.statusMessage || 'Only Strategy 001 is active pending validation.'}`
+    );
+  }
+
   const primaryTf = strategy.primaryTimeframe;
   const primaryCandles = candlesByTimeframe[primaryTf] || [];
 
@@ -93,9 +121,9 @@ export function runModularBacktest(options: ModularBacktestOptions): BacktestRes
     riskRewardRatio: params.riskRewardRatio || strategy.defaultParameters.riskRewardRatio || 2.0,
   };
 
-  // 3. Optional lifecycle initialization (precomputing EMAs, ATR, Swings)
+  // 3. Optional lifecycle initialization (precomputing EMAs, ATR, Swings) with user parameters
   if (strategy.init) {
-    strategy.init(marketContext);
+    strategy.init(marketContext, mergedParams);
   }
 
   const symbolMeta = FOREX_SYMBOLS[symbol] || FOREX_SYMBOLS['EUR/USD'];
@@ -349,18 +377,22 @@ function compileModularResults(
   let maxDrawdownPercent = 0;
   let maxDrawdownR = 0;
 
-  const equityCurve: { time: number; equity: number; balance: number; drawdown: number }[] = [
+  const equityCurve: EquityPoint[] = [
     {
-      time: trades[0]?.entryTime ? trades[0].entryTime - 3600 : Date.now() / 1000 - 86400,
+      time: trades[0]?.entryTime ? trades[0].entryTime - 3600 : Math.floor(Date.now() / 1000) - 86400,
+      tradeIndex: 0,
       equity: startingBalance,
-      balance: startingBalance,
-      drawdown: 0,
+      cumulativeR: 0,
+      drawdownPercent: 0,
+      drawdownR: 0,
     },
   ];
 
   let runningBalance = startingBalance;
+  let runningNetR = 0;
 
-  for (const trade of trades) {
+  for (let i = 0; i < trades.length; i++) {
+    const trade = trades[i];
     const isBuy = trade.direction === 'BUY' || trade.direction === 'LONG';
     if (isBuy) {
       longCount++;
@@ -389,6 +421,7 @@ function compileModularResults(
     }
 
     netR += trade.pnlR;
+    runningNetR += trade.pnlR;
     totalPnlCurrency += trade.pnlCurrency;
     runningBalance += trade.pnlCurrency;
 
@@ -406,9 +439,11 @@ function compileModularResults(
 
     equityCurve.push({
       time: trade.exitTime || trade.entryTime,
+      tradeIndex: i + 1,
       equity: Number(runningBalance.toFixed(2)),
-      balance: Number(runningBalance.toFixed(2)),
-      drawdown: Number(currentDdPercent.toFixed(2)),
+      cumulativeR: Number(runningNetR.toFixed(2)),
+      drawdownPercent: Number(currentDdPercent.toFixed(2)),
+      drawdownR: Number(currentDdR.toFixed(2)),
     });
   }
 
@@ -470,6 +505,15 @@ function createEmptyResult(startingBalance: number): BacktestResult {
     longWinRate: 0,
     shortTradesCount: 0,
     shortWinRate: 0,
-    equityCurve: [{ time: Date.now() / 1000, equity: startingBalance, balance: startingBalance, drawdown: 0 }],
+    equityCurve: [
+      {
+        time: Math.floor(Date.now() / 1000),
+        tradeIndex: 0,
+        equity: startingBalance,
+        cumulativeR: 0,
+        drawdownPercent: 0,
+        drawdownR: 0,
+      },
+    ],
   };
 }

@@ -178,7 +178,7 @@ export interface StrategyParameters {
   commissionPerLot?: number; // e.g. $7 per standard round-turn lot
   slippagePips?: number; // e.g. 0.5 pips execution slippage
   // Strategy A specific configuration (optional)
-  strategyA?: import('./strategyA').StrategyAParameters;
+  strategyA?: Partial<import('./strategyA').StrategyAParameters>;
   // TradeLab Phase 3 Strategy Configuration (optional)
   tradeLabConfig?: Partial<import('../services/strategy/types').StrategyConfiguration>;
 }

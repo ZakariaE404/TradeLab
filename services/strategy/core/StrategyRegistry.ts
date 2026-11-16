@@ -36,10 +36,45 @@ class StrategyRegistryClass {
   }
 
   /**
+   * Checks if a strategy is active and validated for execution.
+   */
+  public isStrategyValidated(id: string): boolean {
+    const strat = this.getStrategy(id);
+    if (!strat) return false;
+    return strat.status === 'active' || strat.status === 'validated';
+  }
+
+  /**
+   * Asserts that a strategy exists and is validated for execution.
+   * Throws an explicit error if the strategy is disabled or unvalidated.
+   */
+  public assertStrategyExecutable(id: string): StrategyDefinition {
+    const strat = this.getStrategy(id);
+    if (!strat) {
+      throw new Error(`[StrategyRegistry] Strategy "${id}" is not registered.`);
+    }
+    if (strat.status === 'disabled' || strat.status === 'not_validated') {
+      throw new Error(
+        `[StrategyRegistry] Strategy "${strat.name}" (${strat.id}) is Disabled / Not Validated. ${strat.statusMessage || 'Only Strategy 001 is active pending validation.'}`
+      );
+    }
+    return strat;
+  }
+
+  /**
    * Returns all registered strategies as an array
    */
   public getAllStrategies(): StrategyDefinition[] {
     return Array.from(this.strategies.values());
+  }
+
+  /**
+   * Returns only active and validated strategies
+   */
+  public getActiveStrategies(): StrategyDefinition[] {
+    return Array.from(this.strategies.values()).filter(
+      (s) => s.status === 'active' || s.status === 'validated'
+    );
   }
 
   /**

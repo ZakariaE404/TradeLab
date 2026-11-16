@@ -14,26 +14,38 @@ export const Strategy001: StrategyDefinition<Strategy001Parameters> = {
   requiredTimeframes: ['15m', '1h'],
   timeframeDescription: 'M15 Entry + H1 Trend',
   tags: ['multi-timeframe', 'trend-following', 'price-action', 'rejection'],
+  status: 'active',
+  statusMessage: 'Validated Multi-Timeframe Strategy (M15 Entry + H1 Trend)',
   parameterSchema: STRATEGY_001_SCHEMA,
   defaultParameters: STRATEGY_001_DEFAULTS,
 
-  init(marketContext: MultiTimeframeMarketContext<Strategy001Parameters>) {
-    // Precompute sequential EMA 50 and EMA 200 on M15
+  init(marketContext: MultiTimeframeMarketContext<Strategy001Parameters>, parameters?: Strategy001Parameters) {
+    const params = parameters || STRATEGY_001_DEFAULTS;
+    const m15Fast = params.m15FastEmaPeriod || 50;
+    const m15Slow = params.m15SlowEmaPeriod || 200;
+    const h1Fast = params.h1FastEmaPeriod || 50;
+    const h1Slow = params.h1SlowEmaPeriod || 200;
+
+    // Precompute sequential EMA Fast and Slow on M15
     const m15Candles = marketContext.candlesByTimeframe.get('15m') || [];
     if (m15Candles.length > 0) {
-      const m15Ema50 = calculateSequentialEMAMap(m15Candles, 50);
-      const m15Ema200 = calculateSequentialEMAMap(m15Candles, 200);
-      marketContext.registerIndicatorMap('ema50', '15m', m15Ema50);
-      marketContext.registerIndicatorMap('ema200', '15m', m15Ema200);
+      const m15EmaFast = calculateSequentialEMAMap(m15Candles, m15Fast);
+      const m15EmaSlow = calculateSequentialEMAMap(m15Candles, m15Slow);
+      marketContext.registerIndicatorMap('fastEma', '15m', m15EmaFast);
+      marketContext.registerIndicatorMap('slowEma', '15m', m15EmaSlow);
+      marketContext.registerIndicatorMap('ema50', '15m', m15EmaFast);
+      marketContext.registerIndicatorMap('ema200', '15m', m15EmaSlow);
     }
 
-    // Precompute sequential EMA 50 and EMA 200 on H1
+    // Precompute sequential EMA Fast and Slow on H1
     const h1Candles = marketContext.candlesByTimeframe.get('1h') || [];
     if (h1Candles.length > 0) {
-      const h1Ema50 = calculateSequentialEMAMap(h1Candles, 50);
-      const h1Ema200 = calculateSequentialEMAMap(h1Candles, 200);
-      marketContext.registerIndicatorMap('ema50', '1h', h1Ema50);
-      marketContext.registerIndicatorMap('ema200', '1h', h1Ema200);
+      const h1EmaFast = calculateSequentialEMAMap(h1Candles, h1Fast);
+      const h1EmaSlow = calculateSequentialEMAMap(h1Candles, h1Slow);
+      marketContext.registerIndicatorMap('fastEma', '1h', h1EmaFast);
+      marketContext.registerIndicatorMap('slowEma', '1h', h1EmaSlow);
+      marketContext.registerIndicatorMap('ema50', '1h', h1EmaFast);
+      marketContext.registerIndicatorMap('ema200', '1h', h1EmaSlow);
     }
   },
 

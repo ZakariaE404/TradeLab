@@ -12,9 +12,9 @@ export interface StrategyDefinition<P extends Record<string, any> = Record<strin
 
   /**
    * Optional initialization hook called once before the evaluation loop starts.
-   * Useful for precomputing series-wide indicators (e.g. EMAs, ATR, ADX).
+   * Useful for precomputing series-wide indicators (e.g. EMAs, ATR, ADX) with user parameters.
    */
-  init?(marketContext: MultiTimeframeMarketContext<P>): void;
+  init?(marketContext: MultiTimeframeMarketContext<P>, parameters?: P): void;
 
   /**
    * Bar-by-bar evaluation hook executed at the close of every primary timeframe candle.
