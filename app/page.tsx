@@ -47,7 +47,11 @@ import { ApiKeyModal } from '@/components/common/ApiKeyModal';
 import { HistoricalDataModal } from '@/components/historical/HistoricalDataModal';
 import { SavedHistoricalDataset } from '@/types/historicalData';
 import { getSavedDatasetsList } from '@/services/datasetStorage';
-import { getOrComputeDerivedTimeframe } from '@/services/timeframeAggregator';
+import {
+  getOrComputeDerivedTimeframeInWorker,
+  isJobCancelledError,
+  runBacktestInWorker,
+} from '@/services/workerManager';
 import { StrategyRegistry } from '@/services/strategy';
 import { AlertTriangle, RefreshCw, Key, Download, Database } from 'lucide-react';
 
@@ -201,6 +205,7 @@ export default function TradeLabPage() {
   // 7. Candle Generation, Real Data Fetching & IndexedDB Caching
   useEffect(() => {
     let isCancelled = false;
+    const abortController = new AbortController();
 
     async function loadCandles() {
       if (customCandles) {
@@ -210,16 +215,22 @@ export default function TradeLabPage() {
 
       if (dataSourceMode === 'HISTORICAL') {
         if (activeHistoricalDataset) {
-          const derived = await getOrComputeDerivedTimeframe(
-            activeHistoricalDataset.instrument,
-            timeframe,
-            activeHistoricalDataset.startTime,
-            activeHistoricalDataset.endTime
-          );
-          if (isCancelled) return;
-          if (derived && derived.length > 0) {
-            setActiveCandles(derived);
-            return;
+          try {
+            const derived = await getOrComputeDerivedTimeframeInWorker(
+              activeHistoricalDataset.instrument,
+              timeframe,
+              activeHistoricalDataset.startTime,
+              activeHistoricalDataset.endTime,
+              abortController.signal
+            );
+            if (isCancelled) return;
+            if (derived && derived.length > 0) {
+              setActiveCandles(derived);
+              return;
+            }
+          } catch (err) {
+            if (isCancelled || isJobCancelledError(err)) return;
+            throw err;
           }
           if (activeHistoricalDataset.candles && activeHistoricalDataset.candles.length > 0) {
             setActiveCandles(activeHistoricalDataset.candles);
@@ -320,6 +331,7 @@ export default function TradeLabPage() {
 
     return () => {
       isCancelled = true;
+      abortController.abort();
     };
   }, [dataSourceMode, symbol, timeframe, outputsize, marketSeed, marketRegime, customCandles, activeHistoricalDataset]);
 
@@ -401,86 +413,97 @@ export default function TradeLabPage() {
     if (!activeCandles || activeCandles.length === 0) return;
 
     const currentEvalId = ++evaluationIdRef.current;
+    const abortController = new AbortController();
     setCalculationStatus('computing');
 
-    // Run async cache lookup then fallback to computation
+    // Run async cache lookup then off-thread worker computation
     (async () => {
-      // 1. Resolve strategy definition to determine required evaluation timeframe
-      const strategyDef = StrategyRegistry.getStrategy(strategyParams.strategyType);
-      const evalTf = strategyDef ? strategyDef.primaryTimeframe : timeframe;
+      try {
+        // 1. Resolve strategy definition to determine required evaluation timeframe
+        const strategyDef = StrategyRegistry.getStrategy(strategyParams.strategyType);
+        const evalTf = strategyDef ? strategyDef.primaryTimeframe : timeframe;
 
-      let strategyCandles = activeCandles;
-      let strategyH1Candles = realH1Candles;
+        let strategyCandles = activeCandles;
+        let strategyH1Candles = realH1Candles;
 
-      // When the chart timeframe differs from the strategy's primary timeframe (e.g. Chart is H1, Strategy needs M15 or H4):
-      if (evalTf !== timeframe) {
-        if (dataSourceMode === 'HISTORICAL' && activeHistoricalDataset) {
-          const derived = await getOrComputeDerivedTimeframe(
-            activeHistoricalDataset.instrument,
-            evalTf,
-            activeHistoricalDataset.startTime,
-            activeHistoricalDataset.endTime
-          );
-          if (derived && derived.length > 0) {
-            strategyCandles = derived;
-          } else if (activeHistoricalDataset.displayTimeframe === evalTf && activeHistoricalDataset.candles?.length) {
-            strategyCandles = activeHistoricalDataset.candles;
-          }
-          if (evalTf === '15m') {
-            const derivedH1 = await getOrComputeDerivedTimeframe(
+        // When the chart timeframe differs from the strategy's primary timeframe (e.g. Chart is H1, Strategy needs M15 or H4):
+        if (evalTf !== timeframe) {
+          if (dataSourceMode === 'HISTORICAL' && activeHistoricalDataset) {
+            const derived = await getOrComputeDerivedTimeframeInWorker(
               activeHistoricalDataset.instrument,
-              '1h',
+              evalTf,
               activeHistoricalDataset.startTime,
-              activeHistoricalDataset.endTime
+              activeHistoricalDataset.endTime,
+              abortController.signal
             );
-            if (derivedH1 && derivedH1.length > 0) {
-              strategyH1Candles = derivedH1;
+            if (evaluationIdRef.current !== currentEvalId) return;
+            if (derived && derived.length > 0) {
+              strategyCandles = derived;
+            } else if (activeHistoricalDataset.displayTimeframe === evalTf && activeHistoricalDataset.candles?.length) {
+              strategyCandles = activeHistoricalDataset.candles;
+            }
+            if (evalTf === '15m') {
+              const derivedH1 = await getOrComputeDerivedTimeframeInWorker(
+                activeHistoricalDataset.instrument,
+                '1h',
+                activeHistoricalDataset.startTime,
+                activeHistoricalDataset.endTime,
+                abortController.signal
+              );
+              if (evaluationIdRef.current !== currentEvalId) return;
+              if (derivedH1 && derivedH1.length > 0) {
+                strategyH1Candles = derivedH1;
+              }
+            }
+          } else if (dataSourceMode === 'DEMO') {
+            strategyCandles = generateForexCandles(symbol, evalTf, marketSeed, undefined, marketRegime);
+            if (evalTf === '15m') {
+              strategyH1Candles = generateForexCandles(symbol, '1h', marketSeed, undefined, marketRegime);
             }
           }
-        } else if (dataSourceMode === 'DEMO') {
-          strategyCandles = generateForexCandles(symbol, evalTf, marketSeed, undefined, marketRegime);
-          if (evalTf === '15m') {
-            strategyH1Candles = generateForexCandles(symbol, '1h', marketSeed, undefined, marketRegime);
-          }
         }
-      }
 
-      if (evaluationIdRef.current !== currentEvalId) return; // Discard superseded evaluation
+        if (evaluationIdRef.current !== currentEvalId) return; // Discard superseded evaluation
 
-      const candlesHash = getCandlesIdentityHash(strategyCandles);
-      const cacheKey = getBacktestCacheKey(candlesHash, symbol, evalTf, strategyParams);
+        const candlesHash = getCandlesIdentityHash(strategyCandles);
+        const cacheKey = getBacktestCacheKey(candlesHash, symbol, evalTf, strategyParams);
 
-      const cached = await getCachedBacktest(cacheKey);
+        const cached = await getCachedBacktest(cacheKey);
 
-      if (evaluationIdRef.current !== currentEvalId) return;
+        if (evaluationIdRef.current !== currentEvalId) return;
 
-      if (cached) {
-        setBacktestResult(cached.result);
-        setLastCalculatedAt(cached.timestamp);
-        setCalculationStatus('cached');
-      } else {
-        // Small delay via requestAnimationFrame to keep UI responsive
-        requestAnimationFrame(async () => {
-          if (evaluationIdRef.current !== currentEvalId) return;
-
-          const result = runBacktest(
+        if (cached) {
+          setBacktestResult(cached.result);
+          setLastCalculatedAt(cached.timestamp);
+          setCalculationStatus('cached');
+        } else {
+          const result = await runBacktestInWorker(
             strategyCandles,
             strategyParams,
             symbol,
             evalTf,
             strategyH1Candles,
-            dataSourceDescription
+            dataSourceDescription,
+            abortController.signal
           );
-          const savedTimestamp = await setCachedBacktest(cacheKey, result);
+          if (evaluationIdRef.current !== currentEvalId) return;
 
+          const savedTimestamp = await setCachedBacktest(cacheKey, result);
           if (evaluationIdRef.current !== currentEvalId) return;
 
           setBacktestResult(result);
           setLastCalculatedAt(savedTimestamp);
           setCalculationStatus('calculated');
-        });
+        }
+      } catch (err) {
+        if (isJobCancelledError(err) || evaluationIdRef.current !== currentEvalId) return;
+        console.error('[TradeLab] Backtest evaluation failed:', err);
       }
     })();
+
+    return () => {
+      abortController.abort();
+    };
   }, [
     activeCandles,
     strategyParams,
@@ -561,12 +584,23 @@ export default function TradeLabPage() {
         setActiveCandles(activeHistoricalDataset.candles);
         const candlesHash = getCandlesIdentityHash(activeHistoricalDataset.candles);
         const cacheKey = getBacktestCacheKey(candlesHash, symbol, timeframe, strategyParams);
-        const result = runBacktest(activeHistoricalDataset.candles, strategyParams, symbol, timeframe, null, dataSourceDescription);
-        const savedTimestamp = await setCachedBacktest(cacheKey, result);
-        setBacktestResult(result);
-        setLastCalculatedAt(savedTimestamp);
-        setCalculationStatus('calculated');
-        setSelectedTradeId(null);
+        try {
+          const result = await runBacktestInWorker(
+            activeHistoricalDataset.candles,
+            strategyParams,
+            symbol,
+            timeframe,
+            null,
+            dataSourceDescription
+          );
+          const savedTimestamp = await setCachedBacktest(cacheKey, result);
+          setBacktestResult(result);
+          setLastCalculatedAt(savedTimestamp);
+          setCalculationStatus('calculated');
+          setSelectedTradeId(null);
+        } catch (err) {
+          if (!isJobCancelledError(err)) throw err;
+        }
       }
       return;
     }
@@ -579,13 +613,17 @@ export default function TradeLabPage() {
 
     const candlesHash = getCandlesIdentityHash(freshCandles);
     const cacheKey = getBacktestCacheKey(candlesHash, symbol, timeframe, strategyParams);
-    const result = runBacktest(freshCandles, strategyParams, symbol, timeframe);
-    const savedTimestamp = await setCachedBacktest(cacheKey, result);
+    try {
+      const result = await runBacktestInWorker(freshCandles, strategyParams, symbol, timeframe);
+      const savedTimestamp = await setCachedBacktest(cacheKey, result);
 
-    setBacktestResult(result);
-    setLastCalculatedAt(savedTimestamp);
-    setCalculationStatus('calculated');
-    setSelectedTradeId(null);
+      setBacktestResult(result);
+      setLastCalculatedAt(savedTimestamp);
+      setCalculationStatus('calculated');
+      setSelectedTradeId(null);
+    } catch (err) {
+      if (!isJobCancelledError(err)) throw err;
+    }
   };
 
   return (

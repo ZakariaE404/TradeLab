@@ -27,6 +27,11 @@ import {
   Trade,
 } from '@/types/trading';
 import { calculateEMA } from '@/services/indicators';
+import {
+  binarySearchByTime,
+  getChartCandleWindowRange,
+  MAX_CHART_CANDLES,
+} from '@/services/chartWindow';
 import { FOREX_SYMBOLS, TIMEFRAMES } from '@/services/marketData';
 import { SmcFibOverlayPrimitive } from './SmcFibOverlayPrimitive';
 import {
@@ -46,6 +51,8 @@ import {
   Target,
   Clock,
 } from 'lucide-react';
+
+const EMA_WARMUP_BARS = 200;
 
 interface TradingChartProps {
   candles: Candle[];
@@ -113,28 +120,49 @@ export function TradingChart({
   const symbolMeta = FOREX_SYMBOLS[symbol] || FOREX_SYMBOLS['XAUUSDm'] || FOREX_SYMBOLS['EUR/USD'];
   const digits = symbolMeta.digits;
 
-  // Pre-calculate EMA 50 & EMA 200 data
-  const ema50Data = useMemo(() => calculateEMA(candles, 50), [candles]);
-  const ema200Data = useMemo(() => calculateEMA(candles, 200), [candles]);
+  // Limit rendered chart candles to MAX_CHART_CANDLES while keeping full `candles` intact for backtesting
+  const { startIndex, endIndex } = useMemo(
+    () => getChartCandleWindowRange(candles, selectedTrade, MAX_CHART_CANDLES),
+    [candles, selectedTrade]
+  );
 
-  // Fast maps for cursor hover lookup
-  const ema50Map = useMemo(() => {
-    const map = new Map<number, number>();
-    for (const p of ema50Data) map.set(p.time, p.value);
-    return map;
-  }, [ema50Data]);
+  const displayCandles = useMemo(() => {
+    if (startIndex === 0 && endIndex === candles.length) return candles;
+    return candles.slice(startIndex, endIndex);
+  }, [candles, startIndex, endIndex]);
 
-  const ema200Map = useMemo(() => {
-    const map = new Map<number, number>();
-    for (const p of ema200Data) map.set(p.time, p.value);
-    return map;
-  }, [ema200Data]);
+  // Pre-calculate EMA 50 & EMA 200 only over the displayed window (+ warmup bars)
+  const { ema50Data, ema200Data } = useMemo(() => {
+    if (displayCandles.length === 0) {
+      return { ema50Data: [], ema200Data: [] };
+    }
+    const warmupStart = Math.max(0, startIndex - EMA_WARMUP_BARS);
+    const emaSource =
+      warmupStart === startIndex && endIndex === candles.length && displayCandles === candles
+        ? displayCandles
+        : candles.slice(warmupStart, endIndex);
 
-  const candleMap = useMemo(() => {
-    const map = new Map<number, Candle>();
-    for (const c of candles) map.set(c.time, c);
-    return map;
-  }, [candles]);
+    const raw50 = calculateEMA(emaSource, 50);
+    const raw200 = calculateEMA(emaSource, 200);
+
+    if (warmupStart === startIndex) {
+      return { ema50Data: raw50, ema200Data: raw200 };
+    }
+
+    const minDisplayTime = displayCandles[0].time;
+    const filterFrom = (pts: { time: number; value: number }[]) => {
+      let firstIdx = 0;
+      while (firstIdx < pts.length && pts[firstIdx].time < minDisplayTime) {
+        firstIdx++;
+      }
+      return firstIdx === 0 ? pts : pts.slice(firstIdx);
+    };
+
+    return {
+      ema50Data: filterFrom(raw50),
+      ema200Data: filterFrom(raw200),
+    };
+  }, [candles, displayCandles, startIndex, endIndex]);
 
   // 1. One-time initialization of Lightweight Charts instance
   useEffect(() => {
@@ -364,33 +392,37 @@ export function TradingChart({
   useEffect(() => {
     if (!candleSeriesRef.current || !volumeSeriesRef.current) return;
 
-    if (candles.length === 0) {
+    const len = displayCandles.length;
+    if (len === 0) {
       candleSeriesRef.current.setData([]);
       volumeSeriesRef.current.setData([]);
       return;
     }
 
-    const chartCandles = candles.map((c) => ({
-      time: c.time as Time,
-      open: c.open,
-      high: c.high,
-      low: c.low,
-      close: c.close,
-    }));
+    const chartCandles = new Array(len);
+    const chartVolumes = new Array(len);
 
-    const chartVolumes = candles.map((c) => ({
-      time: c.time as Time,
-      value: c.volume,
-      color: c.close >= c.open ? 'rgba(16, 185, 129, 0.35)' : 'rgba(244, 63, 94, 0.35)',
-    }));
+    for (let i = 0; i < len; i++) {
+      const c = displayCandles[i];
+      const t = c.time as Time;
+      chartCandles[i] = {
+        time: t,
+        open: c.open,
+        high: c.high,
+        low: c.low,
+        close: c.close,
+      };
+      chartVolumes[i] = {
+        time: t,
+        value: c.volume,
+        color: c.close >= c.open ? 'rgba(16, 185, 129, 0.35)' : 'rgba(244, 63, 94, 0.35)',
+      };
+    }
 
     candleSeriesRef.current.setData(chartCandles);
     volumeSeriesRef.current.setData(chartVolumes);
-
-    if (chartCandles.length > 0) {
-      chartRef.current?.timeScale().fitContent();
-    }
-  }, [candles]);
+    chartRef.current?.timeScale().fitContent();
+  }, [displayCandles]);
 
   // 4. Update EMA 50 data & visibility
   useEffect(() => {
@@ -400,7 +432,7 @@ export function TradingChart({
     });
     if (indicatorConfig.showEma50) {
       ema50SeriesRef.current.setData(
-        ema50Data.map((p) => ({ time: p.time as Time, value: p.value }))
+        ema50Data as unknown as { time: Time; value: number }[]
       );
     } else {
       ema50SeriesRef.current.setData([]);
@@ -415,7 +447,7 @@ export function TradingChart({
     });
     if (indicatorConfig.showEma200) {
       ema200SeriesRef.current.setData(
-        ema200Data.map((p) => ({ time: p.time as Time, value: p.value }))
+        ema200Data as unknown as { time: Time; value: number }[]
       );
     } else {
       ema200SeriesRef.current.setData([]);
@@ -447,11 +479,15 @@ export function TradingChart({
 
     const seriesMarkers: SeriesMarker<Time>[] = [];
     const tfSeconds = TIMEFRAMES[timeframe]?.seconds || 900;
+    const minWindowTime = displayCandles.length > 0 ? displayCandles[0].time : 0;
+    const maxWindowTime =
+      displayCandles.length > 0 ? displayCandles[displayCandles.length - 1].time + tfSeconds : 0;
 
     const findSeriesTime = (t: number): Time | null => {
-      if (candleMap.has(t)) return t as Time;
+      if (displayCandles.length === 0 || t < minWindowTime || t > maxWindowTime) return null;
+      if (binarySearchByTime(displayCandles, t)) return t as Time;
       const bucket = Math.floor(t / tfSeconds) * tfSeconds;
-      if (candleMap.has(bucket)) return bucket as Time;
+      if (binarySearchByTime(displayCandles, bucket)) return bucket as Time;
       return null;
     };
 
@@ -583,7 +619,7 @@ export function TradingChart({
     indicatorConfig.showMarkers,
     indicatorConfig.showStructureSignals,
     selectedTrade,
-    candleMap,
+    displayCandles,
     timeframe,
   ]);
 
@@ -595,7 +631,7 @@ export function TradingChart({
       indicatorConfig.showSmcZones ?? true,
       indicatorConfig.showStructureSignals ?? true
     );
-  }, [smcOverlay, indicatorConfig.showSmcZones, indicatorConfig.showStructureSignals, candles]);
+  }, [smcOverlay, indicatorConfig.showSmcZones, indicatorConfig.showStructureSignals, displayCandles]);
 
   // 8. Handle Selected Trade highlighting & horizontal price lines
   useEffect(() => {
@@ -663,14 +699,14 @@ export function TradingChart({
       });
     }
 
-    // Zoom chart to trade window safely clamped to candle range
-    if (chartRef.current && selectedTrade.entryTime && candles.length > 0) {
+    // Zoom chart to trade window safely clamped to displayed candle range
+    if (chartRef.current && selectedTrade.entryTime && displayCandles.length > 0) {
       const timeScale = chartRef.current.timeScale();
       const exitTime = selectedTrade.exitTime || selectedTrade.entryTime + 3600 * 4;
       const tfSeconds = TIMEFRAMES[timeframe]?.seconds || 900;
 
-      const minTime = candles[0].time;
-      const maxTime = candles[candles.length - 1].time;
+      const minTime = displayCandles[0].time;
+      const maxTime = displayCandles[displayCandles.length - 1].time;
       const fromTime = Math.max(minTime, selectedTrade.entryTime - tfSeconds * 12) as Time;
       const toTime = Math.min(maxTime, exitTime + tfSeconds * 16) as Time;
 
@@ -682,7 +718,7 @@ export function TradingChart({
         }
       }
     }
-  }, [selectedTrade, digits, timeframe, candles]);
+  }, [selectedTrade, digits, timeframe, displayCandles]);
 
   // Derived indices for selected trade navigation
   const currentTradeIdx = useMemo(() => {
@@ -697,12 +733,12 @@ export function TradingChart({
       : null;
 
   const handleZoomToSelectedTrade = useCallback(() => {
-    if (!chartRef.current || !selectedTrade || candles.length === 0) return;
+    if (!chartRef.current || !selectedTrade || displayCandles.length === 0) return;
     const timeScale = chartRef.current.timeScale();
     const tfSeconds = TIMEFRAMES[timeframe]?.seconds || 900;
     const exitTime = selectedTrade.exitTime || selectedTrade.entryTime + 3600 * 4;
-    const minTime = candles[0].time;
-    const maxTime = candles[candles.length - 1].time;
+    const minTime = displayCandles[0].time;
+    const maxTime = displayCandles[displayCandles.length - 1].time;
     const fromTime = Math.max(minTime, selectedTrade.entryTime - tfSeconds * 12) as Time;
     const toTime = Math.min(maxTime, exitTime + tfSeconds * 16) as Time;
 
@@ -711,7 +747,7 @@ export function TradingChart({
         timeScale.setVisibleRange({ from: fromTime, to: toTime });
       } catch {}
     }
-  }, [selectedTrade, timeframe, candles]);
+  }, [selectedTrade, timeframe, displayCandles]);
 
   // Chart Actions
   const handleResetView = useCallback(() => {
@@ -745,27 +781,24 @@ export function TradingChart({
     }
   }, []);
 
-  // Active or Hovered Bar Information
+  // Active or Hovered Bar Information (O(log n) lookup with zero Map allocation)
   const activeCandle = useMemo(() => {
-    if (hoveredTime && candleMap.has(hoveredTime)) {
-      return candleMap.get(hoveredTime)!;
+    if (hoveredTime !== null) {
+      const found = binarySearchByTime(displayCandles, hoveredTime);
+      if (found) return found;
     }
-    return candles.length > 0 ? candles[candles.length - 1] : null;
-  }, [hoveredTime, candleMap, candles]);
+    return displayCandles.length > 0 ? displayCandles[displayCandles.length - 1] : null;
+  }, [hoveredTime, displayCandles]);
 
   const activeEma50 = useMemo(() => {
-    if (activeCandle) {
-      return ema50Map.get(activeCandle.time);
-    }
-    return undefined;
-  }, [activeCandle, ema50Map]);
+    if (!activeCandle) return undefined;
+    return binarySearchByTime(ema50Data, activeCandle.time)?.value;
+  }, [activeCandle, ema50Data]);
 
   const activeEma200 = useMemo(() => {
-    if (activeCandle) {
-      return ema200Map.get(activeCandle.time);
-    }
-    return undefined;
-  }, [activeCandle, ema200Map]);
+    if (!activeCandle) return undefined;
+    return binarySearchByTime(ema200Data, activeCandle.time)?.value;
+  }, [activeCandle, ema200Data]);
 
   const change = activeCandle ? activeCandle.close - activeCandle.open : 0;
   const changePercent = activeCandle && activeCandle.open > 0 ? (change / activeCandle.open) * 100 : 0;

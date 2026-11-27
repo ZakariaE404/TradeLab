@@ -25,10 +25,11 @@ const inMemoryCoverage = new Map<string, SymbolCoverageRecord>();
 const inMemoryDerived = new Map<string, DerivedCacheRecord>();
 
 /**
- * Initializes and upgrades IndexedDB schema safely
+ * Initializes and upgrades IndexedDB schema safely (works in both Window and Web Worker contexts)
  */
 export function getM1Database(): Promise<IDBDatabase | null> {
-  if (typeof window === 'undefined' || !window.indexedDB) {
+  const idb = typeof globalThis !== 'undefined' ? (globalThis as { indexedDB?: IDBFactory }).indexedDB : undefined;
+  if (!idb) {
     return Promise.resolve(null);
   }
 
@@ -36,7 +37,7 @@ export function getM1Database(): Promise<IDBDatabase | null> {
 
   dbPromise = new Promise((resolve) => {
     try {
-      const request = window.indexedDB.open(DB_NAME, DB_VERSION);
+      const request = idb.open(DB_NAME, DB_VERSION);
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
@@ -165,20 +166,20 @@ export function subtractIntervals(
 /**
  * Checks if a given timestamp falls into the standard Forex weekend closure:
  * Friday 22:00 UTC to Sunday 21:00 UTC.
+ * Uses pure integer arithmetic to avoid Date allocations in hot aggregation loops.
  */
 export function isWeekendMarketClosed(timestampSec: number): boolean {
-  const date = new Date(timestampSec * 1000);
-  const day = date.getUTCDay(); // 0 = Sun, 5 = Fri, 6 = Sat
-  const hour = date.getUTCHours();
-  const minute = date.getUTCMinutes();
+  const dayIdx = Math.floor(timestampSec / 86400);
+  const day = ((dayIdx + 4) % 7 + 7) % 7; // Epoch 1970-01-01 was Thursday (4); 0 = Sun, 5 = Fri, 6 = Sat
+  const secInDay = timestampSec - dayIdx * 86400;
 
-  if (day === 5 && (hour > 22 || (hour === 22 && minute >= 0))) {
+  if (day === 5 && secInDay >= 79200) {
     return true; // Friday 22:00+ UTC
   }
   if (day === 6) {
     return true; // Saturday all day
   }
-  if (day === 0 && hour < 21) {
+  if (day === 0 && secInDay < 75600) {
     return true; // Sunday before 21:00 UTC
   }
 
@@ -281,14 +282,12 @@ export async function saveCanonicalM1Candles(
     validCandles.push(record);
     if (time < minTime) minTime = time;
     if (time > maxTime) maxTime = time;
-
-    // Always maintain in-memory map
-    inMemoryM1.set(record.id, record);
   }
 
   if (validCandles.length === 0) return 0;
 
-  // 1. Bulk write to IndexedDB
+  // 1. Bulk write to IndexedDB (avoid keeping 1M+ M1 records in inMemoryM1 when IDB succeeds)
+  let savedToIdb = false;
   try {
     const db = await getM1Database();
     if (db) {
@@ -305,9 +304,16 @@ export async function saveCanonicalM1Candles(
           tx.onerror = () => reject(tx.error);
         });
       }
+      savedToIdb = true;
     }
   } catch (err) {
     console.warn('[M1Database] Bulk insert into IndexedDB failed, memory active:', err);
+  }
+
+  if (!savedToIdb) {
+    for (const record of validCandles) {
+      inMemoryM1.set(record.id, record);
+    }
   }
 
   // 2. Update Symbol Coverage
@@ -428,6 +434,74 @@ export async function calculateMissingM1Intervals(
 }
 
 /**
+ * Streams canonical M1 candles in bounded chronological chunks from IndexedDB (or memory fallback)
+ * so aggregation never materializes 1M+ M1 objects in RAM at once.
+ */
+export async function streamCanonicalM1Candles(
+  symbol: string,
+  fromSec: number | undefined,
+  toSec: number | undefined,
+  onChunk: (candles: ReadonlyArray<Candle>) => void | Promise<void>,
+  chunkSize: number = 10000
+): Promise<number> {
+  const symKey = normalizeSymbolKey(symbol);
+  const minTime = fromSec !== undefined ? Math.floor(fromSec) : 0;
+  const maxTime = toSec !== undefined ? Math.ceil(toSec) : Infinity;
+
+  try {
+    const db = await getM1Database();
+    if (db) {
+      let curMin = minTime;
+      let totalCount = 0;
+
+      while (curMin <= maxTime) {
+        const batch = await new Promise<CanonicalM1Candle[]>((resolve) => {
+          const tx = db.transaction(STORES.CANONICAL_M1, 'readonly');
+          const store = tx.objectStore(STORES.CANONICAL_M1);
+          const index = store.index('symbol_time');
+          const range = IDBKeyRange.bound([symKey, curMin], [symKey, maxTime]);
+          const req = index.getAll(range, chunkSize);
+
+          req.onsuccess = () => resolve((req.result as CanonicalM1Candle[]) || []);
+          req.onerror = () => resolve([]);
+        });
+
+        if (batch.length === 0) {
+          break;
+        }
+
+        await onChunk(batch);
+        totalCount += batch.length;
+
+        if (batch.length < chunkSize) {
+          break;
+        }
+
+        const lastTime = batch[batch.length - 1].time;
+        if (lastTime < curMin) {
+          break;
+        }
+        curMin = lastTime + 1;
+      }
+
+      if (totalCount > 0) {
+        return totalCount;
+      }
+    }
+  } catch (err) {
+    console.warn('[M1Database] Error streaming M1 candles from IDB:', err);
+  }
+
+  const memCandles = getMemoryM1Candles(symKey, minTime, maxTime);
+  if (memCandles.length === 0) return 0;
+
+  for (let i = 0; i < memCandles.length; i += chunkSize) {
+    await onChunk(memCandles.slice(i, i + chunkSize));
+  }
+  return memCandles.length;
+}
+
+/**
  * Retrieves canonical M1 candles from IndexedDB / memory store
  */
 export async function getCanonicalM1Candles(
@@ -454,16 +528,26 @@ export async function getCanonicalM1Candles(
         req.onsuccess = () => {
           const results = req.result as CanonicalM1Candle[];
           if (results && results.length > 0) {
-            const mapped: Candle[] = results.map((r) => ({
-              time: r.time,
-              open: r.open,
-              high: r.high,
-              low: r.low,
-              close: r.close,
-              volume: r.volume,
-            }));
-            // Sort ascending chronologically
-            mapped.sort((a, b) => a.time - b.time);
+            const len = results.length;
+            const mapped: Candle[] = new Array(len);
+            let isSorted = true;
+            let prevTime = -Infinity;
+            for (let i = 0; i < len; i++) {
+              const r = results[i];
+              if (r.time < prevTime) isSorted = false;
+              prevTime = r.time;
+              mapped[i] = {
+                time: r.time,
+                open: r.open,
+                high: r.high,
+                low: r.low,
+                close: r.close,
+                volume: r.volume,
+              };
+            }
+            if (!isSorted) {
+              mapped.sort((a, b) => a.time - b.time);
+            }
             resolve(mapped);
             return;
           }
@@ -565,11 +649,12 @@ export async function invalidateDerivedCache(
  * Saves a generated derived timeframe series to cache
  */
 export async function saveDerivedCache(record: DerivedCacheRecord): Promise<void> {
-  inMemoryDerived.set(record.id, record);
-
   try {
     const db = await getM1Database();
-    if (!db) return;
+    if (!db) {
+      inMemoryDerived.set(record.id, record);
+      return;
+    }
 
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(STORES.DERIVED_CACHE, 'readwrite');
@@ -581,6 +666,7 @@ export async function saveDerivedCache(record: DerivedCacheRecord): Promise<void
     });
   } catch (err) {
     console.warn('[M1Database] Error storing derived cache in IDB:', err);
+    inMemoryDerived.set(record.id, record);
   }
 }
 
@@ -603,7 +689,6 @@ export async function getDerivedCache(id: string): Promise<DerivedCacheRecord | 
 
       req.onsuccess = () => {
         if (req.result) {
-          inMemoryDerived.set(id, req.result);
           resolve(req.result);
         } else {
           resolve(null);

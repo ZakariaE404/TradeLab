@@ -23,7 +23,7 @@ import {
   normalizeSymbolKey,
   saveCanonicalM1Candles,
 } from './m1Database';
-import { aggregateM1ToTimeframe, normalizeTimeframeId } from './timeframeAggregator';
+import { getOrComputeDerivedTimeframe, normalizeTimeframeId } from './timeframeAggregator';
 
 export interface ChunkRange {
   from: string; // ISO date 'YYYY-MM-DD' or timestamp
@@ -167,16 +167,15 @@ export async function downloadHistoricalDataset(
       currentStage: 'All requested data already exists locally. Generating timeframes...',
     });
 
-    const storedM1 = await getCanonicalM1Candles(symKey, startSec, endSec);
-    const dataset = await buildDatasetFromM1({
+    const dataset = await buildDatasetFromCanonicalM1({
       instrument,
+      symKey,
       timeframe,
       from,
       to,
       startSec,
       endSec,
       priceType,
-      m1Candles: storedM1,
     });
 
     onProgress?.({
@@ -186,7 +185,7 @@ export async function downloadHistoricalDataset(
       progressPercent: 100,
       totalChunks: 0,
       completedChunks: 0,
-      totalCandlesFetched: storedM1.length,
+      totalCandlesFetched: dataset.candleCount,
       currentStage: 'Complete! Loaded from canonical local database.',
     });
 
@@ -293,7 +292,7 @@ export async function downloadHistoricalDataset(
     }
   }
 
-  // 6. Retrieve full M1 range from canonical database
+  // 6. Stream / aggregate requested timeframe directly from canonical database
   onProgress?.({
     isDownloading: true,
     instrument,
@@ -305,26 +304,24 @@ export async function downloadHistoricalDataset(
     currentStage: 'Validating canonical M1 data and generating timeframes...',
   });
 
-  const fullM1Candles = await getCanonicalM1Candles(symKey, startSec, endSec);
-
-  if (fullM1Candles.length === 0) {
-    return {
-      success: false,
-      error: `No candles returned from Dukascopy for ${instrument.toUpperCase()} between ${from} and ${to}. Market was likely closed.`,
-    };
-  }
-
-  // 7. Aggregate M1 to the requested display timeframe
-  const dataset = await buildDatasetFromM1({
+  // 7. Aggregate M1 to the requested display timeframe via streaming DB aggregation
+  const dataset = await buildDatasetFromCanonicalM1({
     instrument,
+    symKey,
     timeframe,
     from,
     to,
     startSec,
     endSec,
     priceType,
-    m1Candles: fullM1Candles,
   });
+
+  if (dataset.candleCount === 0) {
+    return {
+      success: false,
+      error: `No candles returned from Dukascopy for ${instrument.toUpperCase()} between ${from} and ${to}. Market was likely closed.`,
+    };
+  }
 
   onProgress?.({
     isDownloading: false,
@@ -333,7 +330,7 @@ export async function downloadHistoricalDataset(
     progressPercent: 100,
     totalChunks,
     completedChunks: totalChunks,
-    totalCandlesFetched: fullM1Candles.length,
+    totalCandlesFetched: totalM1Saved || dataset.candleCount,
     currentStage: 'Completed successfully! Saved to canonical database.',
   });
 
@@ -344,24 +341,26 @@ export async function downloadHistoricalDataset(
 }
 
 /**
- * Builds and saves a SavedHistoricalDataset entity from canonical M1 candles
+ * Builds and saves a SavedHistoricalDataset entity by streaming canonical M1 data
  */
-async function buildDatasetFromM1(params: {
+async function buildDatasetFromCanonicalM1(params: {
   instrument: string;
+  symKey: string;
   timeframe: DukascopyTimeframe;
   from: string;
   to: string;
   startSec: number;
   endSec: number;
   priceType: DukascopyPriceType;
-  m1Candles: Candle[];
 }): Promise<SavedHistoricalDataset> {
-  const { instrument, timeframe, from, to, startSec, endSec, priceType, m1Candles } = params;
+  const { instrument, symKey, timeframe, from, to, startSec, endSec, priceType } = params;
 
   const instMeta = getDukascopyInstrumentMeta(instrument);
-
   const normTf = normalizeTimeframeId(timeframe);
-  const aggregated = aggregateM1ToTimeframe(m1Candles, normTf);
+  const candles =
+    normTf === '1m'
+      ? await getCanonicalM1Candles(symKey, startSec, endSec)
+      : await getOrComputeDerivedTimeframe(symKey, normTf, startSec, endSec);
 
   const displayTf = mapDukascopyTfToTradeLabTf(timeframe);
   const datasetId = `ds_${instrument.toLowerCase()}_${timeframe}_${from.replace(/[^0-9]/g, '')}_${to.replace(/[^0-9]/g, '')}_${priceType.toLowerCase()}_${Date.now()}`;
@@ -375,14 +374,14 @@ async function buildDatasetFromM1(params: {
     displayTimeframe: displayTf,
     startDate: from,
     endDate: to,
-    startTime: m1Candles[0]?.time || startSec,
-    endTime: m1Candles[m1Candles.length - 1]?.time || endSec,
+    startTime: candles[0]?.time || startSec,
+    endTime: candles[candles.length - 1]?.time || endSec,
     priceType,
-    candleCount: aggregated.length,
+    candleCount: candles.length,
     downloadDate: Date.now(),
     dataSource: 'Dukascopy',
     status: 'READY',
-    candles: aggregated,
+    candles,
   };
 
   await saveHistoricalDataset(dataset);
