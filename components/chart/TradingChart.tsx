@@ -22,11 +22,13 @@ import {
   DataSourceMode,
   ForexSymbol,
   IndicatorConfig,
+  SmcFibChartOverlay,
   Timeframe,
   Trade,
 } from '@/types/trading';
 import { calculateEMA } from '@/services/indicators';
 import { FOREX_SYMBOLS, TIMEFRAMES } from '@/services/marketData';
+import { SmcFibOverlayPrimitive } from './SmcFibOverlayPrimitive';
 import {
   RotateCcw,
   ZoomIn,
@@ -57,6 +59,7 @@ interface TradingChartProps {
   onToggleIndicator: (key: keyof IndicatorConfig) => void;
   onClearSelectedTrade?: () => void;
   dataSourceMode?: DataSourceMode;
+  smcOverlay?: SmcFibChartOverlay | null;
   historicalMeta?: {
     instrument: string;
     symbol: string;
@@ -80,6 +83,7 @@ export function TradingChart({
   onToggleIndicator,
   onClearSelectedTrade,
   dataSourceMode = 'DEMO',
+  smcOverlay,
   historicalMeta,
 }: TradingChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -89,6 +93,7 @@ export function TradingChart({
   const ema50SeriesRef = useRef<ISeriesApi<'Line', Time> | null>(null);
   const ema200SeriesRef = useRef<ISeriesApi<'Line', Time> | null>(null);
   const markersPluginRef = useRef<ISeriesMarkersPluginApi<Time> | null>(null);
+  const smcPrimitiveRef = useRef<SmcFibOverlayPrimitive | null>(null);
 
   // Active trade price lines
   const entryLineRef = useRef<IPriceLine | null>(null);
@@ -242,9 +247,13 @@ export function TradingChart({
     });
     ema200SeriesRef.current = ema200Series;
 
-    // 5. Signal markers plugin
+    // 5. Signal markers plugin & SMC Fib overlay primitive
     const markersPlugin = createSeriesMarkers(candleSeries, []);
     markersPluginRef.current = markersPlugin;
+
+    const smcPrimitive = new SmcFibOverlayPrimitive();
+    candleSeries.attachPrimitive(smcPrimitive);
+    smcPrimitiveRef.current = smcPrimitive;
 
     // Crosshair hover inspection
     chart.subscribeCrosshairMove((param) => {
@@ -330,6 +339,7 @@ export function TradingChart({
       ema50SeriesRef.current = null;
       ema200SeriesRef.current = null;
       markersPluginRef.current = null;
+      smcPrimitiveRef.current = null;
       entryLineRef.current = null;
       slLineRef.current = null;
       tpLineRef.current = null;
@@ -421,11 +431,16 @@ export function TradingChart({
     }
   }, [indicatorConfig.showVolume]);
 
-  // 7. Update Trade Markers (Buy/Sell, TP/SL badges)
+  // 7. Update Trade Markers (Buy/Sell, TP/SL) and SMC Structure Markers (BOS/CHOCH)
   useEffect(() => {
     if (!markersPluginRef.current) return;
 
-    if (!indicatorConfig.showMarkers || trades.length === 0) {
+    const showTradeMarkers = indicatorConfig.showMarkers && trades.length > 0;
+    const showStructureMarkers =
+      (indicatorConfig.showStructureSignals ?? true) &&
+      Boolean(smcOverlay?.structureEvents && smcOverlay.structureEvents.length > 0);
+
+    if (!showTradeMarkers && !showStructureMarkers) {
       markersPluginRef.current.setMarkers([]);
       return;
     }
@@ -440,99 +455,147 @@ export function TradingChart({
       return null;
     };
 
-    for (const trade of trades) {
-      const isBuy = trade.direction === 'BUY' || trade.direction === 'LONG';
-      const isSelected = selectedTrade?.id === trade.id;
-      const isWin = trade.status === 'WIN';
-      const isLoss = trade.status === 'LOSS';
-      const isUnresolved = trade.status === 'UNRESOLVED' || trade.status === 'OPEN';
+    if (showStructureMarkers && smcOverlay?.structureEvents) {
+      for (let idx = 0; idx < smcOverlay.structureEvents.length; idx++) {
+        const ev = smcOverlay.structureEvents[idx];
+        const evTime = findSeriesTime(ev.time);
+        if (!evTime) continue;
 
-      const entryTime = findSeriesTime(trade.entryTime);
-      if (!entryTime) continue; // Skip marker if candle is outside loaded chart window
+        const isBull = ev.type === 'BULL_BOS' || ev.type === 'BULL_CHOCH';
+        const isChoch = ev.type === 'BULL_CHOCH' || ev.type === 'BEAR_CHOCH';
 
-      const sigTime = trade.signalTime && trade.signalTime > 0 ? findSeriesTime(trade.signalTime) : null;
-      const exitTime = trade.exitTime && trade.exitTime > 0 ? findSeriesTime(trade.exitTime) : null;
-
-      // Color and label according to trade outcome
-      let markerColor = '#94a3b8'; // Slate default / BE
-      let badgeLabel = isBuy ? 'BUY' : 'SELL';
-
-      if (isWin) {
-        markerColor = '#10b981'; // Emerald
-        badgeLabel = `${isBuy ? '▲ BUY' : '▼ SELL'} #${trade.index} [WIN +${trade.pnlR.toFixed(2)}R]`;
-      } else if (isLoss) {
-        markerColor = '#f43f5e'; // Rose
-        badgeLabel = `${isBuy ? '▲ BUY' : '▼ SELL'} #${trade.index} [LOSS ${trade.pnlR.toFixed(2)}R]`;
-      } else if (isUnresolved) {
-        markerColor = '#f59e0b'; // Amber
-        badgeLabel = `${isBuy ? '▲ BUY' : '▼ SELL'} #${trade.index} [UNRESOLVED]`;
-      } else {
-        badgeLabel = `${isBuy ? '▲ BUY' : '▼ SELL'} #${trade.index} [BE]`;
-      }
-
-      if (isSelected) {
-        badgeLabel = `★ ${badgeLabel}`;
-      }
-
-      // 1. Signal Confirmation Marker at confirmed candle CLOSE
-      if (sigTime && sigTime !== entryTime) {
         seriesMarkers.push({
-          id: `sig-${trade.id}`,
-          time: sigTime,
-          position: isBuy ? 'belowBar' : 'aboveBar',
-          color: isBuy ? '#38bdf8' : '#fb923c',
-          shape: isBuy ? 'arrowUp' : 'arrowDown',
-          text: isSelected ? `★ SIG #${trade.index} ${isBuy ? 'BUY' : 'SELL'}` : `SIG #${trade.index} ${isBuy ? 'BUY' : 'SELL'}`,
+          id: `smc-${idx}-${ev.type}-${ev.time}`,
+          time: evTime,
+          position: isBull ? 'aboveBar' : 'belowBar',
+          color: isChoch ? (isBull ? '#38bdf8' : '#fb923c') : isBull ? '#34d399' : '#fb7185',
+          shape: isBull ? 'arrowUp' : 'arrowDown',
+          text:
+            ev.type === 'BULL_BOS'
+              ? 'BOS ▲'
+              : ev.type === 'BEAR_BOS'
+              ? 'BOS ▼'
+              : ev.type === 'BULL_CHOCH'
+              ? 'CHOCH ▲'
+              : 'CHOCH ▼',
           size: 1,
         });
       }
+    }
 
-      // 2. Execution Entry Marker at actual entry candle OPEN
-      seriesMarkers.push({
-        id: `entry-${trade.id}`,
-        time: entryTime,
-        position: isBuy ? 'belowBar' : 'aboveBar',
-        color: markerColor,
-        shape: sigTime === entryTime ? (isBuy ? 'arrowUp' : 'arrowDown') : 'circle',
-        text: badgeLabel,
-        size: isSelected ? 2 : 1,
-      });
+    if (showTradeMarkers) {
+      for (const trade of trades) {
+        const isBuy = trade.direction === 'BUY' || trade.direction === 'LONG';
+        const isSelected = selectedTrade?.id === trade.id;
+        const isWin = trade.status === 'WIN';
+        const isLoss = trade.status === 'LOSS';
+        const isUnresolved = trade.status === 'UNRESOLVED' || trade.status === 'OPEN';
 
-      // 3. Exit Marker only if trade has truly resolved/closed
-      if (
-        !isUnresolved &&
-        exitTime &&
-        exitTime !== entryTime
-      ) {
-        let exitColor = '#94a3b8';
-        let exitShape: 'circle' | 'square' = 'circle';
-        let exitLabel = `${trade.exitReason}`;
+        const entryTime = findSeriesTime(trade.entryTime);
+        if (!entryTime) continue; // Skip marker if candle is outside loaded chart window
+
+        const sigTime = trade.signalTime && trade.signalTime > 0 ? findSeriesTime(trade.signalTime) : null;
+        const exitTime = trade.exitTime && trade.exitTime > 0 ? findSeriesTime(trade.exitTime) : null;
+
+        // Color and label according to trade outcome
+        let markerColor = '#94a3b8'; // Slate default / BE
+        let badgeLabel = isBuy ? 'BUY' : 'SELL';
 
         if (isWin) {
-          exitColor = '#10b981';
-          exitShape = 'circle';
-          exitLabel = `TP #${trade.index} (+${trade.pnlR.toFixed(2)}R)`;
+          markerColor = '#10b981'; // Emerald
+          badgeLabel = `${isBuy ? '▲ BUY' : '▼ SELL'} #${trade.index} [WIN +${trade.pnlR.toFixed(2)}R]`;
         } else if (isLoss) {
-          exitColor = '#f43f5e';
-          exitShape = 'square';
-          exitLabel = `SL #${trade.index} (${trade.pnlR.toFixed(2)}R)`;
+          markerColor = '#f43f5e'; // Rose
+          badgeLabel = `${isBuy ? '▲ BUY' : '▼ SELL'} #${trade.index} [LOSS ${trade.pnlR.toFixed(2)}R]`;
+        } else if (isUnresolved) {
+          markerColor = '#f59e0b'; // Amber
+          badgeLabel = `${isBuy ? '▲ BUY' : '▼ SELL'} #${trade.index} [UNRESOLVED]`;
+        } else {
+          badgeLabel = `${isBuy ? '▲ BUY' : '▼ SELL'} #${trade.index} [BE]`;
         }
 
+        if (isSelected) {
+          badgeLabel = `★ ${badgeLabel}`;
+        }
+
+        // 1. Signal Confirmation Marker at confirmed candle CLOSE
+        if (sigTime && sigTime !== entryTime) {
+          seriesMarkers.push({
+            id: `sig-${trade.id}`,
+            time: sigTime,
+            position: isBuy ? 'belowBar' : 'aboveBar',
+            color: isBuy ? '#38bdf8' : '#fb923c',
+            shape: isBuy ? 'arrowUp' : 'arrowDown',
+            text: isSelected ? `★ SIG #${trade.index} ${isBuy ? 'BUY' : 'SELL'}` : `SIG #${trade.index} ${isBuy ? 'BUY' : 'SELL'}`,
+            size: 1,
+          });
+        }
+
+        // 2. Execution Entry Marker at actual entry candle OPEN
         seriesMarkers.push({
-          id: `exit-${trade.id}`,
-          time: exitTime,
-          position: isBuy ? 'aboveBar' : 'belowBar',
-          color: exitColor,
-          shape: exitShape,
-          text: isSelected ? `★ ${exitLabel}` : exitLabel,
+          id: `entry-${trade.id}`,
+          time: entryTime,
+          position: isBuy ? 'belowBar' : 'aboveBar',
+          color: markerColor,
+          shape: sigTime === entryTime ? (isBuy ? 'arrowUp' : 'arrowDown') : 'circle',
+          text: badgeLabel,
           size: isSelected ? 2 : 1,
         });
+
+        // 3. Exit Marker only if trade has truly resolved/closed
+        if (
+          !isUnresolved &&
+          exitTime &&
+          exitTime !== entryTime
+        ) {
+          let exitColor = '#94a3b8';
+          let exitShape: 'circle' | 'square' = 'circle';
+          let exitLabel = `${trade.exitReason}`;
+
+          if (isWin) {
+            exitColor = '#10b981';
+            exitShape = 'circle';
+            exitLabel = `${trade.exitReason} #${trade.index} (+${trade.pnlR.toFixed(2)}R)`;
+          } else if (isLoss) {
+            exitColor = '#f43f5e';
+            exitShape = 'square';
+            exitLabel = `${trade.exitReason} #${trade.index} (${trade.pnlR.toFixed(2)}R)`;
+          }
+
+          seriesMarkers.push({
+            id: `exit-${trade.id}`,
+            time: exitTime,
+            position: isBuy ? 'aboveBar' : 'belowBar',
+            color: exitColor,
+            shape: exitShape,
+            text: isSelected ? `★ ${exitLabel}` : exitLabel,
+            size: isSelected ? 2 : 1,
+          });
+        }
       }
     }
 
     seriesMarkers.sort((a, b) => Number(a.time) - Number(b.time));
     markersPluginRef.current.setMarkers(seriesMarkers);
-  }, [trades, indicatorConfig.showMarkers, selectedTrade, candleMap, timeframe]);
+  }, [
+    trades,
+    smcOverlay,
+    indicatorConfig.showMarkers,
+    indicatorConfig.showStructureSignals,
+    selectedTrade,
+    candleMap,
+    timeframe,
+  ]);
+
+  // 7B. Update SMC Fib Zones & BOS/CHOCH Canvas Primitive
+  useEffect(() => {
+    if (!smcPrimitiveRef.current) return;
+    smcPrimitiveRef.current.setData(
+      smcOverlay,
+      indicatorConfig.showSmcZones ?? true,
+      indicatorConfig.showStructureSignals ?? true
+    );
+  }, [smcOverlay, indicatorConfig.showSmcZones, indicatorConfig.showStructureSignals, candles]);
 
   // 8. Handle Selected Trade highlighting & horizontal price lines
   useEffect(() => {
@@ -760,10 +823,10 @@ export function TradingChart({
             )}
           </div>
 
-          {/* Quick M15 / H1 Timeframe Switcher if provided */}
+          {/* Quick M15 / H1 / H4 Timeframe Switcher if provided */}
           {onSelectTimeframe && (
             <div className="flex items-center bg-slate-900 rounded border border-slate-800 p-0.5">
-              {(['15m', '1h'] as Timeframe[]).map((tf) => (
+              {(['15m', '1h', '4h'] as Timeframe[]).map((tf) => (
                 <button
                   key={tf}
                   onClick={() => onSelectTimeframe(tf)}
@@ -876,6 +939,32 @@ export function TradingChart({
             >
               <Tag className="w-3.5 h-3.5" />
               <span>Signals</span>
+            </button>
+
+            <button
+              onClick={() => onToggleIndicator('showSmcZones')}
+              title="Toggle SMC Fibonacci 0.60-0.70 Zones"
+              className={`px-2 py-1 rounded flex items-center gap-1 transition-colors ${
+                indicatorConfig.showSmcZones ?? true
+                  ? 'bg-teal-500/20 text-teal-300 font-medium'
+                  : 'text-slate-500 hover:text-slate-300'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>Fib Zones</span>
+            </button>
+
+            <button
+              onClick={() => onToggleIndicator('showStructureSignals')}
+              title="Toggle BOS / CHOCH Market Structure Labels"
+              className={`px-2 py-1 rounded flex items-center gap-1 transition-colors ${
+                indicatorConfig.showStructureSignals ?? true
+                  ? 'bg-sky-500/20 text-sky-300 font-medium'
+                  : 'text-slate-500 hover:text-slate-300'
+              }`}
+            >
+              <Activity className="w-3.5 h-3.5" />
+              <span>BOS/CHOCH</span>
             </button>
           </div>
 

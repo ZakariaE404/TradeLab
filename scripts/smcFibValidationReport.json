@@ -1,0 +1,5317 @@
+[
+  {
+    "symbol": "BTCUSD",
+    "dukascopyId": "btcusd",
+    "assetClass": "Crypto",
+    "dateRange": "2022-01-01 -> 2025-10-31",
+    "h4Bars": 8374,
+    "structureEvents": {
+      "bosCount": 331,
+      "chochCount": 92
+    },
+    "qcNextOpen": {
+      "totalTrades": 106,
+      "unresolvedTrades": 1,
+      "winningTrades": 29,
+      "losingTrades": 77,
+      "chochLiquidations": 66,
+      "winRate": 27.4,
+      "profitFactor": 1.56,
+      "netR": 31.11,
+      "totalPnlCurrency": 15794.17,
+      "finalEquity": 115794.17,
+      "maxDrawdownR": 14.32,
+      "maxDrawdownPercent": 6.94,
+      "expectancyR": 0.29,
+      "longTrades": 54,
+      "longWinRate": 31.5,
+      "shortTrades": 52,
+      "shortWinRate": 23.1,
+      "equityCurve": [
+        {
+          "time": 1642694400,
+          "tradeIndex": 0,
+          "equity": 100000,
+          "cumulativeR": 0,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1642723200,
+          "tradeIndex": 1,
+          "equity": 99499.96,
+          "cumulativeR": -1,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        },
+        {
+          "time": 1643976000,
+          "tradeIndex": 2,
+          "equity": 99002.39,
+          "cumulativeR": -2,
+          "drawdownPercent": 1,
+          "drawdownR": 2
+        },
+        {
+          "time": 1645660800,
+          "tradeIndex": 3,
+          "equity": 98507.44,
+          "cumulativeR": -3,
+          "drawdownPercent": 1.49,
+          "drawdownR": 3
+        },
+        {
+          "time": 1646683200,
+          "tradeIndex": 4,
+          "equity": 98249.56,
+          "cumulativeR": -3.52,
+          "drawdownPercent": 1.75,
+          "drawdownR": 3.52
+        },
+        {
+          "time": 1646784000,
+          "tradeIndex": 5,
+          "equity": 97758.62,
+          "cumulativeR": -4.52,
+          "drawdownPercent": 2.24,
+          "drawdownR": 4.52
+        },
+        {
+          "time": 1646884800,
+          "tradeIndex": 6,
+          "equity": 97269.79,
+          "cumulativeR": -5.52,
+          "drawdownPercent": 2.73,
+          "drawdownR": 5.52
+        },
+        {
+          "time": 1647475200,
+          "tradeIndex": 7,
+          "equity": 97026.97,
+          "cumulativeR": -6.02,
+          "drawdownPercent": 2.97,
+          "drawdownR": 6.02
+        },
+        {
+          "time": 1650254400,
+          "tradeIndex": 8,
+          "equity": 96543.02,
+          "cumulativeR": -7.02,
+          "drawdownPercent": 3.46,
+          "drawdownR": 7.02
+        },
+        {
+          "time": 1650643200,
+          "tradeIndex": 9,
+          "equity": 96323.54,
+          "cumulativeR": -7.47,
+          "drawdownPercent": 3.68,
+          "drawdownR": 7.47
+        },
+        {
+          "time": 1653883200,
+          "tradeIndex": 10,
+          "equity": 97885.67,
+          "cumulativeR": -4.23,
+          "drawdownPercent": 2.11,
+          "drawdownR": 4.23
+        },
+        {
+          "time": 1654948800,
+          "tradeIndex": 11,
+          "equity": 97396.02,
+          "cumulativeR": -5.23,
+          "drawdownPercent": 2.6,
+          "drawdownR": 5.23
+        },
+        {
+          "time": 1658044800,
+          "tradeIndex": 12,
+          "equity": 97378.85,
+          "cumulativeR": -5.27,
+          "drawdownPercent": 2.62,
+          "drawdownR": 5.27
+        },
+        {
+          "time": 1660104000,
+          "tradeIndex": 13,
+          "equity": 98075.31,
+          "cumulativeR": -3.84,
+          "drawdownPercent": 1.92,
+          "drawdownR": 3.84
+        },
+        {
+          "time": 1660132800,
+          "tradeIndex": 14,
+          "equity": 97584.94,
+          "cumulativeR": -4.84,
+          "drawdownPercent": 2.42,
+          "drawdownR": 4.84
+        },
+        {
+          "time": 1660752000,
+          "tradeIndex": 15,
+          "equity": 97412.92,
+          "cumulativeR": -5.19,
+          "drawdownPercent": 2.59,
+          "drawdownR": 5.19
+        },
+        {
+          "time": 1662696000,
+          "tradeIndex": 16,
+          "equity": 98997.04,
+          "cumulativeR": -1.94,
+          "drawdownPercent": 1,
+          "drawdownR": 1.94
+        },
+        {
+          "time": 1663545600,
+          "tradeIndex": 17,
+          "equity": 98502.03,
+          "cumulativeR": -2.94,
+          "drawdownPercent": 1.5,
+          "drawdownR": 2.94
+        },
+        {
+          "time": 1664553600,
+          "tradeIndex": 18,
+          "equity": 98280.94,
+          "cumulativeR": -3.39,
+          "drawdownPercent": 1.72,
+          "drawdownR": 3.39
+        },
+        {
+          "time": 1665288000,
+          "tradeIndex": 19,
+          "equity": 98149.39,
+          "cumulativeR": -3.66,
+          "drawdownPercent": 1.85,
+          "drawdownR": 3.66
+        },
+        {
+          "time": 1665705600,
+          "tradeIndex": 20,
+          "equity": 97658.64,
+          "cumulativeR": -4.66,
+          "drawdownPercent": 2.34,
+          "drawdownR": 4.66
+        },
+        {
+          "time": 1666353600,
+          "tradeIndex": 21,
+          "equity": 97170.19,
+          "cumulativeR": -5.66,
+          "drawdownPercent": 2.83,
+          "drawdownR": 5.66
+        },
+        {
+          "time": 1667865600,
+          "tradeIndex": 22,
+          "equity": 98069.02,
+          "cumulativeR": -3.81,
+          "drawdownPercent": 1.93,
+          "drawdownR": 3.81
+        },
+        {
+          "time": 1669176000,
+          "tradeIndex": 23,
+          "equity": 100890.79,
+          "cumulativeR": 1.94,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1670270400,
+          "tradeIndex": 24,
+          "equity": 101060.42,
+          "cumulativeR": 2.28,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1670529600,
+          "tradeIndex": 25,
+          "equity": 100731.29,
+          "cumulativeR": 1.63,
+          "drawdownPercent": 0.33,
+          "drawdownR": 0.65
+        },
+        {
+          "time": 1671192000,
+          "tradeIndex": 26,
+          "equity": 100548.39,
+          "cumulativeR": 1.27,
+          "drawdownPercent": 0.51,
+          "drawdownR": 1.01
+        },
+        {
+          "time": 1672804800,
+          "tradeIndex": 27,
+          "equity": 100634.76,
+          "cumulativeR": 1.44,
+          "drawdownPercent": 0.42,
+          "drawdownR": 0.84
+        },
+        {
+          "time": 1674288000,
+          "tradeIndex": 28,
+          "equity": 108182.45,
+          "cumulativeR": 16.44,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1675108800,
+          "tradeIndex": 29,
+          "equity": 107948.86,
+          "cumulativeR": 16.01,
+          "drawdownPercent": 0.22,
+          "drawdownR": 0.43
+        },
+        {
+          "time": 1675296000,
+          "tradeIndex": 30,
+          "equity": 107473.83,
+          "cumulativeR": 15.13,
+          "drawdownPercent": 0.66,
+          "drawdownR": 1.31
+        },
+        {
+          "time": 1675656000,
+          "tradeIndex": 31,
+          "equity": 106936.38,
+          "cumulativeR": 14.13,
+          "drawdownPercent": 1.15,
+          "drawdownR": 2.31
+        },
+        {
+          "time": 1676491200,
+          "tradeIndex": 32,
+          "equity": 106401.72,
+          "cumulativeR": 13.13,
+          "drawdownPercent": 1.65,
+          "drawdownR": 3.31
+        },
+        {
+          "time": 1678665600,
+          "tradeIndex": 33,
+          "equity": 107490.19,
+          "cumulativeR": 15.18,
+          "drawdownPercent": 0.64,
+          "drawdownR": 1.26
+        },
+        {
+          "time": 1681992000,
+          "tradeIndex": 34,
+          "equity": 109058.63,
+          "cumulativeR": 18.1,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1682510400,
+          "tradeIndex": 35,
+          "equity": 108513.55,
+          "cumulativeR": 17.1,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        },
+        {
+          "time": 1683172800,
+          "tradeIndex": 36,
+          "equity": 108303.53,
+          "cumulativeR": 16.71,
+          "drawdownPercent": 0.69,
+          "drawdownR": 1.39
+        },
+        {
+          "time": 1683504000,
+          "tradeIndex": 37,
+          "equity": 107762.02,
+          "cumulativeR": 15.71,
+          "drawdownPercent": 1.19,
+          "drawdownR": 2.39
+        },
+        {
+          "time": 1684915200,
+          "tradeIndex": 38,
+          "equity": 107664.48,
+          "cumulativeR": 15.53,
+          "drawdownPercent": 1.28,
+          "drawdownR": 2.57
+        },
+        {
+          "time": 1685232000,
+          "tradeIndex": 39,
+          "equity": 107513.24,
+          "cumulativeR": 15.25,
+          "drawdownPercent": 1.42,
+          "drawdownR": 2.85
+        },
+        {
+          "time": 1685966400,
+          "tradeIndex": 40,
+          "equity": 106975.68,
+          "cumulativeR": 14.25,
+          "drawdownPercent": 1.91,
+          "drawdownR": 3.85
+        },
+        {
+          "time": 1687291200,
+          "tradeIndex": 41,
+          "equity": 106440.71,
+          "cumulativeR": 13.25,
+          "drawdownPercent": 2.4,
+          "drawdownR": 4.85
+        },
+        {
+          "time": 1689264000,
+          "tradeIndex": 42,
+          "equity": 105907.36,
+          "cumulativeR": 12.25,
+          "drawdownPercent": 2.89,
+          "drawdownR": 5.85
+        },
+        {
+          "time": 1689854400,
+          "tradeIndex": 43,
+          "equity": 105850.76,
+          "cumulativeR": 12.14,
+          "drawdownPercent": 2.94,
+          "drawdownR": 5.96
+        },
+        {
+          "time": 1689854400,
+          "tradeIndex": 44,
+          "equity": 105325.78,
+          "cumulativeR": 11.15,
+          "drawdownPercent": 3.42,
+          "drawdownR": 6.95
+        },
+        {
+          "time": 1691524800,
+          "tradeIndex": 45,
+          "equity": 105292.23,
+          "cumulativeR": 11.09,
+          "drawdownPercent": 3.45,
+          "drawdownR": 7.01
+        },
+        {
+          "time": 1691784000,
+          "tradeIndex": 46,
+          "equity": 104969.09,
+          "cumulativeR": 10.48,
+          "drawdownPercent": 3.75,
+          "drawdownR": 7.62
+        },
+        {
+          "time": 1694520000,
+          "tradeIndex": 47,
+          "equity": 108915.36,
+          "cumulativeR": 18,
+          "drawdownPercent": 0.13,
+          "drawdownR": 0.1
+        },
+        {
+          "time": 1699012800,
+          "tradeIndex": 48,
+          "equity": 113341.11,
+          "cumulativeR": 26.13,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1699142400,
+          "tradeIndex": 49,
+          "equity": 113024.39,
+          "cumulativeR": 25.57,
+          "drawdownPercent": 0.28,
+          "drawdownR": 0.56
+        },
+        {
+          "time": 1699992000,
+          "tradeIndex": 50,
+          "equity": 113133.78,
+          "cumulativeR": 25.76,
+          "drawdownPercent": 0.18,
+          "drawdownR": 0.37
+        },
+        {
+          "time": 1700064000,
+          "tradeIndex": 51,
+          "equity": 112568.15,
+          "cumulativeR": 24.76,
+          "drawdownPercent": 0.68,
+          "drawdownR": 1.37
+        },
+        {
+          "time": 1704312000,
+          "tradeIndex": 52,
+          "equity": 114627.14,
+          "cumulativeR": 28.42,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1704715200,
+          "tradeIndex": 53,
+          "equity": 114247.86,
+          "cumulativeR": 27.76,
+          "drawdownPercent": 0.33,
+          "drawdownR": 0.66
+        },
+        {
+          "time": 1705075200,
+          "tradeIndex": 54,
+          "equity": 114182.1,
+          "cumulativeR": 27.64,
+          "drawdownPercent": 0.39,
+          "drawdownR": 0.78
+        },
+        {
+          "time": 1706299200,
+          "tradeIndex": 55,
+          "equity": 114500.05,
+          "cumulativeR": 28.2,
+          "drawdownPercent": 0.11,
+          "drawdownR": 0.22
+        },
+        {
+          "time": 1709596800,
+          "tradeIndex": 56,
+          "equity": 123085.69,
+          "cumulativeR": 43.2,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1714924800,
+          "tradeIndex": 57,
+          "equity": 123391.28,
+          "cumulativeR": 43.7,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1715198400,
+          "tradeIndex": 58,
+          "equity": 122774.44,
+          "cumulativeR": 42.7,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        },
+        {
+          "time": 1716998400,
+          "tradeIndex": 59,
+          "equity": 122585.22,
+          "cumulativeR": 42.39,
+          "drawdownPercent": 0.65,
+          "drawdownR": 1.31
+        },
+        {
+          "time": 1717502400,
+          "tradeIndex": 60,
+          "equity": 121972.2,
+          "cumulativeR": 41.39,
+          "drawdownPercent": 1.15,
+          "drawdownR": 2.31
+        },
+        {
+          "time": 1718092800,
+          "tradeIndex": 61,
+          "equity": 121362.44,
+          "cumulativeR": 40.39,
+          "drawdownPercent": 1.64,
+          "drawdownR": 3.31
+        },
+        {
+          "time": 1721966400,
+          "tradeIndex": 62,
+          "equity": 122069.44,
+          "cumulativeR": 41.56,
+          "drawdownPercent": 1.07,
+          "drawdownR": 2.14
+        },
+        {
+          "time": 1722484800,
+          "tradeIndex": 63,
+          "equity": 121458.71,
+          "cumulativeR": 40.56,
+          "drawdownPercent": 1.57,
+          "drawdownR": 3.14
+        },
+        {
+          "time": 1724126400,
+          "tradeIndex": 64,
+          "equity": 121623.58,
+          "cumulativeR": 40.83,
+          "drawdownPercent": 1.43,
+          "drawdownR": 2.87
+        },
+        {
+          "time": 1724803200,
+          "tradeIndex": 65,
+          "equity": 121365.76,
+          "cumulativeR": 40.41,
+          "drawdownPercent": 1.64,
+          "drawdownR": 3.29
+        },
+        {
+          "time": 1725998400,
+          "tradeIndex": 66,
+          "equity": 121564.5,
+          "cumulativeR": 40.74,
+          "drawdownPercent": 1.48,
+          "drawdownR": 2.96
+        },
+        {
+          "time": 1727712000,
+          "tradeIndex": 67,
+          "equity": 122609.5,
+          "cumulativeR": 42.46,
+          "drawdownPercent": 0.63,
+          "drawdownR": 1.24
+        },
+        {
+          "time": 1728676800,
+          "tradeIndex": 68,
+          "equity": 122781.43,
+          "cumulativeR": 42.74,
+          "drawdownPercent": 0.49,
+          "drawdownR": 0.96
+        },
+        {
+          "time": 1730750400,
+          "tradeIndex": 69,
+          "equity": 123835.17,
+          "cumulativeR": 44.46,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1730822400,
+          "tradeIndex": 70,
+          "equity": 123216.03,
+          "cumulativeR": 43.46,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        },
+        {
+          "time": 1732651200,
+          "tradeIndex": 71,
+          "equity": 124429.78,
+          "cumulativeR": 45.43,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1732737600,
+          "tradeIndex": 72,
+          "equity": 123976.99,
+          "cumulativeR": 44.7,
+          "drawdownPercent": 0.36,
+          "drawdownR": 0.73
+        },
+        {
+          "time": 1733846400,
+          "tradeIndex": 73,
+          "equity": 123857.96,
+          "cumulativeR": 44.51,
+          "drawdownPercent": 0.46,
+          "drawdownR": 0.92
+        },
+        {
+          "time": 1733932800,
+          "tradeIndex": 74,
+          "equity": 123389.62,
+          "cumulativeR": 43.75,
+          "drawdownPercent": 0.84,
+          "drawdownR": 1.68
+        },
+        {
+          "time": 1734638400,
+          "tradeIndex": 75,
+          "equity": 123058.68,
+          "cumulativeR": 43.21,
+          "drawdownPercent": 1.1,
+          "drawdownR": 2.22
+        },
+        {
+          "time": 1735920000,
+          "tradeIndex": 76,
+          "equity": 123032.01,
+          "cumulativeR": 43.17,
+          "drawdownPercent": 1.12,
+          "drawdownR": 2.26
+        },
+        {
+          "time": 1736352000,
+          "tradeIndex": 77,
+          "equity": 122415.73,
+          "cumulativeR": 42.17,
+          "drawdownPercent": 1.62,
+          "drawdownR": 3.26
+        },
+        {
+          "time": 1736812800,
+          "tradeIndex": 78,
+          "equity": 122371.81,
+          "cumulativeR": 42.1,
+          "drawdownPercent": 1.65,
+          "drawdownR": 3.33
+        },
+        {
+          "time": 1737950400,
+          "tradeIndex": 79,
+          "equity": 123120.83,
+          "cumulativeR": 43.32,
+          "drawdownPercent": 1.05,
+          "drawdownR": 2.11
+        },
+        {
+          "time": 1738195200,
+          "tradeIndex": 80,
+          "equity": 122505.22,
+          "cumulativeR": 42.32,
+          "drawdownPercent": 1.55,
+          "drawdownR": 3.11
+        },
+        {
+          "time": 1738454400,
+          "tradeIndex": 81,
+          "equity": 121892.97,
+          "cumulativeR": 41.32,
+          "drawdownPercent": 2.04,
+          "drawdownR": 4.11
+        },
+        {
+          "time": 1738612800,
+          "tradeIndex": 82,
+          "equity": 121522.31,
+          "cumulativeR": 40.71,
+          "drawdownPercent": 2.34,
+          "drawdownR": 4.72
+        },
+        {
+          "time": 1738972800,
+          "tradeIndex": 83,
+          "equity": 121136.44,
+          "cumulativeR": 40.07,
+          "drawdownPercent": 2.65,
+          "drawdownR": 5.36
+        },
+        {
+          "time": 1740081600,
+          "tradeIndex": 84,
+          "equity": 120859.68,
+          "cumulativeR": 39.61,
+          "drawdownPercent": 2.87,
+          "drawdownR": 5.82
+        },
+        {
+          "time": 1740398400,
+          "tradeIndex": 85,
+          "equity": 120255.33,
+          "cumulativeR": 38.61,
+          "drawdownPercent": 3.35,
+          "drawdownR": 6.82
+        },
+        {
+          "time": 1741046400,
+          "tradeIndex": 86,
+          "equity": 119654.46,
+          "cumulativeR": 37.61,
+          "drawdownPercent": 3.84,
+          "drawdownR": 7.82
+        },
+        {
+          "time": 1741233600,
+          "tradeIndex": 87,
+          "equity": 119055.94,
+          "cumulativeR": 36.61,
+          "drawdownPercent": 4.32,
+          "drawdownR": 8.82
+        },
+        {
+          "time": 1743177600,
+          "tradeIndex": 88,
+          "equity": 118766.17,
+          "cumulativeR": 36.12,
+          "drawdownPercent": 4.55,
+          "drawdownR": 9.31
+        },
+        {
+          "time": 1743624000,
+          "tradeIndex": 89,
+          "equity": 118273.59,
+          "cumulativeR": 35.29,
+          "drawdownPercent": 4.95,
+          "drawdownR": 10.14
+        },
+        {
+          "time": 1743624000,
+          "tradeIndex": 90,
+          "equity": 117682.09,
+          "cumulativeR": 34.29,
+          "drawdownPercent": 5.42,
+          "drawdownR": 11.14
+        },
+        {
+          "time": 1745337600,
+          "tradeIndex": 91,
+          "equity": 117090.2,
+          "cumulativeR": 33.28,
+          "drawdownPercent": 5.9,
+          "drawdownR": 12.15
+        },
+        {
+          "time": 1746576000,
+          "tradeIndex": 92,
+          "equity": 116554.37,
+          "cumulativeR": 32.36,
+          "drawdownPercent": 6.33,
+          "drawdownR": 13.07
+        },
+        {
+          "time": 1747656000,
+          "tradeIndex": 93,
+          "equity": 117358.7,
+          "cumulativeR": 33.74,
+          "drawdownPercent": 5.68,
+          "drawdownR": 11.69
+        },
+        {
+          "time": 1747699200,
+          "tradeIndex": 94,
+          "equity": 116771.7,
+          "cumulativeR": 32.74,
+          "drawdownPercent": 6.15,
+          "drawdownR": 12.69
+        },
+        {
+          "time": 1750536000,
+          "tradeIndex": 95,
+          "equity": 116189.07,
+          "cumulativeR": 31.74,
+          "drawdownPercent": 6.62,
+          "drawdownR": 13.69
+        },
+        {
+          "time": 1750809600,
+          "tradeIndex": 96,
+          "equity": 116087.54,
+          "cumulativeR": 31.57,
+          "drawdownPercent": 6.7,
+          "drawdownR": 13.86
+        },
+        {
+          "time": 1751371200,
+          "tradeIndex": 97,
+          "equity": 116163.56,
+          "cumulativeR": 31.7,
+          "drawdownPercent": 6.64,
+          "drawdownR": 13.73
+        },
+        {
+          "time": 1751457600,
+          "tradeIndex": 98,
+          "equity": 115915.52,
+          "cumulativeR": 31.27,
+          "drawdownPercent": 6.84,
+          "drawdownR": 14.16
+        },
+        {
+          "time": 1754006400,
+          "tradeIndex": 99,
+          "equity": 118107.28,
+          "cumulativeR": 35.05,
+          "drawdownPercent": 5.08,
+          "drawdownR": 10.38
+        },
+        {
+          "time": 1754856000,
+          "tradeIndex": 100,
+          "equity": 117513.83,
+          "cumulativeR": 34.05,
+          "drawdownPercent": 5.56,
+          "drawdownR": 11.38
+        },
+        {
+          "time": 1755619200,
+          "tradeIndex": 101,
+          "equity": 116926.93,
+          "cumulativeR": 33.05,
+          "drawdownPercent": 6.03,
+          "drawdownR": 12.38
+        },
+        {
+          "time": 1756915200,
+          "tradeIndex": 102,
+          "equity": 116694.73,
+          "cumulativeR": 32.65,
+          "drawdownPercent": 6.22,
+          "drawdownR": 12.78
+        },
+        {
+          "time": 1758312000,
+          "tradeIndex": 103,
+          "equity": 117148.06,
+          "cumulativeR": 33.43,
+          "drawdownPercent": 5.85,
+          "drawdownR": 12
+        },
+        {
+          "time": 1759334400,
+          "tradeIndex": 104,
+          "equity": 116563.05,
+          "cumulativeR": 32.43,
+          "drawdownPercent": 6.32,
+          "drawdownR": 13
+        },
+        {
+          "time": 1761062400,
+          "tradeIndex": 105,
+          "equity": 116167.44,
+          "cumulativeR": 31.75,
+          "drawdownPercent": 6.64,
+          "drawdownR": 13.68
+        },
+        {
+          "time": 1761840000,
+          "tradeIndex": 106,
+          "equity": 115794.17,
+          "cumulativeR": 31.11,
+          "drawdownPercent": 6.94,
+          "drawdownR": 14.32
+        }
+      ]
+    },
+    "pineCloseFill": {
+      "totalTrades": 106,
+      "unresolvedTrades": 1,
+      "winningTrades": 29,
+      "losingTrades": 77,
+      "chochLiquidations": 66,
+      "winRate": 27.4,
+      "profitFactor": 1.56,
+      "netR": 30.96,
+      "totalPnlCurrency": 15686.71,
+      "finalEquity": 115686.71,
+      "maxDrawdownR": 14.47,
+      "maxDrawdownPercent": 7.02,
+      "expectancyR": 0.29,
+      "longTrades": 54,
+      "longWinRate": 31.5,
+      "shortTrades": 52,
+      "shortWinRate": 23.1,
+      "equityCurve": [
+        {
+          "time": 1642680000,
+          "tradeIndex": 0,
+          "equity": 100000,
+          "cumulativeR": 0,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1642723200,
+          "tradeIndex": 1,
+          "equity": 99499.96,
+          "cumulativeR": -1,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        },
+        {
+          "time": 1643976000,
+          "tradeIndex": 2,
+          "equity": 99002.42,
+          "cumulativeR": -2,
+          "drawdownPercent": 1,
+          "drawdownR": 2
+        },
+        {
+          "time": 1645660800,
+          "tradeIndex": 3,
+          "equity": 98507.54,
+          "cumulativeR": -3,
+          "drawdownPercent": 1.49,
+          "drawdownR": 3
+        },
+        {
+          "time": 1646668800,
+          "tradeIndex": 4,
+          "equity": 98249.35,
+          "cumulativeR": -3.52,
+          "drawdownPercent": 1.75,
+          "drawdownR": 3.52
+        },
+        {
+          "time": 1646784000,
+          "tradeIndex": 5,
+          "equity": 97758.14,
+          "cumulativeR": -4.52,
+          "drawdownPercent": 2.24,
+          "drawdownR": 4.52
+        },
+        {
+          "time": 1646884800,
+          "tradeIndex": 6,
+          "equity": 97269.27,
+          "cumulativeR": -5.52,
+          "drawdownPercent": 2.73,
+          "drawdownR": 5.52
+        },
+        {
+          "time": 1647460800,
+          "tradeIndex": 7,
+          "equity": 97025.82,
+          "cumulativeR": -6.02,
+          "drawdownPercent": 2.97,
+          "drawdownR": 6.02
+        },
+        {
+          "time": 1650254400,
+          "tradeIndex": 8,
+          "equity": 96540.65,
+          "cumulativeR": -7.02,
+          "drawdownPercent": 3.46,
+          "drawdownR": 7.02
+        },
+        {
+          "time": 1650628800,
+          "tradeIndex": 9,
+          "equity": 96321.17,
+          "cumulativeR": -7.47,
+          "drawdownPercent": 3.68,
+          "drawdownR": 7.47
+        },
+        {
+          "time": 1653868800,
+          "tradeIndex": 10,
+          "equity": 97883.38,
+          "cumulativeR": -4.23,
+          "drawdownPercent": 2.12,
+          "drawdownR": 4.23
+        },
+        {
+          "time": 1654948800,
+          "tradeIndex": 11,
+          "equity": 97394.05,
+          "cumulativeR": -5.23,
+          "drawdownPercent": 2.61,
+          "drawdownR": 5.23
+        },
+        {
+          "time": 1658030400,
+          "tradeIndex": 12,
+          "equity": 97376.84,
+          "cumulativeR": -5.27,
+          "drawdownPercent": 2.62,
+          "drawdownR": 5.27
+        },
+        {
+          "time": 1660089600,
+          "tradeIndex": 13,
+          "equity": 98073.3,
+          "cumulativeR": -3.84,
+          "drawdownPercent": 1.93,
+          "drawdownR": 3.84
+        },
+        {
+          "time": 1660132800,
+          "tradeIndex": 14,
+          "equity": 97582.98,
+          "cumulativeR": -4.84,
+          "drawdownPercent": 2.42,
+          "drawdownR": 4.84
+        },
+        {
+          "time": 1660737600,
+          "tradeIndex": 15,
+          "equity": 97410.85,
+          "cumulativeR": -5.19,
+          "drawdownPercent": 2.59,
+          "drawdownR": 5.19
+        },
+        {
+          "time": 1662681600,
+          "tradeIndex": 16,
+          "equity": 98994.84,
+          "cumulativeR": -1.94,
+          "drawdownPercent": 1.01,
+          "drawdownR": 1.94
+        },
+        {
+          "time": 1663545600,
+          "tradeIndex": 17,
+          "equity": 98499.92,
+          "cumulativeR": -2.94,
+          "drawdownPercent": 1.5,
+          "drawdownR": 2.94
+        },
+        {
+          "time": 1664539200,
+          "tradeIndex": 18,
+          "equity": 98278.8,
+          "cumulativeR": -3.39,
+          "drawdownPercent": 1.72,
+          "drawdownR": 3.39
+        },
+        {
+          "time": 1665273600,
+          "tradeIndex": 19,
+          "equity": 98147.21,
+          "cumulativeR": -3.66,
+          "drawdownPercent": 1.85,
+          "drawdownR": 3.66
+        },
+        {
+          "time": 1665705600,
+          "tradeIndex": 20,
+          "equity": 97656.46,
+          "cumulativeR": -4.66,
+          "drawdownPercent": 2.34,
+          "drawdownR": 4.66
+        },
+        {
+          "time": 1666353600,
+          "tradeIndex": 21,
+          "equity": 97168.2,
+          "cumulativeR": -5.66,
+          "drawdownPercent": 2.83,
+          "drawdownR": 5.66
+        },
+        {
+          "time": 1667851200,
+          "tradeIndex": 22,
+          "equity": 98067.41,
+          "cumulativeR": -3.81,
+          "drawdownPercent": 1.93,
+          "drawdownR": 3.81
+        },
+        {
+          "time": 1669161600,
+          "tradeIndex": 23,
+          "equity": 100889.88,
+          "cumulativeR": 1.95,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1670256000,
+          "tradeIndex": 24,
+          "equity": 101060.55,
+          "cumulativeR": 2.29,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1670515200,
+          "tradeIndex": 25,
+          "equity": 100732.82,
+          "cumulativeR": 1.64,
+          "drawdownPercent": 0.32,
+          "drawdownR": 0.65
+        },
+        {
+          "time": 1671177600,
+          "tradeIndex": 26,
+          "equity": 100549.92,
+          "cumulativeR": 1.28,
+          "drawdownPercent": 0.51,
+          "drawdownR": 1.01
+        },
+        {
+          "time": 1672790400,
+          "tradeIndex": 27,
+          "equity": 100636.18,
+          "cumulativeR": 1.45,
+          "drawdownPercent": 0.42,
+          "drawdownR": 0.84
+        },
+        {
+          "time": 1674288000,
+          "tradeIndex": 28,
+          "equity": 108183.87,
+          "cumulativeR": 16.45,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1675094400,
+          "tradeIndex": 29,
+          "equity": 107950.28,
+          "cumulativeR": 16.02,
+          "drawdownPercent": 0.22,
+          "drawdownR": 0.43
+        },
+        {
+          "time": 1675281600,
+          "tradeIndex": 30,
+          "equity": 107475.36,
+          "cumulativeR": 15.14,
+          "drawdownPercent": 0.65,
+          "drawdownR": 1.31
+        },
+        {
+          "time": 1675656000,
+          "tradeIndex": 31,
+          "equity": 106938.02,
+          "cumulativeR": 14.14,
+          "drawdownPercent": 1.15,
+          "drawdownR": 2.31
+        },
+        {
+          "time": 1676491200,
+          "tradeIndex": 32,
+          "equity": 106403.36,
+          "cumulativeR": 13.14,
+          "drawdownPercent": 1.65,
+          "drawdownR": 3.31
+        },
+        {
+          "time": 1678651200,
+          "tradeIndex": 33,
+          "equity": 107492.07,
+          "cumulativeR": 15.19,
+          "drawdownPercent": 0.64,
+          "drawdownR": 1.26
+        },
+        {
+          "time": 1681977600,
+          "tradeIndex": 34,
+          "equity": 109060.58,
+          "cumulativeR": 18.11,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1682510400,
+          "tradeIndex": 35,
+          "equity": 108515.27,
+          "cumulativeR": 17.11,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        },
+        {
+          "time": 1683158400,
+          "tradeIndex": 36,
+          "equity": 108305.25,
+          "cumulativeR": 16.72,
+          "drawdownPercent": 0.69,
+          "drawdownR": 1.39
+        },
+        {
+          "time": 1683504000,
+          "tradeIndex": 37,
+          "equity": 107763.74,
+          "cumulativeR": 15.72,
+          "drawdownPercent": 1.19,
+          "drawdownR": 2.39
+        },
+        {
+          "time": 1684900800,
+          "tradeIndex": 38,
+          "equity": 107666.2,
+          "cumulativeR": 15.54,
+          "drawdownPercent": 1.28,
+          "drawdownR": 2.57
+        },
+        {
+          "time": 1685217600,
+          "tradeIndex": 39,
+          "equity": 107514.96,
+          "cumulativeR": 15.26,
+          "drawdownPercent": 1.42,
+          "drawdownR": 2.85
+        },
+        {
+          "time": 1685966400,
+          "tradeIndex": 40,
+          "equity": 106977.4,
+          "cumulativeR": 14.26,
+          "drawdownPercent": 1.91,
+          "drawdownR": 3.85
+        },
+        {
+          "time": 1687291200,
+          "tradeIndex": 41,
+          "equity": 106442.48,
+          "cumulativeR": 13.26,
+          "drawdownPercent": 2.4,
+          "drawdownR": 4.85
+        },
+        {
+          "time": 1689264000,
+          "tradeIndex": 42,
+          "equity": 105910.26,
+          "cumulativeR": 12.26,
+          "drawdownPercent": 2.89,
+          "drawdownR": 5.85
+        },
+        {
+          "time": 1689840000,
+          "tradeIndex": 43,
+          "equity": 105851.95,
+          "cumulativeR": 12.15,
+          "drawdownPercent": 2.94,
+          "drawdownR": 5.96
+        },
+        {
+          "time": 1689854400,
+          "tradeIndex": 44,
+          "equity": 105322.71,
+          "cumulativeR": 11.15,
+          "drawdownPercent": 3.43,
+          "drawdownR": 6.96
+        },
+        {
+          "time": 1691510400,
+          "tradeIndex": 45,
+          "equity": 105289.31,
+          "cumulativeR": 11.09,
+          "drawdownPercent": 3.46,
+          "drawdownR": 7.02
+        },
+        {
+          "time": 1691769600,
+          "tradeIndex": 46,
+          "equity": 104966.37,
+          "cumulativeR": 10.48,
+          "drawdownPercent": 3.75,
+          "drawdownR": 7.63
+        },
+        {
+          "time": 1694505600,
+          "tradeIndex": 47,
+          "equity": 108912.31,
+          "cumulativeR": 18,
+          "drawdownPercent": 0.14,
+          "drawdownR": 0.11
+        },
+        {
+          "time": 1698998400,
+          "tradeIndex": 48,
+          "equity": 113338.06,
+          "cumulativeR": 26.13,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1699128000,
+          "tradeIndex": 49,
+          "equity": 113022.04,
+          "cumulativeR": 25.57,
+          "drawdownPercent": 0.28,
+          "drawdownR": 0.56
+        },
+        {
+          "time": 1699977600,
+          "tradeIndex": 50,
+          "equity": 113132.35,
+          "cumulativeR": 25.77,
+          "drawdownPercent": 0.18,
+          "drawdownR": 0.36
+        },
+        {
+          "time": 1700064000,
+          "tradeIndex": 51,
+          "equity": 112566.72,
+          "cumulativeR": 24.77,
+          "drawdownPercent": 0.68,
+          "drawdownR": 1.36
+        },
+        {
+          "time": 1704297600,
+          "tradeIndex": 52,
+          "equity": 114625.71,
+          "cumulativeR": 28.43,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1704700800,
+          "tradeIndex": 53,
+          "equity": 114246.43,
+          "cumulativeR": 27.77,
+          "drawdownPercent": 0.33,
+          "drawdownR": 0.66
+        },
+        {
+          "time": 1705060800,
+          "tradeIndex": 54,
+          "equity": 114180.67,
+          "cumulativeR": 27.65,
+          "drawdownPercent": 0.39,
+          "drawdownR": 0.78
+        },
+        {
+          "time": 1706284800,
+          "tradeIndex": 55,
+          "equity": 114498.95,
+          "cumulativeR": 28.21,
+          "drawdownPercent": 0.11,
+          "drawdownR": 0.22
+        },
+        {
+          "time": 1709596800,
+          "tradeIndex": 56,
+          "equity": 123085.37,
+          "cumulativeR": 43.21,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1714910400,
+          "tradeIndex": 57,
+          "equity": 123391.64,
+          "cumulativeR": 43.71,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1715198400,
+          "tradeIndex": 58,
+          "equity": 122774.78,
+          "cumulativeR": 42.71,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        },
+        {
+          "time": 1716984000,
+          "tradeIndex": 59,
+          "equity": 122584.76,
+          "cumulativeR": 42.4,
+          "drawdownPercent": 0.65,
+          "drawdownR": 1.31
+        },
+        {
+          "time": 1717502400,
+          "tradeIndex": 60,
+          "equity": 121971.74,
+          "cumulativeR": 41.4,
+          "drawdownPercent": 1.15,
+          "drawdownR": 2.31
+        },
+        {
+          "time": 1718092800,
+          "tradeIndex": 61,
+          "equity": 121361.98,
+          "cumulativeR": 40.4,
+          "drawdownPercent": 1.64,
+          "drawdownR": 3.31
+        },
+        {
+          "time": 1721952000,
+          "tradeIndex": 62,
+          "equity": 122069.27,
+          "cumulativeR": 41.57,
+          "drawdownPercent": 1.07,
+          "drawdownR": 2.14
+        },
+        {
+          "time": 1722484800,
+          "tradeIndex": 63,
+          "equity": 121458.76,
+          "cumulativeR": 40.57,
+          "drawdownPercent": 1.57,
+          "drawdownR": 3.14
+        },
+        {
+          "time": 1724112000,
+          "tradeIndex": 64,
+          "equity": 121620.34,
+          "cumulativeR": 40.84,
+          "drawdownPercent": 1.44,
+          "drawdownR": 2.87
+        },
+        {
+          "time": 1724788800,
+          "tradeIndex": 65,
+          "equity": 121357.9,
+          "cumulativeR": 40.41,
+          "drawdownPercent": 1.65,
+          "drawdownR": 3.3
+        },
+        {
+          "time": 1725984000,
+          "tradeIndex": 66,
+          "equity": 121556.64,
+          "cumulativeR": 40.74,
+          "drawdownPercent": 1.49,
+          "drawdownR": 2.97
+        },
+        {
+          "time": 1727697600,
+          "tradeIndex": 67,
+          "equity": 122601.64,
+          "cumulativeR": 42.46,
+          "drawdownPercent": 0.64,
+          "drawdownR": 1.25
+        },
+        {
+          "time": 1728662400,
+          "tradeIndex": 68,
+          "equity": 122773.57,
+          "cumulativeR": 42.74,
+          "drawdownPercent": 0.5,
+          "drawdownR": 0.97
+        },
+        {
+          "time": 1730736000,
+          "tradeIndex": 69,
+          "equity": 123826.84,
+          "cumulativeR": 44.46,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1730822400,
+          "tradeIndex": 70,
+          "equity": 123207.7,
+          "cumulativeR": 43.46,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        },
+        {
+          "time": 1732636800,
+          "tradeIndex": 71,
+          "equity": 124422.49,
+          "cumulativeR": 45.43,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1732723200,
+          "tradeIndex": 72,
+          "equity": 123970.46,
+          "cumulativeR": 44.7,
+          "drawdownPercent": 0.36,
+          "drawdownR": 0.73
+        },
+        {
+          "time": 1733832000,
+          "tradeIndex": 73,
+          "equity": 123851.82,
+          "cumulativeR": 44.51,
+          "drawdownPercent": 0.46,
+          "drawdownR": 0.92
+        },
+        {
+          "time": 1733918400,
+          "tradeIndex": 74,
+          "equity": 123383.9,
+          "cumulativeR": 43.75,
+          "drawdownPercent": 0.83,
+          "drawdownR": 1.68
+        },
+        {
+          "time": 1734624000,
+          "tradeIndex": 75,
+          "equity": 123052.96,
+          "cumulativeR": 43.21,
+          "drawdownPercent": 1.1,
+          "drawdownR": 2.22
+        },
+        {
+          "time": 1735905600,
+          "tradeIndex": 76,
+          "equity": 123026.61,
+          "cumulativeR": 43.17,
+          "drawdownPercent": 1.12,
+          "drawdownR": 2.26
+        },
+        {
+          "time": 1736352000,
+          "tradeIndex": 77,
+          "equity": 122411.31,
+          "cumulativeR": 42.17,
+          "drawdownPercent": 1.62,
+          "drawdownR": 3.26
+        },
+        {
+          "time": 1736798400,
+          "tradeIndex": 78,
+          "equity": 122367.11,
+          "cumulativeR": 42.1,
+          "drawdownPercent": 1.65,
+          "drawdownR": 3.33
+        },
+        {
+          "time": 1737936000,
+          "tradeIndex": 79,
+          "equity": 123115.94,
+          "cumulativeR": 43.32,
+          "drawdownPercent": 1.05,
+          "drawdownR": 2.11
+        },
+        {
+          "time": 1738195200,
+          "tradeIndex": 80,
+          "equity": 122500.26,
+          "cumulativeR": 42.32,
+          "drawdownPercent": 1.54,
+          "drawdownR": 3.11
+        },
+        {
+          "time": 1738454400,
+          "tradeIndex": 81,
+          "equity": 121887.99,
+          "cumulativeR": 41.32,
+          "drawdownPercent": 2.04,
+          "drawdownR": 4.11
+        },
+        {
+          "time": 1738598400,
+          "tradeIndex": 82,
+          "equity": 121519.61,
+          "cumulativeR": 40.72,
+          "drawdownPercent": 2.33,
+          "drawdownR": 4.71
+        },
+        {
+          "time": 1738958400,
+          "tradeIndex": 83,
+          "equity": 121093.94,
+          "cumulativeR": 40.02,
+          "drawdownPercent": 2.68,
+          "drawdownR": 5.41
+        },
+        {
+          "time": 1740067200,
+          "tradeIndex": 84,
+          "equity": 120732.3,
+          "cumulativeR": 39.42,
+          "drawdownPercent": 2.97,
+          "drawdownR": 6.01
+        },
+        {
+          "time": 1740398400,
+          "tradeIndex": 85,
+          "equity": 120128.72,
+          "cumulativeR": 38.42,
+          "drawdownPercent": 3.45,
+          "drawdownR": 7.01
+        },
+        {
+          "time": 1741046400,
+          "tradeIndex": 86,
+          "equity": 119527.73,
+          "cumulativeR": 37.42,
+          "drawdownPercent": 3.93,
+          "drawdownR": 8.01
+        },
+        {
+          "time": 1741233600,
+          "tradeIndex": 87,
+          "equity": 118930.4,
+          "cumulativeR": 36.42,
+          "drawdownPercent": 4.41,
+          "drawdownR": 9.01
+        },
+        {
+          "time": 1743163200,
+          "tradeIndex": 88,
+          "equity": 118643.94,
+          "cumulativeR": 35.94,
+          "drawdownPercent": 4.64,
+          "drawdownR": 9.49
+        },
+        {
+          "time": 1743609600,
+          "tradeIndex": 89,
+          "equity": 118153.06,
+          "cumulativeR": 35.11,
+          "drawdownPercent": 5.04,
+          "drawdownR": 10.32
+        },
+        {
+          "time": 1743624000,
+          "tradeIndex": 90,
+          "equity": 117562.33,
+          "cumulativeR": 34.11,
+          "drawdownPercent": 5.51,
+          "drawdownR": 11.32
+        },
+        {
+          "time": 1745337600,
+          "tradeIndex": 91,
+          "equity": 116974.11,
+          "cumulativeR": 33.11,
+          "drawdownPercent": 5.99,
+          "drawdownR": 12.32
+        },
+        {
+          "time": 1746561600,
+          "tradeIndex": 92,
+          "equity": 116440.12,
+          "cumulativeR": 32.2,
+          "drawdownPercent": 6.42,
+          "drawdownR": 13.23
+        },
+        {
+          "time": 1747641600,
+          "tradeIndex": 93,
+          "equity": 117244.03,
+          "cumulativeR": 33.58,
+          "drawdownPercent": 5.77,
+          "drawdownR": 11.85
+        },
+        {
+          "time": 1747699200,
+          "tradeIndex": 94,
+          "equity": 116657.94,
+          "cumulativeR": 32.58,
+          "drawdownPercent": 6.24,
+          "drawdownR": 12.85
+        },
+        {
+          "time": 1750536000,
+          "tradeIndex": 95,
+          "equity": 116074.81,
+          "cumulativeR": 31.58,
+          "drawdownPercent": 6.71,
+          "drawdownR": 13.85
+        },
+        {
+          "time": 1750795200,
+          "tradeIndex": 96,
+          "equity": 115972.45,
+          "cumulativeR": 31.4,
+          "drawdownPercent": 6.79,
+          "drawdownR": 14.03
+        },
+        {
+          "time": 1751356800,
+          "tradeIndex": 97,
+          "equity": 116049.62,
+          "cumulativeR": 31.53,
+          "drawdownPercent": 6.73,
+          "drawdownR": 13.9
+        },
+        {
+          "time": 1751443200,
+          "tradeIndex": 98,
+          "equity": 115805.16,
+          "cumulativeR": 31.11,
+          "drawdownPercent": 6.93,
+          "drawdownR": 14.32
+        },
+        {
+          "time": 1753992000,
+          "tradeIndex": 99,
+          "equity": 117999.47,
+          "cumulativeR": 34.9,
+          "drawdownPercent": 5.16,
+          "drawdownR": 10.53
+        },
+        {
+          "time": 1754856000,
+          "tradeIndex": 100,
+          "equity": 117409.47,
+          "cumulativeR": 33.9,
+          "drawdownPercent": 5.64,
+          "drawdownR": 11.53
+        },
+        {
+          "time": 1755619200,
+          "tradeIndex": 101,
+          "equity": 116822.56,
+          "cumulativeR": 32.9,
+          "drawdownPercent": 6.11,
+          "drawdownR": 12.53
+        },
+        {
+          "time": 1756900800,
+          "tradeIndex": 102,
+          "equity": 116590.92,
+          "cumulativeR": 32.5,
+          "drawdownPercent": 6.29,
+          "drawdownR": 12.93
+        },
+        {
+          "time": 1758297600,
+          "tradeIndex": 103,
+          "equity": 117043.43,
+          "cumulativeR": 33.28,
+          "drawdownPercent": 5.93,
+          "drawdownR": 12.15
+        },
+        {
+          "time": 1759334400,
+          "tradeIndex": 104,
+          "equity": 116458.1,
+          "cumulativeR": 32.28,
+          "drawdownPercent": 6.4,
+          "drawdownR": 13.15
+        },
+        {
+          "time": 1761048000,
+          "tradeIndex": 105,
+          "equity": 116060.1,
+          "cumulativeR": 31.6,
+          "drawdownPercent": 6.72,
+          "drawdownR": 13.83
+        },
+        {
+          "time": 1761825600,
+          "tradeIndex": 106,
+          "equity": 115686.71,
+          "cumulativeR": 30.96,
+          "drawdownPercent": 7.02,
+          "drawdownR": 14.47
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "ETHUSD",
+    "dukascopyId": "ethusd",
+    "assetClass": "Crypto",
+    "dateRange": "2022-01-01 -> 2025-10-31",
+    "h4Bars": 8375,
+    "structureEvents": {
+      "bosCount": 327,
+      "chochCount": 77
+    },
+    "qcNextOpen": {
+      "totalTrades": 67,
+      "unresolvedTrades": 1,
+      "winningTrades": 28,
+      "losingTrades": 39,
+      "chochLiquidations": 41,
+      "winRate": 41.8,
+      "profitFactor": 3.25,
+      "netR": 68.33,
+      "totalPnlCurrency": 39526.68,
+      "finalEquity": 139526.68,
+      "maxDrawdownR": 7.02,
+      "maxDrawdownPercent": 3.46,
+      "expectancyR": 1.02,
+      "longTrades": 35,
+      "longWinRate": 31.4,
+      "shortTrades": 32,
+      "shortWinRate": 53.1,
+      "equityCurve": [
+        {
+          "time": 1642694400,
+          "tradeIndex": 0,
+          "equity": 100000,
+          "cumulativeR": 0,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1647432000,
+          "tradeIndex": 1,
+          "equity": 101589.78,
+          "cumulativeR": 3.18,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1649246400,
+          "tradeIndex": 2,
+          "equity": 103417.35,
+          "cumulativeR": 6.78,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1651694400,
+          "tradeIndex": 3,
+          "equity": 104384.41,
+          "cumulativeR": 8.65,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1651766400,
+          "tradeIndex": 4,
+          "equity": 103919.28,
+          "cumulativeR": 7.76,
+          "drawdownPercent": 0.45,
+          "drawdownR": 0.89
+        },
+        {
+          "time": 1653955200,
+          "tradeIndex": 5,
+          "equity": 105164.64,
+          "cumulativeR": 10.16,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1654099200,
+          "tradeIndex": 6,
+          "equity": 104639.13,
+          "cumulativeR": 9.16,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        },
+        {
+          "time": 1657209600,
+          "tradeIndex": 7,
+          "equity": 107053.98,
+          "cumulativeR": 13.78,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1657569600,
+          "tradeIndex": 8,
+          "equity": 106515.87,
+          "cumulativeR": 12.77,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1.01
+        },
+        {
+          "time": 1657814400,
+          "tradeIndex": 9,
+          "equity": 105982.74,
+          "cumulativeR": 11.77,
+          "drawdownPercent": 1,
+          "drawdownR": 2.01
+        },
+        {
+          "time": 1660910400,
+          "tradeIndex": 10,
+          "equity": 108562.03,
+          "cumulativeR": 16.64,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1662595200,
+          "tradeIndex": 11,
+          "equity": 108894.74,
+          "cumulativeR": 17.25,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1663113600,
+          "tradeIndex": 12,
+          "equity": 108708.1,
+          "cumulativeR": 16.91,
+          "drawdownPercent": 0.17,
+          "drawdownR": 0.34
+        },
+        {
+          "time": 1665720000,
+          "tradeIndex": 13,
+          "equity": 109542.63,
+          "cumulativeR": 18.45,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1667808000,
+          "tradeIndex": 14,
+          "equity": 110734.07,
+          "cumulativeR": 20.63,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1670529600,
+          "tradeIndex": 15,
+          "equity": 112302.66,
+          "cumulativeR": 23.46,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1670817600,
+          "tradeIndex": 16,
+          "equity": 111998.4,
+          "cumulativeR": 22.92,
+          "drawdownPercent": 0.27,
+          "drawdownR": 0.54
+        },
+        {
+          "time": 1670918400,
+          "tradeIndex": 17,
+          "equity": 111438.41,
+          "cumulativeR": 21.92,
+          "drawdownPercent": 0.77,
+          "drawdownR": 1.54
+        },
+        {
+          "time": 1671177600,
+          "tradeIndex": 18,
+          "equity": 110881.22,
+          "cumulativeR": 20.92,
+          "drawdownPercent": 1.27,
+          "drawdownR": 2.54
+        },
+        {
+          "time": 1672790400,
+          "tradeIndex": 19,
+          "equity": 110326.81,
+          "cumulativeR": 19.92,
+          "drawdownPercent": 1.76,
+          "drawdownR": 3.54
+        },
+        {
+          "time": 1674619200,
+          "tradeIndex": 20,
+          "equity": 110235.85,
+          "cumulativeR": 19.76,
+          "drawdownPercent": 1.84,
+          "drawdownR": 3.7
+        },
+        {
+          "time": 1674676800,
+          "tradeIndex": 21,
+          "equity": 109685.5,
+          "cumulativeR": 18.76,
+          "drawdownPercent": 2.33,
+          "drawdownR": 4.7
+        },
+        {
+          "time": 1675094400,
+          "tradeIndex": 22,
+          "equity": 109137.07,
+          "cumulativeR": 17.76,
+          "drawdownPercent": 2.82,
+          "drawdownR": 5.7
+        },
+        {
+          "time": 1675296000,
+          "tradeIndex": 23,
+          "equity": 108960.87,
+          "cumulativeR": 17.44,
+          "drawdownPercent": 2.98,
+          "drawdownR": 6.02
+        },
+        {
+          "time": 1675958400,
+          "tradeIndex": 24,
+          "equity": 108414.71,
+          "cumulativeR": 16.44,
+          "drawdownPercent": 3.46,
+          "drawdownR": 7.02
+        },
+        {
+          "time": 1678651200,
+          "tradeIndex": 25,
+          "equity": 109381.26,
+          "cumulativeR": 18.22,
+          "drawdownPercent": 2.6,
+          "drawdownR": 5.24
+        },
+        {
+          "time": 1682078400,
+          "tradeIndex": 26,
+          "equity": 110913.3,
+          "cumulativeR": 21.02,
+          "drawdownPercent": 1.24,
+          "drawdownR": 2.44
+        },
+        {
+          "time": 1683288000,
+          "tradeIndex": 27,
+          "equity": 110894.37,
+          "cumulativeR": 20.99,
+          "drawdownPercent": 1.25,
+          "drawdownR": 2.47
+        },
+        {
+          "time": 1683504000,
+          "tradeIndex": 28,
+          "equity": 110338.99,
+          "cumulativeR": 19.99,
+          "drawdownPercent": 1.75,
+          "drawdownR": 3.47
+        },
+        {
+          "time": 1685246400,
+          "tradeIndex": 29,
+          "equity": 110448.37,
+          "cumulativeR": 20.19,
+          "drawdownPercent": 1.65,
+          "drawdownR": 3.27
+        },
+        {
+          "time": 1685980800,
+          "tradeIndex": 30,
+          "equity": 109896.13,
+          "cumulativeR": 19.19,
+          "drawdownPercent": 2.14,
+          "drawdownR": 4.27
+        },
+        {
+          "time": 1686369600,
+          "tradeIndex": 31,
+          "equity": 109347.2,
+          "cumulativeR": 18.19,
+          "drawdownPercent": 2.63,
+          "drawdownR": 5.27
+        },
+        {
+          "time": 1688356800,
+          "tradeIndex": 32,
+          "equity": 108800.46,
+          "cumulativeR": 17.19,
+          "drawdownPercent": 3.12,
+          "drawdownR": 6.27
+        },
+        {
+          "time": 1689624000,
+          "tradeIndex": 33,
+          "equity": 108786.42,
+          "cumulativeR": 17.16,
+          "drawdownPercent": 3.13,
+          "drawdownR": 6.3
+        },
+        {
+          "time": 1690934400,
+          "tradeIndex": 34,
+          "equity": 108925.27,
+          "cumulativeR": 17.42,
+          "drawdownPercent": 3.01,
+          "drawdownR": 6.04
+        },
+        {
+          "time": 1691049600,
+          "tradeIndex": 35,
+          "equity": 108552.33,
+          "cumulativeR": 16.74,
+          "drawdownPercent": 3.34,
+          "drawdownR": 6.72
+        },
+        {
+          "time": 1694707200,
+          "tradeIndex": 36,
+          "equity": 110904.98,
+          "cumulativeR": 21.07,
+          "drawdownPercent": 1.24,
+          "drawdownR": 2.39
+        },
+        {
+          "time": 1695297600,
+          "tradeIndex": 37,
+          "equity": 110350.45,
+          "cumulativeR": 20.07,
+          "drawdownPercent": 1.74,
+          "drawdownR": 3.39
+        },
+        {
+          "time": 1696521600,
+          "tradeIndex": 38,
+          "equity": 110269.78,
+          "cumulativeR": 19.92,
+          "drawdownPercent": 1.81,
+          "drawdownR": 3.54
+        },
+        {
+          "time": 1697803200,
+          "tradeIndex": 39,
+          "equity": 110301.65,
+          "cumulativeR": 19.98,
+          "drawdownPercent": 1.78,
+          "drawdownR": 3.48
+        },
+        {
+          "time": 1700611200,
+          "tradeIndex": 40,
+          "equity": 113022.69,
+          "cumulativeR": 24.91,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1700668800,
+          "tradeIndex": 41,
+          "equity": 112457.57,
+          "cumulativeR": 23.91,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        },
+        {
+          "time": 1707955200,
+          "tradeIndex": 42,
+          "equity": 120890.82,
+          "cumulativeR": 38.91,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1710446400,
+          "tradeIndex": 43,
+          "equity": 121488.5,
+          "cumulativeR": 39.9,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1718582400,
+          "tradeIndex": 44,
+          "equity": 121826.75,
+          "cumulativeR": 40.46,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1718640000,
+          "tradeIndex": 45,
+          "equity": 121217.17,
+          "cumulativeR": 39.46,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        },
+        {
+          "time": 1725321600,
+          "tradeIndex": 46,
+          "equity": 124015.68,
+          "cumulativeR": 44.08,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1725379200,
+          "tradeIndex": 47,
+          "equity": 123480.9,
+          "cumulativeR": 43.22,
+          "drawdownPercent": 0.43,
+          "drawdownR": 0.86
+        },
+        {
+          "time": 1726732800,
+          "tradeIndex": 48,
+          "equity": 123502.83,
+          "cumulativeR": 43.26,
+          "drawdownPercent": 0.41,
+          "drawdownR": 0.82
+        },
+        {
+          "time": 1729598400,
+          "tradeIndex": 49,
+          "equity": 124423.65,
+          "cumulativeR": 44.75,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1730289600,
+          "tradeIndex": 50,
+          "equity": 123802.25,
+          "cumulativeR": 43.75,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        },
+        {
+          "time": 1730750400,
+          "tradeIndex": 51,
+          "equity": 123183.71,
+          "cumulativeR": 42.75,
+          "drawdownPercent": 1,
+          "drawdownR": 2
+        },
+        {
+          "time": 1730894400,
+          "tradeIndex": 52,
+          "equity": 122968.38,
+          "cumulativeR": 42.4,
+          "drawdownPercent": 1.17,
+          "drawdownR": 2.35
+        },
+        {
+          "time": 1734494400,
+          "tradeIndex": 53,
+          "equity": 127186.79,
+          "cumulativeR": 49.26,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1738324800,
+          "tradeIndex": 54,
+          "equity": 128626.03,
+          "cumulativeR": 51.52,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1738440000,
+          "tradeIndex": 55,
+          "equity": 127982.91,
+          "cumulativeR": 50.52,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        },
+        {
+          "time": 1746604800,
+          "tradeIndex": 56,
+          "equity": 131747.38,
+          "cumulativeR": 56.4,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1748649600,
+          "tradeIndex": 57,
+          "equity": 137799.12,
+          "cumulativeR": 65.59,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1749513600,
+          "tradeIndex": 58,
+          "equity": 137138.35,
+          "cumulativeR": 64.63,
+          "drawdownPercent": 0.48,
+          "drawdownR": 0.96
+        },
+        {
+          "time": 1751313600,
+          "tradeIndex": 59,
+          "equity": 137136.61,
+          "cumulativeR": 64.63,
+          "drawdownPercent": 0.48,
+          "drawdownR": 0.96
+        },
+        {
+          "time": 1751400000,
+          "tradeIndex": 60,
+          "equity": 136448.69,
+          "cumulativeR": 63.63,
+          "drawdownPercent": 0.98,
+          "drawdownR": 1.96
+        },
+        {
+          "time": 1754064000,
+          "tradeIndex": 61,
+          "equity": 143142.88,
+          "cumulativeR": 73.44,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1754553600,
+          "tradeIndex": 62,
+          "equity": 142425.55,
+          "cumulativeR": 72.44,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        },
+        {
+          "time": 1756483200,
+          "tradeIndex": 63,
+          "equity": 142065.58,
+          "cumulativeR": 71.93,
+          "drawdownPercent": 0.75,
+          "drawdownR": 1.51
+        },
+        {
+          "time": 1757692800,
+          "tradeIndex": 64,
+          "equity": 141355.48,
+          "cumulativeR": 70.93,
+          "drawdownPercent": 1.25,
+          "drawdownR": 2.51
+        },
+        {
+          "time": 1758499200,
+          "tradeIndex": 65,
+          "equity": 140648.32,
+          "cumulativeR": 69.93,
+          "drawdownPercent": 1.74,
+          "drawdownR": 3.51
+        },
+        {
+          "time": 1759420800,
+          "tradeIndex": 66,
+          "equity": 140227.24,
+          "cumulativeR": 69.33,
+          "drawdownPercent": 2.04,
+          "drawdownR": 4.11
+        },
+        {
+          "time": 1760097600,
+          "tradeIndex": 67,
+          "equity": 139526.68,
+          "cumulativeR": 68.33,
+          "drawdownPercent": 2.53,
+          "drawdownR": 5.11
+        }
+      ]
+    },
+    "pineCloseFill": {
+      "totalTrades": 67,
+      "unresolvedTrades": 1,
+      "winningTrades": 28,
+      "losingTrades": 38,
+      "chochLiquidations": 41,
+      "winRate": 41.8,
+      "profitFactor": 3.24,
+      "netR": 68.18,
+      "totalPnlCurrency": 39445.73,
+      "finalEquity": 139445.73,
+      "maxDrawdownR": 7.04,
+      "maxDrawdownPercent": 3.46,
+      "expectancyR": 1.02,
+      "longTrades": 35,
+      "longWinRate": 31.4,
+      "shortTrades": 32,
+      "shortWinRate": 53.1,
+      "equityCurve": [
+        {
+          "time": 1642680000,
+          "tradeIndex": 0,
+          "equity": 100000,
+          "cumulativeR": 0,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1647417600,
+          "tradeIndex": 1,
+          "equity": 101589.51,
+          "cumulativeR": 3.18,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1649232000,
+          "tradeIndex": 2,
+          "equity": 103417.38,
+          "cumulativeR": 6.78,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1651680000,
+          "tradeIndex": 3,
+          "equity": 104384.44,
+          "cumulativeR": 8.65,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1651752000,
+          "tradeIndex": 4,
+          "equity": 103919.31,
+          "cumulativeR": 7.76,
+          "drawdownPercent": 0.45,
+          "drawdownR": 0.89
+        },
+        {
+          "time": 1653940800,
+          "tradeIndex": 5,
+          "equity": 105164.51,
+          "cumulativeR": 10.16,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1654099200,
+          "tradeIndex": 6,
+          "equity": 104638.69,
+          "cumulativeR": 9.16,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        },
+        {
+          "time": 1657195200,
+          "tradeIndex": 7,
+          "equity": 107055.97,
+          "cumulativeR": 13.78,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1657569600,
+          "tradeIndex": 8,
+          "equity": 106520.69,
+          "cumulativeR": 12.78,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        },
+        {
+          "time": 1657814400,
+          "tradeIndex": 9,
+          "equity": 105988.09,
+          "cumulativeR": 11.78,
+          "drawdownPercent": 1,
+          "drawdownR": 2
+        },
+        {
+          "time": 1660896000,
+          "tradeIndex": 10,
+          "equity": 108568.52,
+          "cumulativeR": 16.65,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1662580800,
+          "tradeIndex": 11,
+          "equity": 108901.24,
+          "cumulativeR": 17.26,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1663099200,
+          "tradeIndex": 12,
+          "equity": 108714.92,
+          "cumulativeR": 16.92,
+          "drawdownPercent": 0.17,
+          "drawdownR": 0.34
+        },
+        {
+          "time": 1665705600,
+          "tradeIndex": 13,
+          "equity": 109550.21,
+          "cumulativeR": 18.46,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1667793600,
+          "tradeIndex": 14,
+          "equity": 110741.71,
+          "cumulativeR": 20.64,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1670515200,
+          "tradeIndex": 15,
+          "equity": 112310.99,
+          "cumulativeR": 23.47,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1670803200,
+          "tradeIndex": 16,
+          "equity": 112007.45,
+          "cumulativeR": 22.93,
+          "drawdownPercent": 0.27,
+          "drawdownR": 0.54
+        },
+        {
+          "time": 1670918400,
+          "tradeIndex": 17,
+          "equity": 111447.41,
+          "cumulativeR": 21.93,
+          "drawdownPercent": 0.77,
+          "drawdownR": 1.54
+        },
+        {
+          "time": 1671177600,
+          "tradeIndex": 18,
+          "equity": 110890.17,
+          "cumulativeR": 20.93,
+          "drawdownPercent": 1.27,
+          "drawdownR": 2.54
+        },
+        {
+          "time": 1672790400,
+          "tradeIndex": 19,
+          "equity": 110335.72,
+          "cumulativeR": 19.93,
+          "drawdownPercent": 1.76,
+          "drawdownR": 3.54
+        },
+        {
+          "time": 1674604800,
+          "tradeIndex": 20,
+          "equity": 110242.78,
+          "cumulativeR": 19.76,
+          "drawdownPercent": 1.84,
+          "drawdownR": 3.71
+        },
+        {
+          "time": 1674676800,
+          "tradeIndex": 21,
+          "equity": 109691.56,
+          "cumulativeR": 18.76,
+          "drawdownPercent": 2.33,
+          "drawdownR": 4.71
+        },
+        {
+          "time": 1675094400,
+          "tradeIndex": 22,
+          "equity": 109143.1,
+          "cumulativeR": 17.76,
+          "drawdownPercent": 2.82,
+          "drawdownR": 5.71
+        },
+        {
+          "time": 1675281600,
+          "tradeIndex": 23,
+          "equity": 108965.35,
+          "cumulativeR": 17.43,
+          "drawdownPercent": 2.98,
+          "drawdownR": 6.04
+        },
+        {
+          "time": 1675958400,
+          "tradeIndex": 24,
+          "equity": 108420.52,
+          "cumulativeR": 16.43,
+          "drawdownPercent": 3.46,
+          "drawdownR": 7.04
+        },
+        {
+          "time": 1678636800,
+          "tradeIndex": 25,
+          "equity": 109385.08,
+          "cumulativeR": 18.21,
+          "drawdownPercent": 2.61,
+          "drawdownR": 5.26
+        },
+        {
+          "time": 1682064000,
+          "tradeIndex": 26,
+          "equity": 110916.79,
+          "cumulativeR": 21.01,
+          "drawdownPercent": 1.24,
+          "drawdownR": 2.46
+        },
+        {
+          "time": 1683273600,
+          "tradeIndex": 27,
+          "equity": 110898.4,
+          "cumulativeR": 20.98,
+          "drawdownPercent": 1.26,
+          "drawdownR": 2.49
+        },
+        {
+          "time": 1683504000,
+          "tradeIndex": 28,
+          "equity": 110343.91,
+          "cumulativeR": 19.98,
+          "drawdownPercent": 1.75,
+          "drawdownR": 3.49
+        },
+        {
+          "time": 1685232000,
+          "tradeIndex": 29,
+          "equity": 110453.3,
+          "cumulativeR": 20.18,
+          "drawdownPercent": 1.65,
+          "drawdownR": 3.29
+        },
+        {
+          "time": 1685980800,
+          "tradeIndex": 30,
+          "equity": 109901.04,
+          "cumulativeR": 19.18,
+          "drawdownPercent": 2.15,
+          "drawdownR": 4.29
+        },
+        {
+          "time": 1686369600,
+          "tradeIndex": 31,
+          "equity": 109351.54,
+          "cumulativeR": 18.18,
+          "drawdownPercent": 2.64,
+          "drawdownR": 5.29
+        },
+        {
+          "time": 1688356800,
+          "tradeIndex": 32,
+          "equity": 108804.78,
+          "cumulativeR": 17.18,
+          "drawdownPercent": 3.12,
+          "drawdownR": 6.29
+        },
+        {
+          "time": 1689609600,
+          "tradeIndex": 33,
+          "equity": 108789.91,
+          "cumulativeR": 17.15,
+          "drawdownPercent": 3.14,
+          "drawdownR": 6.32
+        },
+        {
+          "time": 1690920000,
+          "tradeIndex": 34,
+          "equity": 108932.42,
+          "cumulativeR": 17.41,
+          "drawdownPercent": 3.01,
+          "drawdownR": 6.06
+        },
+        {
+          "time": 1691035200,
+          "tradeIndex": 35,
+          "equity": 108559.46,
+          "cumulativeR": 16.73,
+          "drawdownPercent": 3.34,
+          "drawdownR": 6.74
+        },
+        {
+          "time": 1694692800,
+          "tradeIndex": 36,
+          "equity": 110912.27,
+          "cumulativeR": 21.06,
+          "drawdownPercent": 1.25,
+          "drawdownR": 2.41
+        },
+        {
+          "time": 1695297600,
+          "tradeIndex": 37,
+          "equity": 110357.71,
+          "cumulativeR": 20.06,
+          "drawdownPercent": 1.74,
+          "drawdownR": 3.41
+        },
+        {
+          "time": 1696507200,
+          "tradeIndex": 38,
+          "equity": 110277.04,
+          "cumulativeR": 19.91,
+          "drawdownPercent": 1.81,
+          "drawdownR": 3.56
+        },
+        {
+          "time": 1697788800,
+          "tradeIndex": 39,
+          "equity": 110310.59,
+          "cumulativeR": 19.97,
+          "drawdownPercent": 1.78,
+          "drawdownR": 3.5
+        },
+        {
+          "time": 1700596800,
+          "tradeIndex": 40,
+          "equity": 113032.71,
+          "cumulativeR": 24.91,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1700668800,
+          "tradeIndex": 41,
+          "equity": 112467.55,
+          "cumulativeR": 23.91,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        },
+        {
+          "time": 1707955200,
+          "tradeIndex": 42,
+          "equity": 120902.65,
+          "cumulativeR": 38.91,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1710432000,
+          "tradeIndex": 43,
+          "equity": 121500.52,
+          "cumulativeR": 39.9,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1718568000,
+          "tradeIndex": 44,
+          "equity": 121838.8,
+          "cumulativeR": 40.46,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1718640000,
+          "tradeIndex": 45,
+          "equity": 121229.61,
+          "cumulativeR": 39.46,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        },
+        {
+          "time": 1725307200,
+          "tradeIndex": 46,
+          "equity": 124028.49,
+          "cumulativeR": 44.08,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1725364800,
+          "tradeIndex": 47,
+          "equity": 123494.23,
+          "cumulativeR": 43.22,
+          "drawdownPercent": 0.43,
+          "drawdownR": 0.86
+        },
+        {
+          "time": 1726718400,
+          "tradeIndex": 48,
+          "equity": 123516.52,
+          "cumulativeR": 43.26,
+          "drawdownPercent": 0.41,
+          "drawdownR": 0.82
+        },
+        {
+          "time": 1729584000,
+          "tradeIndex": 49,
+          "equity": 124437.44,
+          "cumulativeR": 44.75,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1730289600,
+          "tradeIndex": 50,
+          "equity": 123815.25,
+          "cumulativeR": 43.75,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        },
+        {
+          "time": 1730750400,
+          "tradeIndex": 51,
+          "equity": 123196.17,
+          "cumulativeR": 42.75,
+          "drawdownPercent": 1,
+          "drawdownR": 2
+        },
+        {
+          "time": 1730880000,
+          "tradeIndex": 52,
+          "equity": 122980.82,
+          "cumulativeR": 42.4,
+          "drawdownPercent": 1.17,
+          "drawdownR": 2.35
+        },
+        {
+          "time": 1734480000,
+          "tradeIndex": 53,
+          "equity": 127199.59,
+          "cumulativeR": 49.26,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1738310400,
+          "tradeIndex": 54,
+          "equity": 128638.98,
+          "cumulativeR": 51.52,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1738440000,
+          "tradeIndex": 55,
+          "equity": 127995.79,
+          "cumulativeR": 50.52,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        },
+        {
+          "time": 1746590400,
+          "tradeIndex": 56,
+          "equity": 131760.94,
+          "cumulativeR": 56.4,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1748635200,
+          "tradeIndex": 57,
+          "equity": 137743.36,
+          "cumulativeR": 65.48,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1749513600,
+          "tradeIndex": 58,
+          "equity": 137054.64,
+          "cumulativeR": 64.48,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        },
+        {
+          "time": 1751299200,
+          "tradeIndex": 59,
+          "equity": 137054.64,
+          "cumulativeR": 64.48,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        },
+        {
+          "time": 1751400000,
+          "tradeIndex": 60,
+          "equity": 136369.37,
+          "cumulativeR": 63.48,
+          "drawdownPercent": 1,
+          "drawdownR": 2
+        },
+        {
+          "time": 1754049600,
+          "tradeIndex": 61,
+          "equity": 143060.89,
+          "cumulativeR": 73.29,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1754553600,
+          "tradeIndex": 62,
+          "equity": 142345.59,
+          "cumulativeR": 72.29,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        },
+        {
+          "time": 1756468800,
+          "tradeIndex": 63,
+          "equity": 141985.71,
+          "cumulativeR": 71.78,
+          "drawdownPercent": 0.75,
+          "drawdownR": 1.51
+        },
+        {
+          "time": 1757692800,
+          "tradeIndex": 64,
+          "equity": 141275.79,
+          "cumulativeR": 70.78,
+          "drawdownPercent": 1.25,
+          "drawdownR": 2.51
+        },
+        {
+          "time": 1758499200,
+          "tradeIndex": 65,
+          "equity": 140569.4,
+          "cumulativeR": 69.78,
+          "drawdownPercent": 1.74,
+          "drawdownR": 3.51
+        },
+        {
+          "time": 1759406400,
+          "tradeIndex": 66,
+          "equity": 140146.47,
+          "cumulativeR": 69.18,
+          "drawdownPercent": 2.04,
+          "drawdownR": 4.11
+        },
+        {
+          "time": 1760097600,
+          "tradeIndex": 67,
+          "equity": 139445.73,
+          "cumulativeR": 68.18,
+          "drawdownPercent": 2.53,
+          "drawdownR": 5.11
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "SPY",
+    "dukascopyId": "spyususd",
+    "assetClass": "ETF",
+    "dateRange": "2022-01-03 -> 2025-10-31",
+    "h4Bars": 2222,
+    "structureEvents": {
+      "bosCount": 99,
+      "chochCount": 22
+    },
+    "qcNextOpen": {
+      "totalTrades": 24,
+      "unresolvedTrades": 1,
+      "winningTrades": 11,
+      "losingTrades": 13,
+      "chochLiquidations": 16,
+      "winRate": 45.8,
+      "profitFactor": 3.24,
+      "netR": 21.76,
+      "totalPnlCurrency": 11290.8,
+      "finalEquity": 111290.8,
+      "maxDrawdownR": 3.19,
+      "maxDrawdownPercent": 1.58,
+      "expectancyR": 0.9,
+      "longTrades": 10,
+      "longWinRate": 70,
+      "shortTrades": 14,
+      "shortWinRate": 28.6,
+      "equityCurve": [
+        {
+          "time": 1643803200,
+          "tradeIndex": 0,
+          "equity": 100000,
+          "cumulativeR": 0,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1644494400,
+          "tradeIndex": 1,
+          "equity": 100127.38,
+          "cumulativeR": 0.25,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1644523200,
+          "tradeIndex": 2,
+          "equity": 99944.85,
+          "cumulativeR": -0.11,
+          "drawdownPercent": 0.18,
+          "drawdownR": 0.36
+        },
+        {
+          "time": 1648483200,
+          "tradeIndex": 3,
+          "equity": 99458.6,
+          "cumulativeR": -1.08,
+          "drawdownPercent": 0.67,
+          "drawdownR": 1.33
+        },
+        {
+          "time": 1650888000,
+          "tradeIndex": 4,
+          "equity": 99156.65,
+          "cumulativeR": -1.69,
+          "drawdownPercent": 0.97,
+          "drawdownR": 1.94
+        },
+        {
+          "time": 1666180800,
+          "tradeIndex": 5,
+          "equity": 100851.73,
+          "cumulativeR": 1.73,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1670342400,
+          "tradeIndex": 6,
+          "equity": 101698.16,
+          "cumulativeR": 3.41,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1670932800,
+          "tradeIndex": 7,
+          "equity": 101090.95,
+          "cumulativeR": 2.22,
+          "drawdownPercent": 0.6,
+          "drawdownR": 1.19
+        },
+        {
+          "time": 1675281600,
+          "tradeIndex": 8,
+          "equity": 100587.92,
+          "cumulativeR": 1.22,
+          "drawdownPercent": 1.09,
+          "drawdownR": 2.19
+        },
+        {
+          "time": 1681401600,
+          "tradeIndex": 9,
+          "equity": 100087.13,
+          "cumulativeR": 0.22,
+          "drawdownPercent": 1.58,
+          "drawdownR": 3.19
+        },
+        {
+          "time": 1692273600,
+          "tradeIndex": 10,
+          "equity": 102176.16,
+          "cumulativeR": 4.39,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1693396800,
+          "tradeIndex": 11,
+          "equity": 101745.48,
+          "cumulativeR": 3.55,
+          "drawdownPercent": 0.42,
+          "drawdownR": 0.84
+        },
+        {
+          "time": 1695124800,
+          "tradeIndex": 12,
+          "equity": 101242.69,
+          "cumulativeR": 2.56,
+          "drawdownPercent": 0.91,
+          "drawdownR": 1.83
+        },
+        {
+          "time": 1699012800,
+          "tradeIndex": 13,
+          "equity": 100986.04,
+          "cumulativeR": 2.05,
+          "drawdownPercent": 1.16,
+          "drawdownR": 2.34
+        },
+        {
+          "time": 1713182400,
+          "tradeIndex": 14,
+          "equity": 105087.04,
+          "cumulativeR": 10.17,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1715083200,
+          "tradeIndex": 15,
+          "equity": 104988.19,
+          "cumulativeR": 9.98,
+          "drawdownPercent": 0.09,
+          "drawdownR": 0.19
+        },
+        {
+          "time": 1721649600,
+          "tradeIndex": 16,
+          "equity": 106652.93,
+          "cumulativeR": 13.15,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1723737600,
+          "tradeIndex": 17,
+          "equity": 106716.85,
+          "cumulativeR": 13.27,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1735574400,
+          "tradeIndex": 18,
+          "equity": 107994.13,
+          "cumulativeR": 15.66,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1736164800,
+          "tradeIndex": 19,
+          "equity": 107464.16,
+          "cumulativeR": 14.68,
+          "drawdownPercent": 0.49,
+          "drawdownR": 0.98
+        },
+        {
+          "time": 1736971200,
+          "tradeIndex": 20,
+          "equity": 107352.44,
+          "cumulativeR": 14.47,
+          "drawdownPercent": 0.59,
+          "drawdownR": 1.19
+        },
+        {
+          "time": 1740168000,
+          "tradeIndex": 21,
+          "equity": 107610.62,
+          "cumulativeR": 14.95,
+          "drawdownPercent": 0.36,
+          "drawdownR": 0.71
+        },
+        {
+          "time": 1745841600,
+          "tradeIndex": 22,
+          "equity": 109604.45,
+          "cumulativeR": 18.66,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1756828800,
+          "tradeIndex": 23,
+          "equity": 111784,
+          "cumulativeR": 22.64,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1757001600,
+          "tradeIndex": 24,
+          "equity": 111290.8,
+          "cumulativeR": 21.76,
+          "drawdownPercent": 0.44,
+          "drawdownR": 0.88
+        }
+      ]
+    },
+    "pineCloseFill": {
+      "totalTrades": 24,
+      "unresolvedTrades": 1,
+      "winningTrades": 9,
+      "losingTrades": 15,
+      "chochLiquidations": 16,
+      "winRate": 37.5,
+      "profitFactor": 2.81,
+      "netR": 19.56,
+      "totalPnlCurrency": 10086.76,
+      "finalEquity": 110086.76,
+      "maxDrawdownR": 3.16,
+      "maxDrawdownPercent": 1.57,
+      "expectancyR": 0.81,
+      "longTrades": 10,
+      "longWinRate": 70,
+      "shortTrades": 14,
+      "shortWinRate": 14.3,
+      "equityCurve": [
+        {
+          "time": 1643745600,
+          "tradeIndex": 0,
+          "equity": 100000,
+          "cumulativeR": 0,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1644436800,
+          "tradeIndex": 1,
+          "equity": 99868.87,
+          "cumulativeR": -0.26,
+          "drawdownPercent": 0.13,
+          "drawdownR": 0.26
+        },
+        {
+          "time": 1644523200,
+          "tradeIndex": 2,
+          "equity": 99371.72,
+          "cumulativeR": -1.26,
+          "drawdownPercent": 0.63,
+          "drawdownR": 1.26
+        },
+        {
+          "time": 1648483200,
+          "tradeIndex": 3,
+          "equity": 98885.78,
+          "cumulativeR": -2.24,
+          "drawdownPercent": 1.11,
+          "drawdownR": 2.24
+        },
+        {
+          "time": 1650643200,
+          "tradeIndex": 4,
+          "equity": 98685.48,
+          "cumulativeR": -2.65,
+          "drawdownPercent": 1.31,
+          "drawdownR": 2.65
+        },
+        {
+          "time": 1666108800,
+          "tradeIndex": 5,
+          "equity": 100383.66,
+          "cumulativeR": 0.79,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1670328000,
+          "tradeIndex": 6,
+          "equity": 101161.29,
+          "cumulativeR": 2.34,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1670932800,
+          "tradeIndex": 7,
+          "equity": 100569.29,
+          "cumulativeR": 1.17,
+          "drawdownPercent": 0.59,
+          "drawdownR": 1.17
+        },
+        {
+          "time": 1675281600,
+          "tradeIndex": 8,
+          "equity": 100067.01,
+          "cumulativeR": 0.17,
+          "drawdownPercent": 1.08,
+          "drawdownR": 2.17
+        },
+        {
+          "time": 1681401600,
+          "tradeIndex": 9,
+          "equity": 99572.48,
+          "cumulativeR": -0.82,
+          "drawdownPercent": 1.57,
+          "drawdownR": 3.16
+        },
+        {
+          "time": 1692201600,
+          "tradeIndex": 10,
+          "equity": 101526.87,
+          "cumulativeR": 3.11,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1693396800,
+          "tradeIndex": 11,
+          "equity": 101021.31,
+          "cumulativeR": 2.11,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        },
+        {
+          "time": 1695124800,
+          "tradeIndex": 12,
+          "equity": 100517.95,
+          "cumulativeR": 1.11,
+          "drawdownPercent": 0.99,
+          "drawdownR": 2
+        },
+        {
+          "time": 1698940800,
+          "tradeIndex": 13,
+          "equity": 100403.69,
+          "cumulativeR": 0.88,
+          "drawdownPercent": 1.11,
+          "drawdownR": 2.23
+        },
+        {
+          "time": 1712937600,
+          "tradeIndex": 14,
+          "equity": 104403.64,
+          "cumulativeR": 8.85,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1715011200,
+          "tradeIndex": 15,
+          "equity": 104164.57,
+          "cumulativeR": 8.39,
+          "drawdownPercent": 0.23,
+          "drawdownR": 0.46
+        },
+        {
+          "time": 1721404800,
+          "tradeIndex": 16,
+          "equity": 105655.84,
+          "cumulativeR": 11.25,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1723723200,
+          "tradeIndex": 17,
+          "equity": 105536.24,
+          "cumulativeR": 11.02,
+          "drawdownPercent": 0.11,
+          "drawdownR": 0.23
+        },
+        {
+          "time": 1735560000,
+          "tradeIndex": 18,
+          "equity": 106777.69,
+          "cumulativeR": 13.37,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1736164800,
+          "tradeIndex": 19,
+          "equity": 106246.61,
+          "cumulativeR": 12.38,
+          "drawdownPercent": 0.5,
+          "drawdownR": 0.99
+        },
+        {
+          "time": 1736956800,
+          "tradeIndex": 20,
+          "equity": 106138.13,
+          "cumulativeR": 12.18,
+          "drawdownPercent": 0.6,
+          "drawdownR": 1.19
+        },
+        {
+          "time": 1740153600,
+          "tradeIndex": 21,
+          "equity": 106390.07,
+          "cumulativeR": 12.65,
+          "drawdownPercent": 0.36,
+          "drawdownR": 0.72
+        },
+        {
+          "time": 1745596800,
+          "tradeIndex": 22,
+          "equity": 108368.51,
+          "cumulativeR": 16.37,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1756814400,
+          "tradeIndex": 23,
+          "equity": 110569.44,
+          "cumulativeR": 20.43,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1756987200,
+          "tradeIndex": 24,
+          "equity": 110086.76,
+          "cumulativeR": 19.56,
+          "drawdownPercent": 0.44,
+          "drawdownR": 0.87
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "QQQ",
+    "dukascopyId": "qqqususd",
+    "assetClass": "ETF",
+    "dateRange": "2022-01-03 -> 2025-10-31",
+    "h4Bars": 2222,
+    "structureEvents": {
+      "bosCount": 96,
+      "chochCount": 37
+    },
+    "qcNextOpen": {
+      "totalTrades": 34,
+      "unresolvedTrades": 1,
+      "winningTrades": 11,
+      "losingTrades": 23,
+      "chochLiquidations": 23,
+      "winRate": 32.4,
+      "profitFactor": 1.86,
+      "netR": 12.76,
+      "totalPnlCurrency": 6423.73,
+      "finalEquity": 106423.73,
+      "maxDrawdownR": 5.18,
+      "maxDrawdownPercent": 2.56,
+      "expectancyR": 0.38,
+      "longTrades": 16,
+      "longWinRate": 50,
+      "shortTrades": 18,
+      "shortWinRate": 16.7,
+      "equityCurve": [
+        {
+          "time": 1643817600,
+          "tradeIndex": 0,
+          "equity": 100000,
+          "cumulativeR": 0,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1647518400,
+          "tradeIndex": 1,
+          "equity": 100839.52,
+          "cumulativeR": 1.68,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1650628800,
+          "tradeIndex": 2,
+          "equity": 100754.24,
+          "cumulativeR": 1.51,
+          "drawdownPercent": 0.08,
+          "drawdownR": 0.17
+        },
+        {
+          "time": 1666627200,
+          "tradeIndex": 3,
+          "equity": 102356.09,
+          "cumulativeR": 4.69,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1667476800,
+          "tradeIndex": 4,
+          "equity": 101855.99,
+          "cumulativeR": 3.71,
+          "drawdownPercent": 0.49,
+          "drawdownR": 0.98
+        },
+        {
+          "time": 1668081600,
+          "tradeIndex": 5,
+          "equity": 101306.51,
+          "cumulativeR": 2.63,
+          "drawdownPercent": 1.03,
+          "drawdownR": 2.06
+        },
+        {
+          "time": 1670342400,
+          "tradeIndex": 6,
+          "equity": 101471.01,
+          "cumulativeR": 2.95,
+          "drawdownPercent": 0.86,
+          "drawdownR": 1.74
+        },
+        {
+          "time": 1670932800,
+          "tradeIndex": 7,
+          "equity": 100893.51,
+          "cumulativeR": 1.81,
+          "drawdownPercent": 1.43,
+          "drawdownR": 2.88
+        },
+        {
+          "time": 1671033600,
+          "tradeIndex": 8,
+          "equity": 100389.76,
+          "cumulativeR": 0.81,
+          "drawdownPercent": 1.92,
+          "drawdownR": 3.88
+        },
+        {
+          "time": 1679486400,
+          "tradeIndex": 9,
+          "equity": 99891.72,
+          "cumulativeR": -0.18,
+          "drawdownPercent": 2.41,
+          "drawdownR": 4.87
+        },
+        {
+          "time": 1682683200,
+          "tradeIndex": 10,
+          "equity": 99736.99,
+          "cumulativeR": -0.49,
+          "drawdownPercent": 2.56,
+          "drawdownR": 5.18
+        },
+        {
+          "time": 1697803200,
+          "tradeIndex": 11,
+          "equity": 101900.09,
+          "cumulativeR": 3.85,
+          "drawdownPercent": 0.45,
+          "drawdownR": 0.84
+        },
+        {
+          "time": 1699027200,
+          "tradeIndex": 12,
+          "equity": 101644.04,
+          "cumulativeR": 3.35,
+          "drawdownPercent": 0.7,
+          "drawdownR": 1.34
+        },
+        {
+          "time": 1704369600,
+          "tradeIndex": 13,
+          "equity": 102998.74,
+          "cumulativeR": 6.02,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1704384000,
+          "tradeIndex": 14,
+          "equity": 102849.34,
+          "cumulativeR": 5.73,
+          "drawdownPercent": 0.15,
+          "drawdownR": 0.29
+        },
+        {
+          "time": 1704398400,
+          "tradeIndex": 15,
+          "equity": 102781.45,
+          "cumulativeR": 5.6,
+          "drawdownPercent": 0.21,
+          "drawdownR": 0.42
+        },
+        {
+          "time": 1704470400,
+          "tradeIndex": 16,
+          "equity": 102652.25,
+          "cumulativeR": 5.35,
+          "drawdownPercent": 0.34,
+          "drawdownR": 0.67
+        },
+        {
+          "time": 1704484800,
+          "tradeIndex": 17,
+          "equity": 102450.47,
+          "cumulativeR": 4.96,
+          "drawdownPercent": 0.53,
+          "drawdownR": 1.06
+        },
+        {
+          "time": 1704715200,
+          "tradeIndex": 18,
+          "equity": 102336.12,
+          "cumulativeR": 4.74,
+          "drawdownPercent": 0.64,
+          "drawdownR": 1.28
+        },
+        {
+          "time": 1710172800,
+          "tradeIndex": 19,
+          "equity": 105141.02,
+          "cumulativeR": 10.22,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1711022400,
+          "tradeIndex": 20,
+          "equity": 104491.16,
+          "cumulativeR": 8.98,
+          "drawdownPercent": 0.62,
+          "drawdownR": 1.24
+        },
+        {
+          "time": 1712318400,
+          "tradeIndex": 21,
+          "equity": 104329.24,
+          "cumulativeR": 8.67,
+          "drawdownPercent": 0.77,
+          "drawdownR": 1.55
+        },
+        {
+          "time": 1712923200,
+          "tradeIndex": 22,
+          "equity": 104218.22,
+          "cumulativeR": 8.46,
+          "drawdownPercent": 0.88,
+          "drawdownR": 1.76
+        },
+        {
+          "time": 1713182400,
+          "tradeIndex": 23,
+          "equity": 104253.86,
+          "cumulativeR": 8.53,
+          "drawdownPercent": 0.84,
+          "drawdownR": 1.69
+        },
+        {
+          "time": 1715011200,
+          "tradeIndex": 24,
+          "equity": 104415.98,
+          "cumulativeR": 8.84,
+          "drawdownPercent": 0.69,
+          "drawdownR": 1.38
+        },
+        {
+          "time": 1721304000,
+          "tradeIndex": 25,
+          "equity": 106591.27,
+          "cumulativeR": 13.01,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1728907200,
+          "tradeIndex": 26,
+          "equity": 106160.31,
+          "cumulativeR": 12.2,
+          "drawdownPercent": 0.4,
+          "drawdownR": 0.81
+        },
+        {
+          "time": 1730390400,
+          "tradeIndex": 27,
+          "equity": 105899.25,
+          "cumulativeR": 11.71,
+          "drawdownPercent": 0.65,
+          "drawdownR": 1.3
+        },
+        {
+          "time": 1730894400,
+          "tradeIndex": 28,
+          "equity": 105383.25,
+          "cumulativeR": 10.74,
+          "drawdownPercent": 1.13,
+          "drawdownR": 2.27
+        },
+        {
+          "time": 1736524800,
+          "tradeIndex": 29,
+          "equity": 106055.27,
+          "cumulativeR": 12.02,
+          "drawdownPercent": 0.5,
+          "drawdownR": 0.99
+        },
+        {
+          "time": 1737115200,
+          "tradeIndex": 30,
+          "equity": 105504.81,
+          "cumulativeR": 10.98,
+          "drawdownPercent": 1.02,
+          "drawdownR": 2.03
+        },
+        {
+          "time": 1740657600,
+          "tradeIndex": 31,
+          "equity": 104988.67,
+          "cumulativeR": 10,
+          "drawdownPercent": 1.5,
+          "drawdownR": 3.01
+        },
+        {
+          "time": 1745582400,
+          "tradeIndex": 32,
+          "equity": 104813.81,
+          "cumulativeR": 9.67,
+          "drawdownPercent": 1.67,
+          "drawdownR": 3.34
+        },
+        {
+          "time": 1756828800,
+          "tradeIndex": 33,
+          "equity": 106954.4,
+          "cumulativeR": 13.75,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1757001600,
+          "tradeIndex": 34,
+          "equity": 106423.73,
+          "cumulativeR": 12.76,
+          "drawdownPercent": 0.5,
+          "drawdownR": 0.99
+        }
+      ]
+    },
+    "pineCloseFill": {
+      "totalTrades": 34,
+      "unresolvedTrades": 1,
+      "winningTrades": 11,
+      "losingTrades": 23,
+      "chochLiquidations": 23,
+      "winRate": 32.4,
+      "profitFactor": 1.79,
+      "netR": 11.97,
+      "totalPnlCurrency": 6004.57,
+      "finalEquity": 106004.57,
+      "maxDrawdownR": 5.22,
+      "maxDrawdownPercent": 2.58,
+      "expectancyR": 0.35,
+      "longTrades": 16,
+      "longWinRate": 43.8,
+      "shortTrades": 18,
+      "shortWinRate": 22.2,
+      "equityCurve": [
+        {
+          "time": 1643803200,
+          "tradeIndex": 0,
+          "equity": 100000,
+          "cumulativeR": 0,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1647446400,
+          "tradeIndex": 1,
+          "equity": 100782.68,
+          "cumulativeR": 1.57,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1650556800,
+          "tradeIndex": 2,
+          "equity": 100657.31,
+          "cumulativeR": 1.32,
+          "drawdownPercent": 0.12,
+          "drawdownR": 0.25
+        },
+        {
+          "time": 1666612800,
+          "tradeIndex": 3,
+          "equity": 102260.9,
+          "cumulativeR": 4.51,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1667476800,
+          "tradeIndex": 4,
+          "equity": 101761.16,
+          "cumulativeR": 3.53,
+          "drawdownPercent": 0.49,
+          "drawdownR": 0.98
+        },
+        {
+          "time": 1668081600,
+          "tradeIndex": 5,
+          "equity": 101211.72,
+          "cumulativeR": 2.45,
+          "drawdownPercent": 1.03,
+          "drawdownR": 2.06
+        },
+        {
+          "time": 1670328000,
+          "tradeIndex": 6,
+          "equity": 101375.87,
+          "cumulativeR": 2.77,
+          "drawdownPercent": 0.87,
+          "drawdownR": 1.74
+        },
+        {
+          "time": 1670932800,
+          "tradeIndex": 7,
+          "equity": 100797.95,
+          "cumulativeR": 1.63,
+          "drawdownPercent": 1.43,
+          "drawdownR": 2.88
+        },
+        {
+          "time": 1671033600,
+          "tradeIndex": 8,
+          "equity": 100294.2,
+          "cumulativeR": 0.63,
+          "drawdownPercent": 1.92,
+          "drawdownR": 3.88
+        },
+        {
+          "time": 1679486400,
+          "tradeIndex": 9,
+          "equity": 99796.87,
+          "cumulativeR": -0.36,
+          "drawdownPercent": 2.41,
+          "drawdownR": 4.87
+        },
+        {
+          "time": 1682611200,
+          "tradeIndex": 10,
+          "equity": 99622.9,
+          "cumulativeR": -0.71,
+          "drawdownPercent": 2.58,
+          "drawdownR": 5.22
+        },
+        {
+          "time": 1697731200,
+          "tradeIndex": 11,
+          "equity": 101798.65,
+          "cumulativeR": 3.66,
+          "drawdownPercent": 0.45,
+          "drawdownR": 0.85
+        },
+        {
+          "time": 1699012800,
+          "tradeIndex": 12,
+          "equity": 101559.94,
+          "cumulativeR": 3.19,
+          "drawdownPercent": 0.69,
+          "drawdownR": 1.32
+        },
+        {
+          "time": 1704312000,
+          "tradeIndex": 13,
+          "equity": 103002.96,
+          "cumulativeR": 6.03,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1704369600,
+          "tradeIndex": 14,
+          "equity": 103017.15,
+          "cumulativeR": 6.06,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1704384000,
+          "tradeIndex": 15,
+          "equity": 102953.51,
+          "cumulativeR": 5.94,
+          "drawdownPercent": 0.06,
+          "drawdownR": 0.12
+        },
+        {
+          "time": 1704456000,
+          "tradeIndex": 16,
+          "equity": 102826.28,
+          "cumulativeR": 5.69,
+          "drawdownPercent": 0.19,
+          "drawdownR": 0.37
+        },
+        {
+          "time": 1704470400,
+          "tradeIndex": 17,
+          "equity": 102628.57,
+          "cumulativeR": 5.31,
+          "drawdownPercent": 0.38,
+          "drawdownR": 0.75
+        },
+        {
+          "time": 1704484800,
+          "tradeIndex": 18,
+          "equity": 102580.87,
+          "cumulativeR": 5.22,
+          "drawdownPercent": 0.42,
+          "drawdownR": 0.84
+        },
+        {
+          "time": 1710158400,
+          "tradeIndex": 19,
+          "equity": 105473.97,
+          "cumulativeR": 10.86,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1711022400,
+          "tradeIndex": 20,
+          "equity": 104824.71,
+          "cumulativeR": 9.63,
+          "drawdownPercent": 0.62,
+          "drawdownR": 1.23
+        },
+        {
+          "time": 1712246400,
+          "tradeIndex": 21,
+          "equity": 104539.64,
+          "cumulativeR": 9.09,
+          "drawdownPercent": 0.89,
+          "drawdownR": 1.77
+        },
+        {
+          "time": 1712851200,
+          "tradeIndex": 22,
+          "equity": 104275.97,
+          "cumulativeR": 8.59,
+          "drawdownPercent": 1.14,
+          "drawdownR": 2.27
+        },
+        {
+          "time": 1712937600,
+          "tradeIndex": 23,
+          "equity": 104017.13,
+          "cumulativeR": 8.09,
+          "drawdownPercent": 1.38,
+          "drawdownR": 2.77
+        },
+        {
+          "time": 1714996800,
+          "tradeIndex": 24,
+          "equity": 104018.39,
+          "cumulativeR": 8.09,
+          "drawdownPercent": 1.38,
+          "drawdownR": 2.77
+        },
+        {
+          "time": 1721232000,
+          "tradeIndex": 25,
+          "equity": 106024.91,
+          "cumulativeR": 11.95,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1728907200,
+          "tradeIndex": 26,
+          "equity": 105453.37,
+          "cumulativeR": 10.87,
+          "drawdownPercent": 0.54,
+          "drawdownR": 1.08
+        },
+        {
+          "time": 1730376000,
+          "tradeIndex": 27,
+          "equity": 105335.15,
+          "cumulativeR": 10.65,
+          "drawdownPercent": 0.65,
+          "drawdownR": 1.3
+        },
+        {
+          "time": 1730894400,
+          "tradeIndex": 28,
+          "equity": 104819.12,
+          "cumulativeR": 9.67,
+          "drawdownPercent": 1.14,
+          "drawdownR": 2.28
+        },
+        {
+          "time": 1736510400,
+          "tradeIndex": 29,
+          "equity": 105480.91,
+          "cumulativeR": 10.93,
+          "drawdownPercent": 0.51,
+          "drawdownR": 1.02
+        },
+        {
+          "time": 1737115200,
+          "tradeIndex": 30,
+          "equity": 104946.64,
+          "cumulativeR": 9.92,
+          "drawdownPercent": 1.02,
+          "drawdownR": 2.03
+        },
+        {
+          "time": 1740657600,
+          "tradeIndex": 31,
+          "equity": 104430.5,
+          "cumulativeR": 8.94,
+          "drawdownPercent": 1.5,
+          "drawdownR": 3.01
+        },
+        {
+          "time": 1745510400,
+          "tradeIndex": 32,
+          "equity": 104401.42,
+          "cumulativeR": 8.88,
+          "drawdownPercent": 1.53,
+          "drawdownR": 3.07
+        },
+        {
+          "time": 1756814400,
+          "tradeIndex": 33,
+          "equity": 106534.88,
+          "cumulativeR": 12.97,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1757001600,
+          "tradeIndex": 34,
+          "equity": 106004.57,
+          "cumulativeR": 11.97,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "GLD",
+    "dukascopyId": "gldususd",
+    "assetClass": "ETF",
+    "dateRange": "2022-01-03 -> 2025-10-31",
+    "h4Bars": 2222,
+    "structureEvents": {
+      "bosCount": 74,
+      "chochCount": 21
+    },
+    "qcNextOpen": {
+      "totalTrades": 26,
+      "unresolvedTrades": 0,
+      "winningTrades": 5,
+      "losingTrades": 21,
+      "chochLiquidations": 12,
+      "winRate": 19.2,
+      "profitFactor": 1.3,
+      "netR": 5.14,
+      "totalPnlCurrency": 2350.96,
+      "finalEquity": 102350.96,
+      "maxDrawdownR": 8.5,
+      "maxDrawdownPercent": 4.18,
+      "expectancyR": 0.2,
+      "longTrades": 13,
+      "longWinRate": 23.1,
+      "shortTrades": 13,
+      "shortWinRate": 15.4,
+      "equityCurve": [
+        {
+          "time": 1647273600,
+          "tradeIndex": 0,
+          "equity": 100000,
+          "cumulativeR": 0,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1647360000,
+          "tradeIndex": 1,
+          "equity": 99803.33,
+          "cumulativeR": -0.39,
+          "drawdownPercent": 0.2,
+          "drawdownR": 0.39
+        },
+        {
+          "time": 1649851200,
+          "tradeIndex": 2,
+          "equity": 99305.45,
+          "cumulativeR": -1.39,
+          "drawdownPercent": 0.69,
+          "drawdownR": 1.39
+        },
+        {
+          "time": 1651060800,
+          "tradeIndex": 3,
+          "equity": 98810.47,
+          "cumulativeR": -2.39,
+          "drawdownPercent": 1.19,
+          "drawdownR": 2.39
+        },
+        {
+          "time": 1655467200,
+          "tradeIndex": 4,
+          "equity": 98802.98,
+          "cumulativeR": -2.41,
+          "drawdownPercent": 1.2,
+          "drawdownR": 2.41
+        },
+        {
+          "time": 1656590400,
+          "tradeIndex": 5,
+          "equity": 98383.85,
+          "cumulativeR": -3.26,
+          "drawdownPercent": 1.62,
+          "drawdownR": 3.26
+        },
+        {
+          "time": 1684252800,
+          "tradeIndex": 6,
+          "equity": 98200.75,
+          "cumulativeR": -3.63,
+          "drawdownPercent": 1.8,
+          "drawdownR": 3.63
+        },
+        {
+          "time": 1689249600,
+          "tradeIndex": 7,
+          "equity": 98670.42,
+          "cumulativeR": -2.67,
+          "drawdownPercent": 1.33,
+          "drawdownR": 2.67
+        },
+        {
+          "time": 1690977600,
+          "tradeIndex": 8,
+          "equity": 98163.05,
+          "cumulativeR": -3.7,
+          "drawdownPercent": 1.84,
+          "drawdownR": 3.7
+        },
+        {
+          "time": 1693396800,
+          "tradeIndex": 9,
+          "equity": 97675.06,
+          "cumulativeR": -4.69,
+          "drawdownPercent": 2.32,
+          "drawdownR": 4.69
+        },
+        {
+          "time": 1697212800,
+          "tradeIndex": 10,
+          "equity": 98041.17,
+          "cumulativeR": -3.94,
+          "drawdownPercent": 1.96,
+          "drawdownR": 3.94
+        },
+        {
+          "time": 1705507200,
+          "tradeIndex": 11,
+          "equity": 98956.97,
+          "cumulativeR": -2.07,
+          "drawdownPercent": 1.04,
+          "drawdownR": 2.07
+        },
+        {
+          "time": 1706616000,
+          "tradeIndex": 12,
+          "equity": 98444.33,
+          "cumulativeR": -3.11,
+          "drawdownPercent": 1.56,
+          "drawdownR": 3.11
+        },
+        {
+          "time": 1707148800,
+          "tradeIndex": 13,
+          "equity": 98186.91,
+          "cumulativeR": -3.63,
+          "drawdownPercent": 1.81,
+          "drawdownR": 3.63
+        },
+        {
+          "time": 1709208000,
+          "tradeIndex": 14,
+          "equity": 97697.93,
+          "cumulativeR": -4.63,
+          "drawdownPercent": 2.3,
+          "drawdownR": 4.63
+        },
+        {
+          "time": 1717776000,
+          "tradeIndex": 15,
+          "equity": 97376.72,
+          "cumulativeR": -5.29,
+          "drawdownPercent": 2.62,
+          "drawdownR": 5.29
+        },
+        {
+          "time": 1718899200,
+          "tradeIndex": 16,
+          "equity": 97004.52,
+          "cumulativeR": -6.05,
+          "drawdownPercent": 3,
+          "drawdownR": 6.05
+        },
+        {
+          "time": 1719403200,
+          "tradeIndex": 17,
+          "equity": 96471.06,
+          "cumulativeR": -7.15,
+          "drawdownPercent": 3.53,
+          "drawdownR": 7.15
+        },
+        {
+          "time": 1720008000,
+          "tradeIndex": 18,
+          "equity": 95821.19,
+          "cumulativeR": -8.5,
+          "drawdownPercent": 4.18,
+          "drawdownR": 8.5
+        },
+        {
+          "time": 1730980800,
+          "tradeIndex": 19,
+          "equity": 99417.43,
+          "cumulativeR": -0.99,
+          "drawdownPercent": 0.58,
+          "drawdownR": 0.99
+        },
+        {
+          "time": 1731009600,
+          "tradeIndex": 20,
+          "equity": 99222.38,
+          "cumulativeR": -1.38,
+          "drawdownPercent": 0.78,
+          "drawdownR": 1.38
+        },
+        {
+          "time": 1737547200,
+          "tradeIndex": 21,
+          "equity": 98706.18,
+          "cumulativeR": -2.42,
+          "drawdownPercent": 1.29,
+          "drawdownR": 2.42
+        },
+        {
+          "time": 1750780800,
+          "tradeIndex": 22,
+          "equity": 104156.13,
+          "cumulativeR": 8.62,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1753099200,
+          "tradeIndex": 23,
+          "equity": 103601.84,
+          "cumulativeR": 7.56,
+          "drawdownPercent": 0.53,
+          "drawdownR": 1.06
+        },
+        {
+          "time": 1753891200,
+          "tradeIndex": 24,
+          "equity": 103372.15,
+          "cumulativeR": 7.12,
+          "drawdownPercent": 0.75,
+          "drawdownR": 1.5
+        },
+        {
+          "time": 1754049600,
+          "tradeIndex": 25,
+          "equity": 102862.25,
+          "cumulativeR": 6.13,
+          "drawdownPercent": 1.24,
+          "drawdownR": 2.49
+        },
+        {
+          "time": 1755619200,
+          "tradeIndex": 26,
+          "equity": 102350.96,
+          "cumulativeR": 5.14,
+          "drawdownPercent": 1.73,
+          "drawdownR": 3.48
+        }
+      ]
+    },
+    "pineCloseFill": {
+      "totalTrades": 26,
+      "unresolvedTrades": 0,
+      "winningTrades": 5,
+      "losingTrades": 21,
+      "chochLiquidations": 12,
+      "winRate": 19.2,
+      "profitFactor": 1.2,
+      "netR": 3.61,
+      "totalPnlCurrency": 1587.49,
+      "finalEquity": 101587.49,
+      "maxDrawdownR": 8.76,
+      "maxDrawdownPercent": 4.31,
+      "expectancyR": 0.14,
+      "longTrades": 13,
+      "longWinRate": 23.1,
+      "shortTrades": 13,
+      "shortWinRate": 15.4,
+      "equityCurve": [
+        {
+          "time": 1647259200,
+          "tradeIndex": 0,
+          "equity": 100000,
+          "cumulativeR": 0,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1647345600,
+          "tradeIndex": 1,
+          "equity": 99802.69,
+          "cumulativeR": -0.39,
+          "drawdownPercent": 0.2,
+          "drawdownR": 0.39
+        },
+        {
+          "time": 1649851200,
+          "tradeIndex": 2,
+          "equity": 99303.93,
+          "cumulativeR": -1.39,
+          "drawdownPercent": 0.7,
+          "drawdownR": 1.39
+        },
+        {
+          "time": 1651060800,
+          "tradeIndex": 3,
+          "equity": 98809.94,
+          "cumulativeR": -2.38,
+          "drawdownPercent": 1.19,
+          "drawdownR": 2.38
+        },
+        {
+          "time": 1655395200,
+          "tradeIndex": 4,
+          "equity": 98726.12,
+          "cumulativeR": -2.55,
+          "drawdownPercent": 1.27,
+          "drawdownR": 2.55
+        },
+        {
+          "time": 1656590400,
+          "tradeIndex": 5,
+          "equity": 98235.6,
+          "cumulativeR": -3.54,
+          "drawdownPercent": 1.76,
+          "drawdownR": 3.54
+        },
+        {
+          "time": 1684238400,
+          "tradeIndex": 6,
+          "equity": 98054.5,
+          "cumulativeR": -3.91,
+          "drawdownPercent": 1.95,
+          "drawdownR": 3.91
+        },
+        {
+          "time": 1689177600,
+          "tradeIndex": 7,
+          "equity": 98531.41,
+          "cumulativeR": -2.94,
+          "drawdownPercent": 1.47,
+          "drawdownR": 2.94
+        },
+        {
+          "time": 1690977600,
+          "tradeIndex": 8,
+          "equity": 98040.07,
+          "cumulativeR": -3.94,
+          "drawdownPercent": 1.96,
+          "drawdownR": 3.94
+        },
+        {
+          "time": 1693396800,
+          "tradeIndex": 9,
+          "equity": 97550.45,
+          "cumulativeR": -4.94,
+          "drawdownPercent": 2.45,
+          "drawdownR": 4.94
+        },
+        {
+          "time": 1697198400,
+          "tradeIndex": 10,
+          "equity": 97916.22,
+          "cumulativeR": -4.19,
+          "drawdownPercent": 2.08,
+          "drawdownR": 4.19
+        },
+        {
+          "time": 1705492800,
+          "tradeIndex": 11,
+          "equity": 98831.78,
+          "cumulativeR": -2.32,
+          "drawdownPercent": 1.17,
+          "drawdownR": 2.32
+        },
+        {
+          "time": 1706616000,
+          "tradeIndex": 12,
+          "equity": 98319,
+          "cumulativeR": -3.36,
+          "drawdownPercent": 1.68,
+          "drawdownR": 3.36
+        },
+        {
+          "time": 1707134400,
+          "tradeIndex": 13,
+          "equity": 98061.42,
+          "cumulativeR": -3.88,
+          "drawdownPercent": 1.94,
+          "drawdownR": 3.88
+        },
+        {
+          "time": 1709208000,
+          "tradeIndex": 14,
+          "equity": 97572.44,
+          "cumulativeR": -4.88,
+          "drawdownPercent": 2.43,
+          "drawdownR": 4.88
+        },
+        {
+          "time": 1717761600,
+          "tradeIndex": 15,
+          "equity": 97251.23,
+          "cumulativeR": -5.54,
+          "drawdownPercent": 2.75,
+          "drawdownR": 5.54
+        },
+        {
+          "time": 1718884800,
+          "tradeIndex": 16,
+          "equity": 96878.19,
+          "cumulativeR": -6.31,
+          "drawdownPercent": 3.12,
+          "drawdownR": 6.31
+        },
+        {
+          "time": 1719403200,
+          "tradeIndex": 17,
+          "equity": 96343.71,
+          "cumulativeR": -7.41,
+          "drawdownPercent": 3.66,
+          "drawdownR": 7.41
+        },
+        {
+          "time": 1720008000,
+          "tradeIndex": 18,
+          "equity": 95693.84,
+          "cumulativeR": -8.76,
+          "drawdownPercent": 4.31,
+          "drawdownR": 8.76
+        },
+        {
+          "time": 1730923200,
+          "tradeIndex": 19,
+          "equity": 98976.69,
+          "cumulativeR": -1.9,
+          "drawdownPercent": 1.02,
+          "drawdownR": 1.9
+        },
+        {
+          "time": 1731009600,
+          "tradeIndex": 20,
+          "equity": 98483.79,
+          "cumulativeR": -2.9,
+          "drawdownPercent": 1.52,
+          "drawdownR": 2.9
+        },
+        {
+          "time": 1737547200,
+          "tradeIndex": 21,
+          "equity": 97972.04,
+          "cumulativeR": -3.94,
+          "drawdownPercent": 2.03,
+          "drawdownR": 3.94
+        },
+        {
+          "time": 1750766400,
+          "tradeIndex": 22,
+          "equity": 103382.83,
+          "cumulativeR": 7.11,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1753099200,
+          "tradeIndex": 23,
+          "equity": 102835.07,
+          "cumulativeR": 6.05,
+          "drawdownPercent": 0.53,
+          "drawdownR": 1.06
+        },
+        {
+          "time": 1753876800,
+          "tradeIndex": 24,
+          "equity": 102603.63,
+          "cumulativeR": 5.6,
+          "drawdownPercent": 0.75,
+          "drawdownR": 1.51
+        },
+        {
+          "time": 1754049600,
+          "tradeIndex": 25,
+          "equity": 102092.06,
+          "cumulativeR": 4.6,
+          "drawdownPercent": 1.25,
+          "drawdownR": 2.51
+        },
+        {
+          "time": 1755619200,
+          "tradeIndex": 26,
+          "equity": 101587.49,
+          "cumulativeR": 3.61,
+          "drawdownPercent": 1.74,
+          "drawdownR": 3.5
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "SLV",
+    "dukascopyId": "slvususd",
+    "assetClass": "ETF",
+    "dateRange": "2022-01-03 -> 2025-10-31",
+    "h4Bars": 2222,
+    "structureEvents": {
+      "bosCount": 81,
+      "chochCount": 21
+    },
+    "qcNextOpen": {
+      "totalTrades": 22,
+      "unresolvedTrades": 0,
+      "winningTrades": 5,
+      "losingTrades": 17,
+      "chochLiquidations": 9,
+      "winRate": 22.7,
+      "profitFactor": 2.02,
+      "netR": 15.46,
+      "totalPnlCurrency": 7578.06,
+      "finalEquity": 107578.06,
+      "maxDrawdownR": 9.22,
+      "maxDrawdownPercent": 4.52,
+      "expectancyR": 0.7,
+      "longTrades": 11,
+      "longWinRate": 27.3,
+      "shortTrades": 11,
+      "shortWinRate": 18.2,
+      "equityCurve": [
+        {
+          "time": 1650470400,
+          "tradeIndex": 0,
+          "equity": 100000,
+          "cumulativeR": 0,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1650556800,
+          "tradeIndex": 1,
+          "equity": 99702.05,
+          "cumulativeR": -0.6,
+          "drawdownPercent": 0.3,
+          "drawdownR": 0.6
+        },
+        {
+          "time": 1667577600,
+          "tradeIndex": 2,
+          "equity": 101544.89,
+          "cumulativeR": 3.1,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1691424000,
+          "tradeIndex": 3,
+          "equity": 102624.69,
+          "cumulativeR": 5.23,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1692792000,
+          "tradeIndex": 4,
+          "equity": 102112.12,
+          "cumulativeR": 4.23,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        },
+        {
+          "time": 1694001600,
+          "tradeIndex": 5,
+          "equity": 101337.77,
+          "cumulativeR": 2.71,
+          "drawdownPercent": 1.25,
+          "drawdownR": 2.52
+        },
+        {
+          "time": 1697558400,
+          "tradeIndex": 6,
+          "equity": 101443.06,
+          "cumulativeR": 2.92,
+          "drawdownPercent": 1.15,
+          "drawdownR": 2.31
+        },
+        {
+          "time": 1699876800,
+          "tradeIndex": 7,
+          "equity": 100898.68,
+          "cumulativeR": 1.85,
+          "drawdownPercent": 1.68,
+          "drawdownR": 3.38
+        },
+        {
+          "time": 1702310400,
+          "tradeIndex": 8,
+          "equity": 100679.56,
+          "cumulativeR": 1.42,
+          "drawdownPercent": 1.9,
+          "drawdownR": 3.81
+        },
+        {
+          "time": 1702483200,
+          "tradeIndex": 9,
+          "equity": 100185.26,
+          "cumulativeR": 0.44,
+          "drawdownPercent": 2.38,
+          "drawdownR": 4.79
+        },
+        {
+          "time": 1706558400,
+          "tradeIndex": 10,
+          "equity": 100033.34,
+          "cumulativeR": 0.14,
+          "drawdownPercent": 2.53,
+          "drawdownR": 5.09
+        },
+        {
+          "time": 1706875200,
+          "tradeIndex": 11,
+          "equity": 99465.05,
+          "cumulativeR": -1,
+          "drawdownPercent": 3.08,
+          "drawdownR": 6.23
+        },
+        {
+          "time": 1707998400,
+          "tradeIndex": 12,
+          "equity": 98977.27,
+          "cumulativeR": -1.98,
+          "drawdownPercent": 3.55,
+          "drawdownR": 7.21
+        },
+        {
+          "time": 1709121600,
+          "tradeIndex": 13,
+          "equity": 98476.31,
+          "cumulativeR": -2.99,
+          "drawdownPercent": 4.04,
+          "drawdownR": 8.22
+        },
+        {
+          "time": 1709208000,
+          "tradeIndex": 14,
+          "equity": 97982.21,
+          "cumulativeR": -3.99,
+          "drawdownPercent": 4.52,
+          "drawdownR": 9.22
+        },
+        {
+          "time": 1721404800,
+          "tradeIndex": 15,
+          "equity": 102677.71,
+          "cumulativeR": 5.59,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1726228800,
+          "tradeIndex": 16,
+          "equity": 102104.23,
+          "cumulativeR": 4.47,
+          "drawdownPercent": 0.56,
+          "drawdownR": 1.12
+        },
+        {
+          "time": 1738756800,
+          "tradeIndex": 17,
+          "equity": 101599.23,
+          "cumulativeR": 3.48,
+          "drawdownPercent": 1.05,
+          "drawdownR": 2.11
+        },
+        {
+          "time": 1740484800,
+          "tradeIndex": 18,
+          "equity": 101091.3,
+          "cumulativeR": 2.48,
+          "drawdownPercent": 1.55,
+          "drawdownR": 3.11
+        },
+        {
+          "time": 1741780800,
+          "tradeIndex": 19,
+          "equity": 100903.3,
+          "cumulativeR": 2.11,
+          "drawdownPercent": 1.73,
+          "drawdownR": 3.48
+        },
+        {
+          "time": 1743681600,
+          "tradeIndex": 20,
+          "equity": 100241.87,
+          "cumulativeR": 0.8,
+          "drawdownPercent": 2.37,
+          "drawdownR": 4.79
+        },
+        {
+          "time": 1744819200,
+          "tradeIndex": 21,
+          "equity": 100087.23,
+          "cumulativeR": 0.49,
+          "drawdownPercent": 2.52,
+          "drawdownR": 5.1
+        },
+        {
+          "time": 1760544000,
+          "tradeIndex": 22,
+          "equity": 107578.06,
+          "cumulativeR": 15.46,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        }
+      ]
+    },
+    "pineCloseFill": {
+      "totalTrades": 22,
+      "unresolvedTrades": 0,
+      "winningTrades": 5,
+      "losingTrades": 17,
+      "chochLiquidations": 9,
+      "winRate": 22.7,
+      "profitFactor": 2.04,
+      "netR": 15.61,
+      "totalPnlCurrency": 7659.9,
+      "finalEquity": 107659.9,
+      "maxDrawdownR": 9.21,
+      "maxDrawdownPercent": 4.51,
+      "expectancyR": 0.71,
+      "longTrades": 11,
+      "longWinRate": 27.3,
+      "shortTrades": 11,
+      "shortWinRate": 18.2,
+      "equityCurve": [
+        {
+          "time": 1650456000,
+          "tradeIndex": 0,
+          "equity": 100000,
+          "cumulativeR": 0,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1650542400,
+          "tradeIndex": 1,
+          "equity": 99712.18,
+          "cumulativeR": -0.58,
+          "drawdownPercent": 0.29,
+          "drawdownR": 0.58
+        },
+        {
+          "time": 1667563200,
+          "tradeIndex": 2,
+          "equity": 101554.52,
+          "cumulativeR": 3.12,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1691409600,
+          "tradeIndex": 3,
+          "equity": 102629,
+          "cumulativeR": 5.24,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1692792000,
+          "tradeIndex": 4,
+          "equity": 102115.87,
+          "cumulativeR": 4.24,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        },
+        {
+          "time": 1694001600,
+          "tradeIndex": 5,
+          "equity": 101348.44,
+          "cumulativeR": 2.74,
+          "drawdownPercent": 1.25,
+          "drawdownR": 2.5
+        },
+        {
+          "time": 1697544000,
+          "tradeIndex": 6,
+          "equity": 101453.9,
+          "cumulativeR": 2.95,
+          "drawdownPercent": 1.14,
+          "drawdownR": 2.29
+        },
+        {
+          "time": 1699876800,
+          "tradeIndex": 7,
+          "equity": 100915.85,
+          "cumulativeR": 1.89,
+          "drawdownPercent": 1.67,
+          "drawdownR": 3.35
+        },
+        {
+          "time": 1702296000,
+          "tradeIndex": 8,
+          "equity": 100690.77,
+          "cumulativeR": 1.44,
+          "drawdownPercent": 1.89,
+          "drawdownR": 3.8
+        },
+        {
+          "time": 1702483200,
+          "tradeIndex": 9,
+          "equity": 100187.86,
+          "cumulativeR": 0.44,
+          "drawdownPercent": 2.38,
+          "drawdownR": 4.8
+        },
+        {
+          "time": 1706544000,
+          "tradeIndex": 10,
+          "equity": 100037.38,
+          "cumulativeR": 0.14,
+          "drawdownPercent": 2.53,
+          "drawdownR": 5.1
+        },
+        {
+          "time": 1706875200,
+          "tradeIndex": 11,
+          "equity": 99480.23,
+          "cumulativeR": -0.97,
+          "drawdownPercent": 3.07,
+          "drawdownR": 6.21
+        },
+        {
+          "time": 1707998400,
+          "tradeIndex": 12,
+          "equity": 98983.21,
+          "cumulativeR": -1.97,
+          "drawdownPercent": 3.55,
+          "drawdownR": 7.21
+        },
+        {
+          "time": 1709121600,
+          "tradeIndex": 13,
+          "equity": 98488.58,
+          "cumulativeR": -2.97,
+          "drawdownPercent": 4.03,
+          "drawdownR": 8.21
+        },
+        {
+          "time": 1709208000,
+          "tradeIndex": 14,
+          "equity": 97996.24,
+          "cumulativeR": -3.97,
+          "drawdownPercent": 4.51,
+          "drawdownR": 9.21
+        },
+        {
+          "time": 1721390400,
+          "tradeIndex": 15,
+          "equity": 102684.03,
+          "cumulativeR": 5.6,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1726228800,
+          "tradeIndex": 16,
+          "equity": 102105.69,
+          "cumulativeR": 4.47,
+          "drawdownPercent": 0.56,
+          "drawdownR": 1.13
+        },
+        {
+          "time": 1738756800,
+          "tradeIndex": 17,
+          "equity": 101595.35,
+          "cumulativeR": 3.47,
+          "drawdownPercent": 1.06,
+          "drawdownR": 2.13
+        },
+        {
+          "time": 1740484800,
+          "tradeIndex": 18,
+          "equity": 101087.42,
+          "cumulativeR": 2.47,
+          "drawdownPercent": 1.55,
+          "drawdownR": 3.13
+        },
+        {
+          "time": 1741708800,
+          "tradeIndex": 19,
+          "equity": 100937.02,
+          "cumulativeR": 2.17,
+          "drawdownPercent": 1.7,
+          "drawdownR": 3.43
+        },
+        {
+          "time": 1743681600,
+          "tradeIndex": 20,
+          "equity": 100305.63,
+          "cumulativeR": 0.92,
+          "drawdownPercent": 2.32,
+          "drawdownR": 4.68
+        },
+        {
+          "time": 1744804800,
+          "tradeIndex": 21,
+          "equity": 100150.75,
+          "cumulativeR": 0.61,
+          "drawdownPercent": 2.47,
+          "drawdownR": 4.99
+        },
+        {
+          "time": 1760544000,
+          "tradeIndex": 22,
+          "equity": 107659.9,
+          "cumulativeR": 15.61,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "AAPL",
+    "dukascopyId": "aaplususd",
+    "assetClass": "Equity",
+    "dateRange": "2022-01-03 -> 2025-10-31",
+    "h4Bars": 2222,
+    "structureEvents": {
+      "bosCount": 80,
+      "chochCount": 20
+    },
+    "qcNextOpen": {
+      "totalTrades": 23,
+      "unresolvedTrades": 1,
+      "winningTrades": 9,
+      "losingTrades": 14,
+      "chochLiquidations": 14,
+      "winRate": 39.1,
+      "profitFactor": 2.05,
+      "netR": 12.52,
+      "totalPnlCurrency": 6248.6,
+      "finalEquity": 106248.6,
+      "maxDrawdownR": 4.83,
+      "maxDrawdownPercent": 2.39,
+      "expectancyR": 0.54,
+      "longTrades": 11,
+      "longWinRate": 36.4,
+      "shortTrades": 12,
+      "shortWinRate": 41.7,
+      "equityCurve": [
+        {
+          "time": 1643400000,
+          "tradeIndex": 0,
+          "equity": 100000,
+          "cumulativeR": 0,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1643644800,
+          "tradeIndex": 1,
+          "equity": 99770.32,
+          "cumulativeR": -0.46,
+          "drawdownPercent": 0.23,
+          "drawdownR": 0.46
+        },
+        {
+          "time": 1645632000,
+          "tradeIndex": 2,
+          "equity": 99276.14,
+          "cumulativeR": -1.45,
+          "drawdownPercent": 0.72,
+          "drawdownR": 1.45
+        },
+        {
+          "time": 1647864000,
+          "tradeIndex": 3,
+          "equity": 99467.54,
+          "cumulativeR": -1.06,
+          "drawdownPercent": 0.53,
+          "drawdownR": 1.06
+        },
+        {
+          "time": 1650902400,
+          "tradeIndex": 4,
+          "equity": 99164.6,
+          "cumulativeR": -1.67,
+          "drawdownPercent": 0.84,
+          "drawdownR": 1.67
+        },
+        {
+          "time": 1660132800,
+          "tradeIndex": 5,
+          "equity": 98669.54,
+          "cumulativeR": -2.67,
+          "drawdownPercent": 1.33,
+          "drawdownR": 2.67
+        },
+        {
+          "time": 1668513600,
+          "tradeIndex": 6,
+          "equity": 98123.83,
+          "cumulativeR": -3.78,
+          "drawdownPercent": 1.88,
+          "drawdownR": 3.78
+        },
+        {
+          "time": 1669636800,
+          "tradeIndex": 7,
+          "equity": 97607.64,
+          "cumulativeR": -4.83,
+          "drawdownPercent": 2.39,
+          "drawdownR": 4.83
+        },
+        {
+          "time": 1674763200,
+          "tradeIndex": 8,
+          "equity": 97978.86,
+          "cumulativeR": -4.07,
+          "drawdownPercent": 2.02,
+          "drawdownR": 4.07
+        },
+        {
+          "time": 1694102400,
+          "tradeIndex": 9,
+          "equity": 100888.05,
+          "cumulativeR": 1.87,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1696852800,
+          "tradeIndex": 10,
+          "equity": 100906.23,
+          "cumulativeR": 1.91,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1698062400,
+          "tradeIndex": 11,
+          "equity": 100389.58,
+          "cumulativeR": 0.89,
+          "drawdownPercent": 0.51,
+          "drawdownR": 1.02
+        },
+        {
+          "time": 1698249600,
+          "tradeIndex": 12,
+          "equity": 100313.84,
+          "cumulativeR": 0.74,
+          "drawdownPercent": 0.59,
+          "drawdownR": 1.17
+        },
+        {
+          "time": 1698940800,
+          "tradeIndex": 13,
+          "equity": 99816.99,
+          "cumulativeR": -0.25,
+          "drawdownPercent": 1.08,
+          "drawdownR": 2.16
+        },
+        {
+          "time": 1706788800,
+          "tradeIndex": 14,
+          "equity": 100611.49,
+          "cumulativeR": 1.34,
+          "drawdownPercent": 0.29,
+          "drawdownR": 0.57
+        },
+        {
+          "time": 1707307200,
+          "tradeIndex": 15,
+          "equity": 99948.91,
+          "cumulativeR": 0.02,
+          "drawdownPercent": 0.95,
+          "drawdownR": 1.89
+        },
+        {
+          "time": 1712937600,
+          "tradeIndex": 16,
+          "equity": 100030.09,
+          "cumulativeR": 0.18,
+          "drawdownPercent": 0.87,
+          "drawdownR": 1.73
+        },
+        {
+          "time": 1713268800,
+          "tradeIndex": 17,
+          "equity": 99535.11,
+          "cumulativeR": -0.81,
+          "drawdownPercent": 1.36,
+          "drawdownR": 2.72
+        },
+        {
+          "time": 1714406400,
+          "tradeIndex": 18,
+          "equity": 99251.61,
+          "cumulativeR": -1.38,
+          "drawdownPercent": 1.64,
+          "drawdownR": 3.29
+        },
+        {
+          "time": 1741190400,
+          "tradeIndex": 19,
+          "equity": 104169.71,
+          "cumulativeR": 8.53,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1745582400,
+          "tradeIndex": 20,
+          "equity": 105481.16,
+          "cumulativeR": 11.05,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1746619200,
+          "tradeIndex": 21,
+          "equity": 105045.57,
+          "cumulativeR": 10.22,
+          "drawdownPercent": 0.41,
+          "drawdownR": 0.83
+        },
+        {
+          "time": 1757520000,
+          "tradeIndex": 22,
+          "equity": 106669.14,
+          "cumulativeR": 13.31,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1757952000,
+          "tradeIndex": 23,
+          "equity": 106248.6,
+          "cumulativeR": 12.52,
+          "drawdownPercent": 0.39,
+          "drawdownR": 0.79
+        }
+      ]
+    },
+    "pineCloseFill": {
+      "totalTrades": 23,
+      "unresolvedTrades": 1,
+      "winningTrades": 8,
+      "losingTrades": 15,
+      "chochLiquidations": 14,
+      "winRate": 34.8,
+      "profitFactor": 1.96,
+      "netR": 11.76,
+      "totalPnlCurrency": 5850.28,
+      "finalEquity": 105850.28,
+      "maxDrawdownR": 4.96,
+      "maxDrawdownPercent": 2.45,
+      "expectancyR": 0.51,
+      "longTrades": 11,
+      "longWinRate": 36.4,
+      "shortTrades": 12,
+      "shortWinRate": 33.3,
+      "equityCurve": [
+        {
+          "time": 1643385600,
+          "tradeIndex": 0,
+          "equity": 100000,
+          "cumulativeR": 0,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1643630400,
+          "tradeIndex": 1,
+          "equity": 99770.76,
+          "cumulativeR": -0.46,
+          "drawdownPercent": 0.23,
+          "drawdownR": 0.46
+        },
+        {
+          "time": 1645632000,
+          "tradeIndex": 2,
+          "equity": 99277,
+          "cumulativeR": -1.45,
+          "drawdownPercent": 0.72,
+          "drawdownR": 1.45
+        },
+        {
+          "time": 1647619200,
+          "tradeIndex": 3,
+          "equity": 99439.34,
+          "cumulativeR": -1.12,
+          "drawdownPercent": 0.56,
+          "drawdownR": 1.12
+        },
+        {
+          "time": 1650888000,
+          "tradeIndex": 4,
+          "equity": 99103.4,
+          "cumulativeR": -1.8,
+          "drawdownPercent": 0.9,
+          "drawdownR": 1.8
+        },
+        {
+          "time": 1660132800,
+          "tradeIndex": 5,
+          "equity": 98608.94,
+          "cumulativeR": -2.8,
+          "drawdownPercent": 1.39,
+          "drawdownR": 2.8
+        },
+        {
+          "time": 1668513600,
+          "tradeIndex": 6,
+          "equity": 98063.23,
+          "cumulativeR": -3.91,
+          "drawdownPercent": 1.94,
+          "drawdownR": 3.91
+        },
+        {
+          "time": 1669636800,
+          "tradeIndex": 7,
+          "equity": 97547.04,
+          "cumulativeR": -4.96,
+          "drawdownPercent": 2.45,
+          "drawdownR": 4.96
+        },
+        {
+          "time": 1674748800,
+          "tradeIndex": 8,
+          "equity": 97917.47,
+          "cumulativeR": -4.2,
+          "drawdownPercent": 2.08,
+          "drawdownR": 4.2
+        },
+        {
+          "time": 1694088000,
+          "tradeIndex": 9,
+          "equity": 100827.62,
+          "cumulativeR": 1.74,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1696608000,
+          "tradeIndex": 10,
+          "equity": 100791.85,
+          "cumulativeR": 1.67,
+          "drawdownPercent": 0.04,
+          "drawdownR": 0.07
+        },
+        {
+          "time": 1698062400,
+          "tradeIndex": 11,
+          "equity": 100215.82,
+          "cumulativeR": 0.53,
+          "drawdownPercent": 0.61,
+          "drawdownR": 1.21
+        },
+        {
+          "time": 1698235200,
+          "tradeIndex": 12,
+          "equity": 100141.15,
+          "cumulativeR": 0.38,
+          "drawdownPercent": 0.68,
+          "drawdownR": 1.36
+        },
+        {
+          "time": 1698940800,
+          "tradeIndex": 13,
+          "equity": 99644.39,
+          "cumulativeR": -0.61,
+          "drawdownPercent": 1.17,
+          "drawdownR": 2.35
+        },
+        {
+          "time": 1706731200,
+          "tradeIndex": 14,
+          "equity": 100198.63,
+          "cumulativeR": 0.5,
+          "drawdownPercent": 0.62,
+          "drawdownR": 1.24
+        },
+        {
+          "time": 1707307200,
+          "tradeIndex": 15,
+          "equity": 99595.83,
+          "cumulativeR": -0.7,
+          "drawdownPercent": 1.22,
+          "drawdownR": 2.44
+        },
+        {
+          "time": 1712923200,
+          "tradeIndex": 16,
+          "equity": 99818.66,
+          "cumulativeR": -0.25,
+          "drawdownPercent": 1,
+          "drawdownR": 1.99
+        },
+        {
+          "time": 1713268800,
+          "tradeIndex": 17,
+          "equity": 99322.84,
+          "cumulativeR": -1.24,
+          "drawdownPercent": 1.49,
+          "drawdownR": 2.98
+        },
+        {
+          "time": 1714392000,
+          "tradeIndex": 18,
+          "equity": 99040.34,
+          "cumulativeR": -1.81,
+          "drawdownPercent": 1.77,
+          "drawdownR": 3.55
+        },
+        {
+          "time": 1741176000,
+          "tradeIndex": 19,
+          "equity": 103959.29,
+          "cumulativeR": 8.12,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1745510400,
+          "tradeIndex": 20,
+          "equity": 105172.74,
+          "cumulativeR": 10.45,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1746619200,
+          "tradeIndex": 21,
+          "equity": 104646.99,
+          "cumulativeR": 9.45,
+          "drawdownPercent": 0.5,
+          "drawdownR": 1
+        },
+        {
+          "time": 1757505600,
+          "tradeIndex": 22,
+          "equity": 106271.25,
+          "cumulativeR": 12.55,
+          "drawdownPercent": 0,
+          "drawdownR": 0
+        },
+        {
+          "time": 1757937600,
+          "tradeIndex": 23,
+          "equity": 105850.28,
+          "cumulativeR": 11.76,
+          "drawdownPercent": 0.4,
+          "drawdownR": 0.79
+        }
+      ]
+    }
+  }
+]

@@ -104,14 +104,144 @@ export const DUKASCOPY_INSTRUMENTS: Record<string, DukascopyInstrumentMeta> = {
   },
   btcusd: {
     id: 'btcusd',
-    symbol: 'BTC/USD',
+    symbol: 'BTCUSD',
     name: 'Bitcoin / US Dollar',
     category: 'Crypto',
     digits: 2,
     pipSize: 1.0,
     typicalSpreadPips: 15.0,
+    is24x7: true,
+  },
+  ethusd: {
+    id: 'ethusd',
+    symbol: 'ETHUSD',
+    name: 'Ethereum / US Dollar',
+    category: 'Crypto',
+    digits: 2,
+    pipSize: 0.1,
+    typicalSpreadPips: 10.0,
+    is24x7: true,
+  },
+  spyususd: {
+    id: 'spyususd',
+    symbol: 'SPY',
+    name: 'SPDR S&P 500 ETF Trust',
+    category: 'ETF',
+    digits: 2,
+    pipSize: 0.01,
+    typicalSpreadPips: 2.0,
+    is24x7: false,
+  },
+  qqqususd: {
+    id: 'qqqususd',
+    symbol: 'QQQ',
+    name: 'Invesco QQQ Trust ETF',
+    category: 'ETF',
+    digits: 2,
+    pipSize: 0.01,
+    typicalSpreadPips: 2.0,
+    is24x7: false,
+  },
+  gldususd: {
+    id: 'gldususd',
+    symbol: 'GLD',
+    name: 'SPDR Gold Shares ETF',
+    category: 'ETF',
+    digits: 2,
+    pipSize: 0.01,
+    typicalSpreadPips: 2.0,
+    is24x7: false,
+  },
+  slvususd: {
+    id: 'slvususd',
+    symbol: 'SLV',
+    name: 'iShares Silver Trust ETF',
+    category: 'ETF',
+    digits: 3,
+    pipSize: 0.01,
+    typicalSpreadPips: 1.5,
+    is24x7: false,
+  },
+  aaplususd: {
+    id: 'aaplususd',
+    symbol: 'AAPL',
+    name: 'Apple Inc.',
+    category: 'Equity',
+    digits: 2,
+    pipSize: 0.01,
+    typicalSpreadPips: 2.0,
+    is24x7: false,
   },
 };
+
+/**
+ * Canonical TradeLab symbol -> official Dukascopy instrument ID mapping
+ */
+export const DUKASCOPY_SYMBOL_ALIASES: Record<string, string> = {
+  btcusd: 'btcusd',
+  'btc/usd': 'btcusd',
+  'btc-usd': 'btcusd',
+  ethusd: 'ethusd',
+  'eth/usd': 'ethusd',
+  'eth-usd': 'ethusd',
+  spy: 'spyususd',
+  'spy.us': 'spyususd',
+  'spy.us/usd': 'spyususd',
+  spyususd: 'spyususd',
+  qqq: 'qqqususd',
+  'qqq.us': 'qqqususd',
+  'qqq.us/usd': 'qqqususd',
+  qqqususd: 'qqqususd',
+  gld: 'gldususd',
+  'gld.us': 'gldususd',
+  'gld.us/usd': 'gldususd',
+  gldususd: 'gldususd',
+  slv: 'slvususd',
+  'slv.us': 'slvususd',
+  'slv.us/usd': 'slvususd',
+  slvususd: 'slvususd',
+  aapl: 'aaplususd',
+  'aapl.us': 'aaplususd',
+  'aapl.us/usd': 'aaplususd',
+  aaplususd: 'aaplususd',
+  'eur/usd': 'eurusd',
+  eurusd: 'eurusd',
+  'gbp/usd': 'gbpusd',
+  gbpusd: 'gbpusd',
+  'usd/jpy': 'usdjpy',
+  usdjpy: 'usdjpy',
+  'aud/usd': 'audusd',
+  audusd: 'audusd',
+  'usd/cad': 'usdcad',
+  usdcad: 'usdcad',
+  'usd/chf': 'usdchf',
+  usdchf: 'usdchf',
+  'nzd/usd': 'nzdusd',
+  nzdusd: 'nzdusd',
+  'xau/usd': 'xauusd',
+  xauusdm: 'xauusd',
+  xauusd: 'xauusd',
+  'xag/usd': 'xagusd',
+  xagusd: 'xagusd',
+  nasdaq: 'usatechidxusd',
+  usatechidxusd: 'usatechidxusd',
+};
+
+/**
+ * Resolves a TradeLab symbol or Dukascopy ID (case-insensitive) to the official Dukascopy instrument ID.
+ */
+export function resolveDukascopyInstrumentId(symbolOrId: string): string {
+  const clean = (symbolOrId || '').trim().toLowerCase();
+  return DUKASCOPY_SYMBOL_ALIASES[clean] || clean;
+}
+
+/**
+ * Returns true for 24/7 instruments (e.g. BTCUSD, ETHUSD) that do not observe weekend market closures.
+ */
+export function is24x7DukascopyInstrument(symbolOrId: string): boolean {
+  const resolved = resolveDukascopyInstrumentId(symbolOrId);
+  return Boolean(DUKASCOPY_INSTRUMENTS[resolved]?.is24x7);
+}
 
 /**
  * Dukascopy timeframe to TradeLab timeframe mappings
@@ -158,16 +288,16 @@ export function mapTradeLabTfToDukascopyTf(tf: Timeframe): DukascopyTimeframe {
 }
 
 /**
- * Validates instrument ID against Dukascopy's catalog
+ * Validates instrument ID or TradeLab symbol alias against Dukascopy's catalog
  */
 export function isValidDukascopyInstrument(instrumentId: string): boolean {
   if (!instrumentId) return false;
-  const cleanId = instrumentId.trim().toLowerCase();
-  return Boolean(DUKASCOPY_INSTRUMENTS[cleanId]);
+  const resolved = resolveDukascopyInstrumentId(instrumentId);
+  return Boolean(DUKASCOPY_INSTRUMENTS[resolved]);
 }
 
 export function getDukascopyInstrumentMeta(instrumentId: string): DukascopyInstrumentMeta {
-  const cleanId = (instrumentId || '').trim().toLowerCase();
+  const cleanId = resolveDukascopyInstrumentId(instrumentId);
   return (
     DUKASCOPY_INSTRUMENTS[cleanId] || {
       id: cleanId,

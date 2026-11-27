@@ -5,6 +5,7 @@ import {
   SymbolCoverageRecord,
   TimeRangeInterval,
 } from '@/types/historicalData';
+import { is24x7DukascopyInstrument, resolveDukascopyInstrumentId } from './dukascopyCatalog';
 
 export const DB_NAME = 'TradeLab_Historical_v1';
 export const DB_VERSION = 2;
@@ -83,11 +84,12 @@ export function getM1Database(): Promise<IDBDatabase | null> {
 }
 
 /**
- * Normalizes instrument symbol string (e.g. 'EUR/USD' -> 'eurusd', 'XAUUSDm' -> 'xauusd')
+ * Normalizes instrument symbol string (e.g. 'EUR/USD' -> 'eurusd', 'XAUUSDm' -> 'xauusd', 'SPY' -> 'spyususd')
  */
 export function normalizeSymbolKey(sym: string): string {
   if (!sym) return 'eurusd';
-  return sym.toLowerCase().replace(/[^a-z0-9]/g, '').replace(/m$/, '');
+  const resolved = resolveDukascopyInstrumentId(sym);
+  return resolved.toLowerCase().replace(/[^a-z0-9]/g, '').replace(/m$/, '');
 }
 
 /**
@@ -401,6 +403,7 @@ export async function getSymbolCoverage(symbol: string): Promise<SymbolCoverageR
 /**
  * Calculates true missing intervals for a requested date range,
  * taking existing database coverage and market weekend closures into account.
+ * 24/7 crypto markets (e.g. BTCUSD, ETHUSD) do not skip weekend intervals.
  */
 export async function calculateMissingM1Intervals(
   symbol: string,
@@ -409,6 +412,7 @@ export async function calculateMissingM1Intervals(
 ): Promise<TimeRangeInterval[]> {
   const symKey = normalizeSymbolKey(symbol);
   const coverage = await getSymbolCoverage(symKey);
+  const is24x7 = is24x7DukascopyInstrument(symKey);
 
   const target: TimeRangeInterval = {
     start: Math.floor(requestStartSec / 60) * 60,
@@ -416,11 +420,11 @@ export async function calculateMissingM1Intervals(
   };
 
   if (!coverage || !coverage.intervals || coverage.intervals.length === 0) {
-    return filterWeekendClosures([target]);
+    return is24x7 ? [target] : filterWeekendClosures([target]);
   }
 
   const rawMissing = subtractIntervals(target, coverage.intervals);
-  return filterWeekendClosures(rawMissing);
+  return is24x7 ? mergeIntervals(rawMissing) : filterWeekendClosures(rawMissing);
 }
 
 /**

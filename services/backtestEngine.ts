@@ -27,6 +27,10 @@ import {
   runModularBacktest,
   prepareTimeframeCandlesForStrategy,
 } from './strategy';
+import {
+  SMC_FIB_4H_V1_DEFAULTS,
+  runSmcFibBacktest,
+} from './strategy/implementations/smcFib4hV1';
 
 export const DEFAULT_STRATEGY_PARAMS: StrategyParameters = {
   strategyType: 'strategy_001',
@@ -49,6 +53,7 @@ export const DEFAULT_STRATEGY_PARAMS: StrategyParameters = {
   slippagePips: 0.5,
   strategyA: DEFAULT_STRATEGY_A_PARAMS,
   tradeLabConfig: DEFAULT_STRATEGY_CONFIG,
+  smcFibConfig: SMC_FIB_4H_V1_DEFAULTS,
 };
 
 export const STRATEGY_PRESETS: {
@@ -58,6 +63,26 @@ export const STRATEGY_PRESETS: {
   params: Partial<StrategyParameters>;
   status?: 'active' | 'disabled';
 }[] = [
+  {
+    id: 'smc_fib_4h_v1_standard',
+    name: 'SMC_FIB_4H_V1: 4H Market Structure + Fib 0.60-0.70',
+    description:
+      'QuantConnect/Pine SMC Fibonacci engine: 4H Swing(10) BOS/CHOCH, 0.60-0.70 Fib zone, SMA ATR(14) 2x SL, 0.5% risk, 15R target.',
+    params: {
+      strategyType: 'smc_fib_4h_v1',
+      accountBalance: 100000,
+      riskPercent: 0.5,
+      riskRewardRatio: 15.0,
+      atrPeriod: 14,
+      atrStopMultiplier: 2.0,
+      includeSpread: false,
+      spreadPips: 0,
+      commissionPerLot: 0,
+      slippagePips: 0,
+      smcFibConfig: SMC_FIB_4H_V1_DEFAULTS,
+    },
+    status: 'active',
+  },
   {
     id: 'strategy_001_standard',
     name: 'Strategy 001: H1 Trend + M15 Rejection (Active / Validated)',
@@ -282,6 +307,19 @@ export function runBacktest(
   providedH1Candles?: Candle[] | null,
   dataSourceDescription?: string
 ): BacktestResult {
+  if (params.strategyType === 'smc_fib_4h_v1') {
+    const mergedSmcConfig = {
+      ...SMC_FIB_4H_V1_DEFAULTS,
+      ...(params.smcFibConfig || {}),
+      initialCapital: params.smcFibConfig?.initialCapital ?? params.accountBalance ?? SMC_FIB_4H_V1_DEFAULTS.initialCapital,
+      riskPercent: params.smcFibConfig?.riskPercent ?? params.riskPercent ?? SMC_FIB_4H_V1_DEFAULTS.riskPercent,
+      rrTarget: params.smcFibConfig?.rrTarget ?? params.riskRewardRatio ?? SMC_FIB_4H_V1_DEFAULTS.rrTarget,
+      slAtrMultiplier: params.smcFibConfig?.slAtrMultiplier ?? params.atrStopMultiplier ?? SMC_FIB_4H_V1_DEFAULTS.slAtrMultiplier,
+      atrLength: params.smcFibConfig?.atrLength ?? params.atrPeriod ?? SMC_FIB_4H_V1_DEFAULTS.atrLength,
+    };
+    return runSmcFibBacktest(candles, symbol, mergedSmcConfig, dataSourceDescription);
+  }
+
   if (!candles || candles.length < 50) {
     return createEmptyResult(params.accountBalance);
   }

@@ -9,6 +9,13 @@ export type ForexSymbol =
   | 'NZD/USD'
   | 'XAU/USD'
   | 'NASDAQ'
+  | 'BTCUSD'
+  | 'ETHUSD'
+  | 'SPY'
+  | 'QQQ'
+  | 'GLD'
+  | 'SLV'
+  | 'AAPL'
   | string;
 
 export type DataSourceMode = 'DEMO' | 'REAL' | 'HISTORICAL' | 'CUSTOM';
@@ -35,7 +42,7 @@ export interface RealDataState {
 export interface SymbolMeta {
   symbol: ForexSymbol;
   name: string;
-  category: 'Forex Major' | 'Forex Commodity' | 'Precious Metal';
+  category: 'Forex Major' | 'Forex Commodity' | 'Precious Metal' | 'Crypto' | 'ETF' | 'Equity';
   basePrice: number;
   digits: number;
   pipMultiplier: number;
@@ -148,6 +155,7 @@ export type StrategyType =
   | 'strategy_a'
   | 'strategy_001'
   | 'strategy_002'
+  | 'smc_fib_4h_v1'
   | 'ema_pullback'
   | 'breakout_retest'
   | 'rsi_mean_reversion'
@@ -181,6 +189,8 @@ export interface StrategyParameters {
   strategyA?: Partial<import('./strategyA').StrategyAParameters>;
   // TradeLab Phase 3 Strategy Configuration (optional)
   tradeLabConfig?: Partial<import('../services/strategy/types').StrategyConfiguration>;
+  // SMC Fib 4H V1 Configuration (optional)
+  smcFibConfig?: Partial<import('../services/strategy/implementations/smcFib4hV1/config').SmcFibParameters>;
 }
 
 export interface MonthlyPerformance {
@@ -192,6 +202,42 @@ export interface MonthlyPerformance {
   winRate: number;
   netR: number;
   profitCurrency: number;
+}
+
+export interface SmcStructureEvent {
+  time: number;
+  type: 'BULL_BOS' | 'BEAR_BOS' | 'BULL_CHOCH' | 'BEAR_CHOCH';
+  price: number;
+  brokenLevel: number;
+  trendAfter: 1 | -1;
+}
+
+export interface SmcFibZoneSegment {
+  startTime: number;
+  endTime: number;
+  direction: 'BULL' | 'BEAR';
+  top: number;
+  bottom: number;
+  impulseHigh: number;
+  impulseLow: number;
+}
+
+export interface SmcFibBarPoint {
+  time: number;
+  trend: -1 | 0 | 1;
+  zoneActive: boolean;
+  bullTop: number | null;
+  bullBottom: number | null;
+  bearBottom: number | null;
+  bearTop: number | null;
+  lastHigh: number | null;
+  lastLow: number | null;
+}
+
+export interface SmcFibChartOverlay {
+  structureEvents: SmcStructureEvent[];
+  fibZoneSegments: SmcFibZoneSegment[];
+  barSeries: SmcFibBarPoint[];
 }
 
 export interface BacktestResult {
@@ -230,6 +276,7 @@ export interface BacktestResult {
   diagnosticsSnapshots?: import('../services/strategy/types').CandleDiagnosticSnapshot[];
   experiments?: import('../services/strategy/experimentRunner').StrategyExperimentResult[];
   activeExperimentId?: string;
+  smcOverlay?: SmcFibChartOverlay;
 }
 
 export interface EquityPoint {
@@ -250,4 +297,6 @@ export interface IndicatorConfig {
   showBollingerBands: boolean;
   showVolume: boolean;
   showMarkers: boolean;
+  showSmcZones?: boolean;
+  showStructureSignals?: boolean;
 }

@@ -101,6 +101,76 @@ export const FOREX_SYMBOLS: Record<ForexSymbol, SymbolMeta> = {
     pipSize: 1.0,
     typicalSpreadPips: 1.5,
   },
+  'BTCUSD': {
+    symbol: 'BTCUSD',
+    name: 'Bitcoin / US Dollar',
+    category: 'Crypto',
+    basePrice: 67000.0,
+    digits: 2,
+    pipMultiplier: 1,
+    pipSize: 1.0,
+    typicalSpreadPips: 15.0,
+  },
+  'ETHUSD': {
+    symbol: 'ETHUSD',
+    name: 'Ethereum / US Dollar',
+    category: 'Crypto',
+    basePrice: 2650.0,
+    digits: 2,
+    pipMultiplier: 10,
+    pipSize: 0.1,
+    typicalSpreadPips: 10.0,
+  },
+  'SPY': {
+    symbol: 'SPY',
+    name: 'SPDR S&P 500 ETF Trust',
+    category: 'ETF',
+    basePrice: 580.0,
+    digits: 2,
+    pipMultiplier: 100,
+    pipSize: 0.01,
+    typicalSpreadPips: 2.0,
+  },
+  'QQQ': {
+    symbol: 'QQQ',
+    name: 'Invesco QQQ Trust (Nasdaq-100 ETF)',
+    category: 'ETF',
+    basePrice: 495.0,
+    digits: 2,
+    pipMultiplier: 100,
+    pipSize: 0.01,
+    typicalSpreadPips: 2.0,
+  },
+  'GLD': {
+    symbol: 'GLD',
+    name: 'SPDR Gold Shares ETF',
+    category: 'ETF',
+    basePrice: 245.0,
+    digits: 2,
+    pipMultiplier: 100,
+    pipSize: 0.01,
+    typicalSpreadPips: 2.0,
+  },
+  'SLV': {
+    symbol: 'SLV',
+    name: 'iShares Silver Trust ETF',
+    category: 'ETF',
+    basePrice: 29.0,
+    digits: 3,
+    pipMultiplier: 100,
+    pipSize: 0.01,
+    typicalSpreadPips: 1.5,
+  },
+  'AAPL': {
+    symbol: 'AAPL',
+    name: 'Apple Inc.',
+    category: 'Equity',
+    basePrice: 230.0,
+    digits: 2,
+    pipMultiplier: 100,
+    pipSize: 0.01,
+    typicalSpreadPips: 2.0,
+  },
 };
 
 export const TIMEFRAMES: Record<Timeframe, TimeframeMeta> = {
@@ -228,7 +298,10 @@ export function generateForexCandles(
   let currentPrice = basePrice;
   let trend = 0;
   let trendDuration = 0;
-  let volatility = pip * (symbol === 'XAU/USD' || symbol === 'XAUUSDm' ? 45 : 12);
+  let volatility =
+    meta.category === 'Crypto' || meta.category === 'ETF' || meta.category === 'Equity'
+      ? basePrice * 0.0025
+      : pip * (symbol === 'XAU/USD' || symbol === 'XAUUSDm' ? 45 : 12);
 
   // Adjust volatility for timeframe
   if (timeframe === '1m') volatility *= 0.5;

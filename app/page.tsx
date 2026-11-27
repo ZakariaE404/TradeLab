@@ -90,6 +90,8 @@ export default function TradeLabPage() {
     showBollingerBands: false,
     showVolume: true,
     showMarkers: true,
+    showSmcZones: true,
+    showStructureSignals: true,
   });
 
   // 4. UI Layout Panels
@@ -136,8 +138,12 @@ export default function TradeLabPage() {
   // Load localStorage preferences on client mount
   useEffect(() => {
     const storedParams = getStoredStrategySettings(DEFAULT_STRATEGY_PARAMS);
-    // Force active validated Strategy 001
-    if (storedParams.strategyType !== 'strategy_001') {
+    // Allow active validated strategies (strategy_001, strategy_a, smc_fib_4h_v1)
+    if (
+      storedParams.strategyType !== 'strategy_001' &&
+      storedParams.strategyType !== 'strategy_a' &&
+      storedParams.strategyType !== 'smc_fib_4h_v1'
+    ) {
       storedParams.strategyType = 'strategy_001';
       saveStoredStrategySettings(storedParams);
     }
@@ -150,6 +156,8 @@ export default function TradeLabPage() {
       showBollingerBands: false,
       showVolume: true,
       showMarkers: true,
+      showSmcZones: true,
+      showStructureSignals: true,
     });
     setStrategyParams(storedParams);
     setIndicatorConfig(storedIndicators);
@@ -404,7 +412,7 @@ export default function TradeLabPage() {
       let strategyCandles = activeCandles;
       let strategyH1Candles = realH1Candles;
 
-      // When the chart timeframe differs from the strategy's primary timeframe (e.g. Chart is H1, Strategy needs M15):
+      // When the chart timeframe differs from the strategy's primary timeframe (e.g. Chart is H1, Strategy needs M15 or H4):
       if (evalTf !== timeframe) {
         if (dataSourceMode === 'HISTORICAL' && activeHistoricalDataset) {
           const derived = await getOrComputeDerivedTimeframe(
@@ -415,19 +423,25 @@ export default function TradeLabPage() {
           );
           if (derived && derived.length > 0) {
             strategyCandles = derived;
+          } else if (activeHistoricalDataset.displayTimeframe === evalTf && activeHistoricalDataset.candles?.length) {
+            strategyCandles = activeHistoricalDataset.candles;
           }
-          const derivedH1 = await getOrComputeDerivedTimeframe(
-            activeHistoricalDataset.instrument,
-            '1h',
-            activeHistoricalDataset.startTime,
-            activeHistoricalDataset.endTime
-          );
-          if (derivedH1 && derivedH1.length > 0) {
-            strategyH1Candles = derivedH1;
+          if (evalTf === '15m') {
+            const derivedH1 = await getOrComputeDerivedTimeframe(
+              activeHistoricalDataset.instrument,
+              '1h',
+              activeHistoricalDataset.startTime,
+              activeHistoricalDataset.endTime
+            );
+            if (derivedH1 && derivedH1.length > 0) {
+              strategyH1Candles = derivedH1;
+            }
           }
         } else if (dataSourceMode === 'DEMO') {
           strategyCandles = generateForexCandles(symbol, evalTf, marketSeed, undefined, marketRegime);
-          strategyH1Candles = generateForexCandles(symbol, '1h', marketSeed, undefined, marketRegime);
+          if (evalTf === '15m') {
+            strategyH1Candles = generateForexCandles(symbol, '1h', marketSeed, undefined, marketRegime);
+          }
         }
       }
 
@@ -760,6 +774,7 @@ export default function TradeLabPage() {
           onToggleIndicator={handleToggleIndicator}
           onClearSelectedTrade={() => setSelectedTradeId(null)}
           dataSourceMode={dataSourceMode}
+          smcOverlay={backtestResult.smcOverlay}
           historicalMeta={
             activeHistoricalDataset && (dataSourceMode === 'HISTORICAL' || dataSourceMode === 'CUSTOM')
               ? {

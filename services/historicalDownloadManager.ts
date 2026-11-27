@@ -9,7 +9,9 @@ import {
 } from '@/types/historicalData';
 import {
   DUKASCOPY_INSTRUMENTS,
+  getDukascopyInstrumentMeta,
   mapDukascopyTfToTradeLabTf,
+  resolveDukascopyInstrumentId,
   validateDownloadParams,
 } from './dukascopyCatalog';
 import { normalizeDukascopyCandles } from './dukascopyNormalizer';
@@ -104,7 +106,9 @@ export async function downloadHistoricalDataset(
   options: DownloadOptions = {}
 ): Promise<{ success: boolean; dataset?: SavedHistoricalDataset; error?: string; isDuplicate?: boolean }> {
   const { onProgress, signal, forceOverwrite } = options;
-  const { instrument, timeframe, from, to, priceType } = request;
+  const resolvedInstrument = resolveDukascopyInstrumentId(request.instrument);
+  const { timeframe, from, to, priceType } = request;
+  const instrument = resolvedInstrument;
 
   // 1. Validate parameters
   const validation = validateDownloadParams({
@@ -354,10 +358,7 @@ async function buildDatasetFromM1(params: {
 }): Promise<SavedHistoricalDataset> {
   const { instrument, timeframe, from, to, startSec, endSec, priceType, m1Candles } = params;
 
-  const instMeta = DUKASCOPY_INSTRUMENTS[instrument.toLowerCase()] || {
-    symbol: instrument.toUpperCase(),
-    name: instrument.toUpperCase(),
-  };
+  const instMeta = getDukascopyInstrumentMeta(instrument);
 
   const normTf = normalizeTimeframeId(timeframe);
   const aggregated = aggregateM1ToTimeframe(m1Candles, normTf);

@@ -144,6 +144,7 @@ export function getBacktestCacheKey(
     balance: params.accountBalance,
     spread: params.includeSpread ? params.spreadPips : 0,
     ...(stratType === 'strategy_a' ? params.strategyA : {}),
+    ...(stratType === 'smc_fib_4h_v1' ? { smcFibConfig: params.smcFibConfig } : {}),
     ...(stratType === 'ema_pullback'
       ? {
           fast: params.fastEma,

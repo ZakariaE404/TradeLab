@@ -8,10 +8,11 @@ export interface DukascopyInstrumentMeta {
   id: string; // Official dukascopy ID, e.g. 'eurusd', 'xauusd', 'usatechidxusd'
   symbol: ForexSymbol | string; // TradeLab symbol or display name
   name: string; // Full human-readable name
-  category: 'Forex Major' | 'Precious Metal' | 'Index CFD' | 'Commodity' | 'Crypto';
+  category: 'Forex Major' | 'Precious Metal' | 'Index CFD' | 'Commodity' | 'Crypto' | 'ETF' | 'Equity';
   digits: number;
   pipSize: number;
   typicalSpreadPips: number;
+  is24x7?: boolean;
 }
 
 export type HistoricalDatePreset =

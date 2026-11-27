@@ -14,6 +14,7 @@ import {
   getDateRangeForPreset,
   getDukascopyInstrumentMeta,
   isValidDukascopyInstrument,
+  mapDukascopyTfToTradeLabTf,
   validateDownloadParams,
 } from '@/services/dukascopyCatalog';
 import {
@@ -270,7 +271,7 @@ export function HistoricalDataModal({
         instrument: inst,
         symbol: meta.symbol,
         timeframe: selectedTimeframe,
-        displayTimeframe: selectedTimeframe === 'm1' ? '1m' : '15m',
+        displayTimeframe: mapDukascopyTfToTradeLabTf(selectedTimeframe),
         startDate: fromStr,
         endDate: toStr,
         startTime: candles[0].time,
@@ -366,55 +367,36 @@ export function HistoricalDataModal({
                   </span>
                 </label>
 
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                   {/* Quick instrument buttons */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedInstrument('eurusd');
-                      setIsCustomInstrumentMode(false);
-                    }}
-                    className={`p-2.5 rounded-lg border text-left font-mono transition-all cursor-pointer ${
-                      !isCustomInstrumentMode && selectedInstrument === 'eurusd'
-                        ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 shadow-sm'
-                        : 'bg-[#111726] border-slate-800 hover:border-slate-700 text-slate-300'
-                    }`}
-                  >
-                    <div className="font-bold text-xs">EUR/USD</div>
-                    <div className="text-[10px] text-slate-500">eurusd</div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedInstrument('xauusd');
-                      setIsCustomInstrumentMode(false);
-                    }}
-                    className={`p-2.5 rounded-lg border text-left font-mono transition-all cursor-pointer ${
-                      !isCustomInstrumentMode && selectedInstrument === 'xauusd'
-                        ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 shadow-sm'
-                        : 'bg-[#111726] border-slate-800 hover:border-slate-700 text-slate-300'
-                    }`}
-                  >
-                    <div className="font-bold text-xs">Gold (XAU/USD)</div>
-                    <div className="text-[10px] text-slate-500">xauusd</div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedInstrument('usatechidxusd');
-                      setIsCustomInstrumentMode(false);
-                    }}
-                    className={`p-2.5 rounded-lg border text-left font-mono transition-all cursor-pointer ${
-                      !isCustomInstrumentMode && selectedInstrument === 'usatechidxusd'
-                        ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 shadow-sm'
-                        : 'bg-[#111726] border-slate-800 hover:border-slate-700 text-slate-300'
-                    }`}
-                  >
-                    <div className="font-bold text-xs">NASDAQ 100</div>
-                    <div className="text-[10px] text-slate-500">usatechidxusd</div>
-                  </button>
+                  {[
+                    { id: 'btcusd', label: 'BTCUSD' },
+                    { id: 'ethusd', label: 'ETHUSD' },
+                    { id: 'spyususd', label: 'SPY' },
+                    { id: 'qqqususd', label: 'QQQ' },
+                    { id: 'gldususd', label: 'GLD' },
+                    { id: 'slvususd', label: 'SLV' },
+                    { id: 'aaplususd', label: 'AAPL' },
+                    { id: 'xauusd', label: 'Gold (XAU/USD)' },
+                    { id: 'eurusd', label: 'EUR/USD' },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedInstrument(item.id);
+                        setIsCustomInstrumentMode(false);
+                      }}
+                      className={`p-2.5 rounded-lg border text-left font-mono transition-all cursor-pointer ${
+                        !isCustomInstrumentMode && selectedInstrument === item.id
+                          ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 shadow-sm'
+                          : 'bg-[#111726] border-slate-800 hover:border-slate-700 text-slate-300'
+                      }`}
+                    >
+                      <div className="font-bold text-xs">{item.label}</div>
+                      <div className="text-[10px] text-slate-500">{item.id}</div>
+                    </button>
+                  ))}
 
                   <button
                     type="button"

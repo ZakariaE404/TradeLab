@@ -8,6 +8,11 @@ import { DEFAULT_STRATEGY_A_PARAMS } from '@/services/strategyA';
 import { DEFAULT_STRATEGY_CONFIG, StrategyConfiguration } from '@/services/strategy/types';
 import { StrategyRegistry } from '@/services/strategy';
 import {
+  SMC_FIB_4H_V1_DEFAULTS,
+  SmcFibExecutionTiming,
+  SmcFibParameters,
+} from '@/services/strategy/implementations/smcFib4hV1';
+import {
   X,
   Sliders,
   RotateCcw,
@@ -48,6 +53,29 @@ export function StrategySettingsDrawer({
   const tradeLabConfig: StrategyConfiguration = {
     ...DEFAULT_STRATEGY_CONFIG,
     ...(params.tradeLabConfig || {}),
+  };
+  const smcFibConfig: SmcFibParameters = {
+    ...SMC_FIB_4H_V1_DEFAULTS,
+    ...(params.smcFibConfig || {}),
+  };
+
+  const handleUpdateSmcFib = <K extends keyof SmcFibParameters>(
+    key: K,
+    value: SmcFibParameters[K]
+  ) => {
+    const updated = {
+      ...smcFibConfig,
+      [key]: value,
+    };
+    onChangeParams({
+      ...params,
+      smcFibConfig: updated,
+      ...(key === 'initialCapital' ? { accountBalance: value as number } : {}),
+      ...(key === 'riskPercent' ? { riskPercent: value as number } : {}),
+      ...(key === 'rrTarget' ? { riskRewardRatio: value as number } : {}),
+      ...(key === 'slAtrMultiplier' ? { atrStopMultiplier: value as number } : {}),
+      ...(key === 'atrLength' ? { atrPeriod: value as number } : {}),
+    });
   };
 
   const handleUpdate = <K extends keyof StrategyParameters>(
@@ -179,12 +207,28 @@ export function StrategySettingsDrawer({
             value={params.strategyType}
             onChange={(e) => {
               const target = e.target.value as StrategyType;
-              if (target === 'strategy_001' || target === 'strategy_a') {
+              if (target === 'smc_fib_4h_v1') {
+                onChangeParams({
+                  ...params,
+                  strategyType: 'smc_fib_4h_v1',
+                  accountBalance: SMC_FIB_4H_V1_DEFAULTS.initialCapital,
+                  riskPercent: SMC_FIB_4H_V1_DEFAULTS.riskPercent,
+                  riskRewardRatio: SMC_FIB_4H_V1_DEFAULTS.rrTarget,
+                  atrPeriod: SMC_FIB_4H_V1_DEFAULTS.atrLength,
+                  atrStopMultiplier: SMC_FIB_4H_V1_DEFAULTS.slAtrMultiplier,
+                  includeSpread: false,
+                  spreadPips: 0,
+                  commissionPerLot: 0,
+                  slippagePips: 0,
+                  smcFibConfig: { ...SMC_FIB_4H_V1_DEFAULTS, ...(params.smcFibConfig || {}) },
+                });
+              } else if (target === 'strategy_001' || target === 'strategy_a') {
                 handleUpdate('strategyType', target);
               }
             }}
             className="w-full bg-[#111726] border border-slate-800 rounded p-2 text-slate-200 font-mono text-xs focus:outline-none focus:border-emerald-500"
           >
+            <option value="smc_fib_4h_v1">★ SMC_FIB_4H_V1 — 4H Market Structure + Fib 0.60-0.70</option>
             <option value="strategy_001">★ Strategy 001 — Active / Validated (M15 Entry + H1 Trend)</option>
             <option value="strategy_a">Strategy A (Validated Alias to Strategy 001)</option>
             <option value="strategy_002" disabled>Strategy 002 [Disabled — Not Validated]</option>
@@ -212,14 +256,73 @@ export function StrategySettingsDrawer({
                 </p>
                 <div className="text-[9px] text-emerald-400 font-mono pt-0.5 flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-                  <span>Sole Validated Strategy: Evaluates on M15 closes with H1 trend filter.</span>
+                  <span>
+                    {params.strategyType === 'smc_fib_4h_v1'
+                      ? 'Active Strategy: Evaluates on H4 candle closes (BOS/CHOCH + Fib 0.60-0.70).'
+                      : 'Sole Validated Strategy: Evaluates on M15 closes with H1 trend filter.'}
+                  </span>
                 </div>
               </div>
             );
           })()}
         </div>
 
-        {/* Section 2A: TradeLab Phase 3 Multi-Regime Strategy Parameters */}
+        {/* Section 2A: SMC_FIB_4H_V1 Reference Parameters */}
+        {params.strategyType === 'smc_fib_4h_v1' && (
+          <div className="pt-3 border-t border-slate-800/80 space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] uppercase tracking-wider text-emerald-400 font-semibold">
+                SMC_FIB_4H_V1 Parameters
+              </label>
+              <span className="text-[10px] font-mono text-slate-400">H4 Structure</span>
+            </div>
+
+            <div className="p-2.5 rounded bg-[#111726] border border-slate-800 space-y-2 text-[10px] font-mono">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <span className="text-slate-400 block">Swing Length</span>
+                  <div className="bg-[#0a0f1d] border border-slate-800 rounded p-1.5 text-slate-200 text-center font-bold">
+                    {smcFibConfig.swingLength}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-slate-400 block">Fib Zone</span>
+                  <div className="bg-[#0a0f1d] border border-slate-800 rounded p-1.5 text-emerald-400 text-center font-bold">
+                    {smcFibConfig.fibStart.toFixed(2)} – {smcFibConfig.fibEnd.toFixed(2)}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-slate-400 block">ATR(14) SMA SL</span>
+                  <div className="bg-[#0a0f1d] border border-slate-800 rounded p-1.5 text-rose-400 text-center font-bold">
+                    {smcFibConfig.slAtrMultiplier}x ATR({smcFibConfig.atrLength})
+                  </div>
+                </div>
+                <div>
+                  <span className="text-slate-400 block">Risk / Target</span>
+                  <div className="bg-[#0a0f1d] border border-slate-800 rounded p-1.5 text-sky-400 text-center font-bold">
+                    {smcFibConfig.riskPercent}% | {smcFibConfig.rrTarget}R
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-1 border-t border-slate-800/70">
+                <span className="text-slate-400 block mb-1">Order Fill Timing</span>
+                <select
+                  value={smcFibConfig.executionTiming}
+                  onChange={(e) =>
+                    handleUpdateSmcFib('executionTiming', e.target.value as SmcFibExecutionTiming)
+                  }
+                  className="w-full bg-[#0a0f1d] border border-slate-800 rounded p-1.5 text-slate-200 font-mono text-[11px] focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="next_open">Next 4H Bar Open (QuantConnect MarketOrder)</option>
+                  <option value="close">4H Bar Close (Pine v6 process_orders_on_close)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Section 2A-legacy: TradeLab Phase 3 Multi-Regime Strategy Parameters */}
         {params.strategyType === 'tradelab_strategy' && (
           <div className="pt-3 border-t border-slate-800/80 space-y-3">
             <div className="flex items-center justify-between">

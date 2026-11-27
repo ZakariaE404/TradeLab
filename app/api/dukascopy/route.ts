@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getHistoricalRates } from 'dukascopy-node';
 import {
   DUKASCOPY_INSTRUMENTS,
-  isValidDukascopyInstrument,
+  resolveDukascopyInstrumentId,
   validateDownloadParams,
 } from '@/services/dukascopyCatalog';
+import { fetchDukascopyHistoricalRates } from '@/services/dukascopyFetcher';
 import {
   normalizeDukascopyCandles,
   RawDukascopyCandle,
@@ -88,7 +88,8 @@ async function handleDukascopyFetch(params: {
   to: string;
   priceType: DukascopyPriceType;
 }) {
-  const { instrument, timeframe, from, to, priceType } = params;
+  const instrument = resolveDukascopyInstrumentId(params.instrument);
+  const { timeframe, from, to, priceType } = params;
 
   // 1. Parameter Validation
   const validation = validateDownloadParams({
@@ -124,20 +125,14 @@ async function handleDukascopyFetch(params: {
 
   // 2. Fetch from Dukascopy
   try {
-    const rawRates = await getHistoricalRates({
-      instrument: instrument as any,
-      dates: {
-        from: fromDate,
-        to: toDate,
-      },
+    const rawRates = await fetchDukascopyHistoricalRates({
+      instrument,
+      from: fromDate,
+      to: toDate,
       timeframe,
       priceType: priceType.toLowerCase() as 'bid' | 'ask',
-      volumes: true,
-      format: 'json',
       retryCount: 2,
       pauseBetweenRetriesMs: 1000,
-      retryOnEmpty: true,
-      failAfterRetryCount: true,
       batchSize: 10,
       pauseBetweenBatchesMs: 100,
     });

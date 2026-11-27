@@ -12,6 +12,7 @@ import {
   normalizeSymbolKey,
   saveDerivedCache,
 } from './m1Database';
+import { is24x7DukascopyInstrument } from './dukascopyCatalog';
 
 export const TIMEFRAME_SPECS: Record<
   string,
@@ -98,7 +99,12 @@ export function getBucketStartTimestamp(timestampSec: number, targetTimeframe: T
 /**
  * Checks if a bucket interval intersects market session boundaries (Friday close / Sunday open)
  */
-function isSessionBoundaryBucket(bucketStart: number, periodSeconds: number): boolean {
+function isSessionBoundaryBucket(
+  bucketStart: number,
+  periodSeconds: number,
+  is24x7: boolean = false
+): boolean {
+  if (is24x7) return false;
   const bucketEnd = bucketStart + periodSeconds;
   // If bucket contains Friday 22:00 UTC or Sunday 21:00 UTC
   const isStartClosed = isWeekendMarketClosed(bucketStart);
@@ -124,7 +130,8 @@ function isSessionBoundaryBucket(bucketStart: number, periodSeconds: number): bo
  */
 export function aggregateM1ToTimeframe(
   m1Candles: Candle[],
-  targetTimeframe: Timeframe | DukascopyTimeframe | string
+  targetTimeframe: Timeframe | DukascopyTimeframe | string,
+  is24x7: boolean = false
 ): AggregatedCandle[] {
   if (!m1Candles || m1Candles.length === 0) return [];
 
@@ -182,7 +189,7 @@ export function aggregateM1ToTimeframe(
 
     const count = constituents.length;
     const expected = spec.expectedM1Count;
-    const isBoundary = isSessionBoundaryBucket(bTime, spec.seconds);
+    const isBoundary = isSessionBoundaryBucket(bTime, spec.seconds, is24x7);
 
     let status: AggregatedCandleStatus = 'COMPLETE';
     let isComplete = true;
@@ -253,7 +260,7 @@ export async function getOrComputeDerivedTimeframe(
   }
 
   // 3. Aggregate M1 to target timeframe
-  const aggregated = aggregateM1ToTimeframe(m1Candles, normTf);
+  const aggregated = aggregateM1ToTimeframe(m1Candles, normTf, is24x7DukascopyInstrument(symKey));
 
   // 4. Save to derived cache for fast future lookups
   const derivedRecord: DerivedCacheRecord = {
